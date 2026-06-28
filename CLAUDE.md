@@ -9,10 +9,10 @@ Monorepo: pasta raiz sig-barbershop com api/ e frontend/.
 ## Stack
 
 - Backend: Python + FastAPI + Poetry, SQL puro (zero ORM)
-- Frontend: Next.js 14+ (App Router) + TypeScript + Tailwind
+- Frontend: Next.js 14+ (App Router) + TypeScript + Tailwind + shadcn/ui
 - Banco: MySQL 8.0
 - Infra: Docker + docker-compose
-- Testes: pytest (backend)
+- Testes: pytest (backend) + Cypress (E2E frontend)
 - CI: GitHub Actions
 
 ## Estrutura de Pastas
@@ -50,12 +50,18 @@ sig-barbershop/
 │ ├── services/
 │ └── repositories/
 │
-└── frontend/ ← Next.js (ainda vazio)
+└── frontend/ ← Next.js (App Router)
 ├── src/
-│ ├── app/
-│ ├── components/
-│ ├── lib/
-│ └── types/
+│ ├── app/           ← rotas (App Router, Server Components por padrão)
+│ ├── components/    ← componentes reutilizáveis e shadcn/ui
+│ ├── services/      ← funções axios puras (sem React, sem hooks)
+│ ├── hooks/         ← React Query hooks (useXxx wrapping services)
+│ ├── lib/           ← axios.ts, queryClient.ts, utils.ts
+│ └── types/         ← interfaces TypeScript
+├── cypress/
+│ ├── e2e/           ← testes E2E por módulo (clientes.cy.ts, etc.)
+│ ├── support/       ← comandos customizados e configuração
+│ └── fixtures/      ← dados estáticos para testes
 ├── Dockerfile
 └── package.json
 
@@ -75,6 +81,9 @@ Router → Service → Repository
 - ORM de qualquer tipo → PROIBIDO
 - Commit sem testes passando → PROIBIDO
 - Novo endpoint sem teste → PROIBIDO
+- Nova feature de frontend sem teste E2E Cypress → PROIBIDO
+- Lógica de requisição HTTP dentro de componente React → PROIBIDO
+- `useQuery` / `useMutation` direto no componente (sem hook customizado) → PROIBIDO
 
 ## Dependências Python (adicionar via Poetry)
 
@@ -111,6 +120,70 @@ VENDA, VENDA_PRODUTO, FIDELIDADE, HISTORICO_PONTOS
   → TRIGGER BEFORE INSERT/UPDATE garante no banco também
 - ATENDIMENTO.valor_total e VENDA.valor_total são derivados
   → calculados e gravados pelo service, nunca pelo banco diretamente
+
+## Padrões do Frontend
+
+### Arquitetura em 3 Camadas (INVIOLÁVEL)
+
+Service → Hook → Component
+
+- **Service** (`services/`): função async pura que chama axios. Recebe parâmetros, retorna dado tipado. Zero React, zero hooks.
+- **Hook** (`hooks/`): wrapper React Query sobre o service. Exporta `useXxx` com `useQuery` ou `useMutation`. Zero JSX.
+- **Component**: consome o hook. Zero chamadas axios ou `useQuery` direta.
+
+```
+// services/clienteService.ts
+export const getClientes = () => api.get<Cliente[]>('/clientes').then(r => r.data)
+
+// hooks/useClientes.ts
+export const useClientes = () => useQuery({ queryKey: ['clientes'], queryFn: getClientes })
+
+// components/ClientesList.tsx
+const { data, isLoading } = useClientes()
+```
+
+### Axios
+
+- Instância única em `src/lib/axios.ts` com `baseURL = process.env.NEXT_PUBLIC_API_URL`
+- Interceptor de response: erros 4xx/5xx normalizados antes de chegar ao hook
+- Nunca importar axios diretamente nos componentes ou hooks — só nos services
+
+### Formulários
+
+- react-hook-form + zod em todos os formulários
+- Schema zod define tipo e validação num único lugar
+- Usar componentes `<Form>` do shadcn/ui (integração nativa com react-hook-form)
+
+### Server vs Client Components
+
+- Server Component por padrão (sem `'use client'`)
+- `'use client'` apenas quando: usa hooks, event handlers, ou componentes shadcn com estado
+- Nunca colocar chamadas de API diretamente em Server Components — usar hooks nos Client Components
+
+### Cypress E2E
+
+- Um arquivo `cypress/e2e/<modulo>.cy.ts` por módulo (ex: `clientes.cy.ts`, `atendimentos.cy.ts`)
+- Testar o fluxo completo: renderizar página → interagir → verificar resultado
+- Usar `cy.intercept()` para mockar respostas da API nos testes
+- Comandos reutilizáveis em `cypress/support/commands.ts`
+- Rodar com `pnpm cypress run` no CI
+
+### Naming Conventions
+
+- Componentes: PascalCase (`ClienteCard.tsx`)
+- Hooks: `useXxx` (`useClientes.ts`)
+- Services: camelCase com sufixo Service (`clienteService.ts`)
+- Tipos: PascalCase interface (`Cliente`, `Atendimento`)
+
+## Dependências npm (frontend)
+
+- `@tanstack/react-query` — data fetching e cache
+- `axios` — cliente HTTP
+- `react-hook-form` — gerenciamento de formulários
+- `zod` — validação de schemas
+- `shadcn/ui` — componentes de UI (instalado via CLI: `npx shadcn@latest init`)
+- `cypress` — testes E2E
+- `prettier` — formatação de código
 
 ## Padrões de Código Python
 
