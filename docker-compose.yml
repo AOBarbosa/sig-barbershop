@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: sig_barbershop_db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./api/app/db/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql
+      - ./api/app/db/seed.sql:/docker-entrypoint-initdb.d/02_seed.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: ./api
+    container_name: sig_barbershop_api
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: .env
+    environment:
+      DB_HOST: db
+    ports:
+      - "${API_PORT:-8000}:8000"
+
+  frontend:
+    build: ./frontend
+    container_name: sig_barbershop_frontend
+    depends_on:
+      - api
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:${API_PORT:-8000}
+    ports:
+      - "3000:3000"
+
+volumes:
+  mysql_data:
