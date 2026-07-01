@@ -1,0 +1,72 @@
+name: CI — API
+
+on:
+  push:
+    paths:
+      - "api/**"
+      - ".github/workflows/ci-api.yml"
+  pull_request:
+    paths:
+      - "api/**"
+      - ".github/workflows/ci-api.yml"
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpassword
+          MYSQL_DATABASE: sig_barbershop_test
+          MYSQL_USER: barbershop
+          MYSQL_PASSWORD: barbershop
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -u root -prootpassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inicializar schema no banco de teste
+        run: |
+          mysql -h 127.0.0.1 -u root -prootpassword sig_barbershop_test < api/app/db/schema.sql
+
+      - name: Instalar Python 3.14
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Instalar Poetry
+        run: pip install poetry
+
+      - name: Cache Poetry virtualenv
+        uses: actions/cache@v4
+        with:
+          path: api/.venv
+          key: venv-${{ hashFiles('api/poetry.lock') }}
+
+      - name: Instalar dependências
+        working-directory: api
+        run: poetry install
+        env:
+          POETRY_VIRTUALENVS_IN_PROJECT: "true"
+
+      - name: Ruff lint
+        working-directory: api
+        run: poetry run ruff check .
+
+      - name: Pytest
+        working-directory: api
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: sig_barbershop_test
+          DB_USER: barbershop
+          DB_PASSWORD: barbershop
+        run: poetry run pytest
