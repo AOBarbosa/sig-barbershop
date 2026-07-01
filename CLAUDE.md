@@ -97,12 +97,12 @@ Router → Service → Repository
 - httpx (para testes de routers)
 - ruff (linting)
 
-## Banco de Dados — 17 Tabelas
+## Banco de Dados — 16 Tabelas
 
 PESSOA, TELEFONE, CLIENTE, CAIXA, BARBEIRO,
 DISPONIBILIDADE, SERVICO, HISTORICO_SERVICO,
 ATENDIMENTO, ATENDIMENTO_SERVICO,
-PRODUTO, HISTORICO_PRODUTO, COMPRA,
+PRODUTO, HISTORICO_PRODUTO,
 VENDA, VENDA_PRODUTO, FIDELIDADE, HISTORICO_PONTOS
 
 ## ENUMs
@@ -115,9 +115,13 @@ VENDA, VENDA_PRODUTO, FIDELIDADE, HISTORICO_PONTOS
 
 ## Pontos de Atenção no Banco
 
-- FIDELIDADE: XOR entre PRODUTO_id_produto e SERVICO_id_servico
+- FIDELIDADE: categoria/union type de PRODUTO e SERVICO (feedback professor)
+  → XOR entre PRODUTO_id_produto e SERVICO_id_servico no relacional
   → validar em fidelidade_service.py antes de qualquer INSERT
   → TRIGGER BEFORE INSERT/UPDATE garante no banco também
+- HISTORICO_SERVICO e HISTORICO_PRODUTO possuem atributo `ativo` (feedback professor)
+- VENDA_PRODUTO possui `preco_unitario` (feedback professor)
+- COMPRA removida do modelo (feedback professor)
 - ATENDIMENTO.valor_total e VENDA.valor_total são derivados
   → calculados e gravados pelo service, nunca pelo banco diretamente
 
@@ -205,7 +209,7 @@ const { data, isLoading } = useClientes()
 
 - Pessoa A: PESSOA / CLIENTE / BARBEIRO / CAIXA / DISPONIBILIDADE
 - Pessoa B: ATENDIMENTO / ATENDIMENTO_SERVICO / SERVICO / HISTORICO_SERVICO
-- Pessoa C: VENDA / VENDA_PRODUTO / PRODUTO / HISTORICO_PRODUTO / COMPRA / FIDELIDADE / HISTORICO_PONTOS
+- Pessoa C: VENDA / VENDA_PRODUTO / PRODUTO / HISTORICO_PRODUTO / FIDELIDADE / HISTORICO_PONTOS
 
 ## Ordem de Execução
 
