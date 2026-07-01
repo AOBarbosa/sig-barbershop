@@ -1,6 +1,8 @@
 import { FlatCompat } from "@eslint/eslintrc";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals";
+import nextTypescript from "eslint-config-next/typescript";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -10,13 +12,12 @@ const compat = new FlatCompat({
 });
 
 const eslintConfig = [
+  ...nextCoreWebVitals,
+  ...nextTypescript,
   ...compat.config({
     extends: [
-      "next/core-web-vitals",
-      "next/typescript",
       "prettier",
-      "plugin:prettier/recommended",
-      "plugin:react-hooks/recommended"
+      "plugin:prettier/recommended"
     ],
     plugins: ["simple-import-sort"],
     rules: {
