@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -27,3 +28,14 @@ class ServicoResponse(ServicoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id_servico: int
+
+
+class HistoricoServicoResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_historico: int
+    SERVICO_id_servico: int
+    preco_anterior: Decimal | None
+    preco_novo: Decimal | None
+    ativo: bool
+    alterado_em: datetime
