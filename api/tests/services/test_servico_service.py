@@ -124,12 +124,24 @@ def test_criar_servico_faz_rollback_quando_repository_falha(monkeypatch):
 
 def test_atualizar_servico_existente_controla_transacao_e_retorna_servico(monkeypatch):
     conn = FakeConn()
-    updated = {"id_servico": 1, "nome": "Corte premium"}
+    current = {
+        "id_servico": 1,
+        "nome": "Corte",
+        "preco": Decimal("35.00"),
+        "ativo": True,
+    }
+    updated = {
+        "id_servico": 1,
+        "nome": "Corte premium",
+        "preco": Decimal("35.00"),
+        "ativo": True,
+    }
+    historicos = []
 
     monkeypatch.setattr(
         servico_service.servico_repository,
         "buscar_por_id",
-        lambda _conn, _id: {"id_servico": 1},
+        lambda _conn, _id: current,
     )
 
     def fake_atualizar(received_conn, servico_id, data):
@@ -139,6 +151,11 @@ def test_atualizar_servico_existente_controla_transacao_e_retorna_servico(monkey
         return updated
 
     monkeypatch.setattr(servico_service.servico_repository, "atualizar", fake_atualizar)
+    monkeypatch.setattr(
+        servico_service.historico_servico_repository,
+        "criar",
+        lambda *args, **kwargs: historicos.append((args, kwargs)),
+    )
 
     result = servico_service.atualizar_servico(
         conn,
@@ -147,6 +164,74 @@ def test_atualizar_servico_existente_controla_transacao_e_retorna_servico(monkey
     )
 
     assert result == updated
+    assert historicos == [
+        (
+            (conn,),
+            {
+                "servico_id": 1,
+                "preco_anterior": Decimal("35.00"),
+                "preco_novo": Decimal("35.00"),
+                "ativo": True,
+            },
+        )
+    ]
+    assert conn.started is True
+    assert conn.committed is True
+    assert conn.rolled_back is False
+
+
+def test_atualizar_servico_grava_historico_com_preco_anterior_preco_novo_e_ativo(monkeypatch):
+    conn = FakeConn()
+    current = {
+        "id_servico": 1,
+        "nome": "Corte",
+        "preco": Decimal("35.00"),
+        "ativo": True,
+    }
+    updated = {
+        "id_servico": 1,
+        "nome": "Corte",
+        "preco": Decimal("45.00"),
+        "ativo": False,
+    }
+    historicos = []
+
+    monkeypatch.setattr(
+        servico_service.servico_repository,
+        "buscar_por_id",
+        lambda _conn, _id: current,
+    )
+    monkeypatch.setattr(
+        servico_service.servico_repository,
+        "atualizar",
+        lambda _conn, _id, _data: updated,
+    )
+
+    def fake_criar_historico(received_conn, **data):
+        assert received_conn is conn
+        historicos.append(data)
+
+    monkeypatch.setattr(
+        servico_service.historico_servico_repository,
+        "criar",
+        fake_criar_historico,
+    )
+
+    result = servico_service.atualizar_servico(
+        conn,
+        1,
+        ServicoUpdate(preco=Decimal("45.00"), ativo=False),
+    )
+
+    assert result == updated
+    assert historicos == [
+        {
+            "servico_id": 1,
+            "preco_anterior": Decimal("35.00"),
+            "preco_novo": Decimal("45.00"),
+            "ativo": False,
+        }
+    ]
     assert conn.started is True
     assert conn.committed is True
     assert conn.rolled_back is False
@@ -192,6 +277,79 @@ def test_atualizar_servico_faz_rollback_quando_repository_falha(monkeypatch):
     assert conn.started is True
     assert conn.committed is False
     assert conn.rolled_back is True
+
+
+def test_atualizar_servico_faz_rollback_quando_historico_falha(monkeypatch):
+    conn = FakeConn()
+    monkeypatch.setattr(
+        servico_service.servico_repository,
+        "buscar_por_id",
+        lambda _conn, _id: {
+            "id_servico": 1,
+            "preco": Decimal("35.00"),
+            "ativo": True,
+        },
+    )
+    monkeypatch.setattr(
+        servico_service.servico_repository,
+        "atualizar",
+        lambda _conn, _id, _data: {
+            "id_servico": 1,
+            "preco": Decimal("45.00"),
+            "ativo": True,
+        },
+    )
+
+    def fake_criar_historico(_conn, **_data):
+        raise RuntimeError("erro no historico")
+
+    monkeypatch.setattr(
+        servico_service.historico_servico_repository,
+        "criar",
+        fake_criar_historico,
+    )
+
+    with pytest.raises(RuntimeError):
+        servico_service.atualizar_servico(
+            conn,
+            1,
+            ServicoUpdate(preco=Decimal("45.00")),
+        )
+
+    assert conn.started is True
+    assert conn.committed is False
+    assert conn.rolled_back is True
+
+
+def test_listar_historico_servico_existente_retorna_historico(monkeypatch):
+    conn = FakeConn()
+    rows = [{"id_historico": 1, "SERVICO_id_servico": 1}]
+    monkeypatch.setattr(
+        servico_service.servico_repository,
+        "buscar_por_id",
+        lambda _conn, _id: {"id_servico": 1},
+    )
+    monkeypatch.setattr(
+        servico_service.historico_servico_repository,
+        "listar_por_servico",
+        lambda _conn, _id: rows,
+    )
+
+    result = servico_service.listar_historico_servico(conn, 1)
+
+    assert result == rows
+    assert conn.started is False
+
+
+def test_listar_historico_servico_inexistente_retorna_404(monkeypatch):
+    conn = FakeConn()
+    monkeypatch.setattr(servico_service.servico_repository, "buscar_por_id", lambda _conn, _id: None)
+
+    with pytest.raises(HTTPException) as exc:
+        servico_service.listar_historico_servico(conn, 404)
+
+    assert exc.value.status_code == 404
+    assert conn.started is False
 
 
 def test_deletar_servico_existente_sem_vinculo_controla_transacao(monkeypatch):

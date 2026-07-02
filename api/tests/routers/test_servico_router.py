@@ -84,6 +84,55 @@ def test_get_servico_por_id_repassa_404_do_service(client, monkeypatch):
     clear_overrides()
 
 
+def test_get_historico_servico_delega_para_service(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    historico = [
+        {
+            "id_historico": 1,
+            "SERVICO_id_servico": 1,
+            "preco_anterior": "35.00",
+            "preco_novo": "45.00",
+            "ativo": True,
+            "alterado_em": "2026-07-02T10:00:00",
+        }
+    ]
+
+    def fake_listar_historico(_conn, servico_id):
+        assert servico_id == 1
+        return historico
+
+    monkeypatch.setattr(
+        servico_router.servico_service,
+        "listar_historico_servico",
+        fake_listar_historico,
+    )
+
+    response = client.get("/servicos/1/historico")
+
+    assert response.status_code == 200
+    assert response.json() == historico
+    clear_overrides()
+
+
+def test_get_historico_servico_repassa_404_do_service(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake_listar_historico(_conn, _servico_id):
+        raise HTTPException(status_code=404, detail="Servico nao encontrado")
+
+    monkeypatch.setattr(
+        servico_router.servico_service,
+        "listar_historico_servico",
+        fake_listar_historico,
+    )
+
+    response = client.get("/servicos/404/historico")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Servico nao encontrado"}
+    clear_overrides()
+
+
 def test_post_servicos_valida_payload_e_retorna_201(client, monkeypatch):
     app.dependency_overrides[get_db] = override_db
     created = {

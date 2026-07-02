@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, Response, status
 
 from app.dependencies import get_db
-from app.schemas.servico_schema import ServicoCreate, ServicoResponse, ServicoUpdate
+from app.schemas.servico_schema import (
+    HistoricoServicoResponse,
+    ServicoCreate,
+    ServicoResponse,
+    ServicoUpdate,
+)
 from app.services import servico_service
 
 router = APIRouter(prefix="/servicos", tags=["servicos"])
@@ -15,6 +20,11 @@ def listar_servicos(conn=Depends(get_db)):
 @router.get("/{servico_id}", response_model=ServicoResponse)
 def buscar_servico(servico_id: int, conn=Depends(get_db)):
     return servico_service.buscar_servico(conn, servico_id)
+
+
+@router.get("/{servico_id}/historico", response_model=list[HistoricoServicoResponse])
+def listar_historico_servico(servico_id: int, conn=Depends(get_db)):
+    return servico_service.listar_historico_servico(conn, servico_id)
 
 
 @router.post("", response_model=ServicoResponse, status_code=status.HTTP_201_CREATED)
