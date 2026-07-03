@@ -97,6 +97,38 @@ def test_buscar_produto_inexistente_retorna_404(monkeypatch):
     assert conn.started is False
 
 
+def test_listar_historico_produto_inexistente_retorna_404(monkeypatch):
+    conn = FakeConn()
+    monkeypatch.setattr(produto_service.produto_repository, "buscar_por_id", lambda _conn, _id: None)
+
+    with pytest.raises(HTTPException) as exc:
+        produto_service.listar_historico_produto(conn, 404)
+
+    assert exc.value.status_code == 404
+    assert conn.started is False
+
+
+def test_listar_historico_produto_existente_delega_para_repository(monkeypatch):
+    conn = FakeConn()
+    rows = [{"id_historico": 1, "PRODUTO_id_produto": 1}]
+
+    monkeypatch.setattr(
+        produto_service.produto_repository,
+        "buscar_por_id",
+        lambda _conn, _id: {"id_produto": 1},
+    )
+    monkeypatch.setattr(
+        produto_service.historico_produto_repository,
+        "listar_por_produto",
+        lambda _conn, produto_id: rows,
+    )
+
+    result = produto_service.listar_historico_produto(conn, 1)
+
+    assert result == rows
+    assert conn.started is False
+
+
 def test_criar_produto_faz_rollback_quando_repository_falha(monkeypatch):
     conn = FakeConn()
 
@@ -124,12 +156,24 @@ def test_criar_produto_faz_rollback_quando_repository_falha(monkeypatch):
 
 def test_atualizar_produto_existente_controla_transacao_e_retorna_produto(monkeypatch):
     conn = FakeConn()
-    updated = {"id_produto": 1, "nome": "Pomada premium"}
+    updated = {
+        "id_produto": 1,
+        "nome": "Pomada premium",
+        "preco": Decimal("35.00"),
+        "estoque": 20,
+        "ativo": True,
+    }
 
     monkeypatch.setattr(
         produto_service.produto_repository,
         "buscar_por_id",
-        lambda _conn, _id: {"id_produto": 1, "nome": "Pomada modeladora"},
+        lambda _conn, _id: {
+            "id_produto": 1,
+            "nome": "Pomada modeladora",
+            "preco": Decimal("35.00"),
+            "estoque": 20,
+            "ativo": True,
+        },
     )
 
     def fake_atualizar(received_conn, produto_id, data):
@@ -139,6 +183,11 @@ def test_atualizar_produto_existente_controla_transacao_e_retorna_produto(monkey
         return updated
 
     monkeypatch.setattr(produto_service.produto_repository, "atualizar", fake_atualizar)
+    monkeypatch.setattr(
+        produto_service.historico_produto_repository,
+        "criar",
+        lambda _conn, **_kwargs: None,
+    )
 
     result = produto_service.atualizar_produto(
         conn,
@@ -150,6 +199,57 @@ def test_atualizar_produto_existente_controla_transacao_e_retorna_produto(monkey
     assert conn.started is True
     assert conn.committed is True
     assert conn.rolled_back is False
+
+
+def test_atualizar_produto_grava_historico_com_valores_anterior_e_novo(monkeypatch):
+    conn = FakeConn()
+    atual = {
+        "id_produto": 1,
+        "preco": Decimal("35.00"),
+        "estoque": 20,
+        "ativo": True,
+    }
+    updated = {
+        "id_produto": 1,
+        "preco": Decimal("45.00"),
+        "estoque": 15,
+        "ativo": False,
+    }
+
+    monkeypatch.setattr(
+        produto_service.produto_repository, "buscar_por_id", lambda _conn, _id: atual
+    )
+    monkeypatch.setattr(
+        produto_service.produto_repository,
+        "atualizar",
+        lambda _conn, _id, _data: updated,
+    )
+
+    historico_chamado = {}
+
+    def fake_criar_historico(received_conn, **kwargs):
+        assert received_conn is conn
+        historico_chamado.update(kwargs)
+
+    monkeypatch.setattr(
+        produto_service.historico_produto_repository, "criar", fake_criar_historico
+    )
+
+    produto_service.atualizar_produto(
+        conn,
+        1,
+        ProdutoUpdate(preco=Decimal("45.00"), estoque=15, ativo=False),
+    )
+
+    assert historico_chamado == {
+        "produto_id": 1,
+        "preco_anterior": Decimal("35.00"),
+        "preco_novo": Decimal("45.00"),
+        "estoque_anterior": 20,
+        "estoque_novo": 15,
+        "ativo": False,
+    }
+    assert conn.committed is True
 
 
 def test_atualizar_produto_inexistente_faz_rollback_e_retorna_404(monkeypatch):

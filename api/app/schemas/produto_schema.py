@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -27,3 +28,16 @@ class ProdutoResponse(ProdutoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id_produto: int
+
+
+class HistoricoProdutoResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_historico: int
+    PRODUTO_id_produto: int
+    preco_anterior: Decimal | None
+    preco_novo: Decimal | None
+    estoque_anterior: int | None
+    estoque_novo: int | None
+    ativo: bool
+    alterado_em: datetime
