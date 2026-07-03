@@ -84,6 +84,53 @@ def test_get_produto_por_id_repassa_404_do_service(client, monkeypatch):
     clear_overrides()
 
 
+def test_get_historico_produto_delega_para_service(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    expected = [
+        {
+            "id_historico": 1,
+            "PRODUTO_id_produto": 1,
+            "preco_anterior": "35.00",
+            "preco_novo": "45.00",
+            "estoque_anterior": 20,
+            "estoque_novo": 15,
+            "ativo": True,
+            "alterado_em": "2026-07-02T10:00:00",
+        }
+    ]
+
+    def fake_listar_historico(_conn, produto_id):
+        assert produto_id == 1
+        return expected
+
+    monkeypatch.setattr(
+        produto_router.produto_service, "listar_historico_produto", fake_listar_historico
+    )
+
+    response = client.get("/produtos/1/historico")
+
+    assert response.status_code == 200
+    assert response.json() == expected
+    clear_overrides()
+
+
+def test_get_historico_produto_repassa_404_do_service(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake_listar_historico(_conn, _produto_id):
+        raise HTTPException(status_code=404, detail="Produto nao encontrado")
+
+    monkeypatch.setattr(
+        produto_router.produto_service, "listar_historico_produto", fake_listar_historico
+    )
+
+    response = client.get("/produtos/404/historico")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Produto nao encontrado"}
+    clear_overrides()
+
+
 def test_post_produtos_valida_payload_e_retorna_201(client, monkeypatch):
     app.dependency_overrides[get_db] = override_db
     created = {

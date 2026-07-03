@@ -205,6 +205,13 @@ const { data, isLoading } = useClientes()
 - Humano decide o quê e o porquê. Claude decide o como.
 - Ao fim de cada sessão: atualizar a seção Hurdles abaixo
 
+## Git Workflow
+
+- Nunca commitar direto na `main` → PROIBIDO
+- Uma branch nova por issue, a partir da `main`: `feature/<numero-da-issue>-<slug>` (ex: `feature/12-historico-produto`)
+- Ao concluir a implementação: abrir PR (`gh pr create`) referenciando a issue (`Closes #N`)
+- Merge na `main` só depois do PR aberto e do CI passando
+
 ## Divisão do Time
 
 - Pessoa A: PESSOA / CLIENTE / BARBEIRO / CAIXA / DISPONIBILIDADE
