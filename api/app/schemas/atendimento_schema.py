@@ -33,6 +33,12 @@ class AtendimentoStatusUpdate(BaseModel):
     status: AtendimentoStatus
 
 
+class AtendimentoServicoCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    SERVICO_id_servico: int = Field(gt=0)
+
+
 class AtendimentoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -43,3 +49,12 @@ class AtendimentoResponse(BaseModel):
     status: AtendimentoStatus
     valor_total: Decimal
     observacao: str | None = None
+
+
+class AtendimentoServicoResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_atendimento_servico: int
+    ATENDIMENTO_id_atendimento: int
+    SERVICO_id_servico: int
+    preco_cobrado: Decimal
