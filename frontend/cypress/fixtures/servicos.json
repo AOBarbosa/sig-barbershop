@@ -1,0 +1,26 @@
+[
+  {
+    "id_servico": 1,
+    "nome": "Corte masculino",
+    "descricao": "Corte na tesoura e máquina",
+    "preco": "45.00",
+    "duracao_minutos": 40,
+    "ativo": true
+  },
+  {
+    "id_servico": 2,
+    "nome": "Barba completa",
+    "descricao": "Toalha quente e acabamento",
+    "preco": "35.00",
+    "duracao_minutos": 30,
+    "ativo": true
+  },
+  {
+    "id_servico": 3,
+    "nome": "Coloração",
+    "descricao": "Serviço temporariamente pausado",
+    "preco": "80.00",
+    "duracao_minutos": 90,
+    "ativo": false
+  }
+]
