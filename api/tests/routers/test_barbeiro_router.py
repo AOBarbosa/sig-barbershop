@@ -1,0 +1,169 @@
+import inspect
+
+from fastapi import HTTPException
+
+from app.dependencies import get_db
+from app.main import app
+from app.routers import barbeiro_router
+
+
+class FakeConn:
+    pass
+
+
+def override_db():
+    yield FakeConn()
+
+
+def clear_overrides():
+    app.dependency_overrides.clear()
+
+
+def barb_row(barb_id=1):
+    return {
+        "id_barbeiro": barb_id,
+        "PESSOA_id_pessoa": 1,
+        "especialidade": "Corte",
+        "ativo": True,
+    }
+
+
+def test_get_barbeiros(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    monkeypatch.setattr(
+        barbeiro_router.barbeiro_service, "listar_barbeiros", lambda _c: [barb_row()]
+    )
+
+    response = client.get("/barbeiros")
+    assert response.status_code == 200
+    assert response.json() == [barb_row()]
+    clear_overrides()
+
+
+def test_get_barbeiro_por_id(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    monkeypatch.setattr(
+        barbeiro_router.barbeiro_service, "buscar_barbeiro", lambda _c, i: barb_row(i)
+    )
+
+    response = client.get("/barbeiros/1")
+    assert response.status_code == 200
+    clear_overrides()
+
+
+def test_get_barbeiro_repassa_404(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake(_c, _i):
+        raise HTTPException(status_code=404, detail="Barbeiro nao encontrado")
+
+    monkeypatch.setattr(barbeiro_router.barbeiro_service, "buscar_barbeiro", fake)
+
+    response = client.get("/barbeiros/404")
+    assert response.status_code == 404
+    clear_overrides()
+
+
+def test_get_disponibilidades_do_barbeiro_delega(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    disps = [
+        {
+            "id_disponibilidade": 1,
+            "BARBEIRO_id_barbeiro": 1,
+            "dia_semana": "segunda",
+            "hora_inicio": "09:00:00",
+            "hora_fim": "18:00:00",
+        }
+    ]
+
+    def fake(_c, barbeiro_id):
+        assert barbeiro_id == 1
+        return disps
+
+    monkeypatch.setattr(
+        barbeiro_router.disponibilidade_service, "listar_por_barbeiro", fake
+    )
+
+    response = client.get("/barbeiros/1/disponibilidades")
+    assert response.status_code == 200
+    assert response.json() == disps
+    clear_overrides()
+
+
+def test_post_barbeiro_valida_e_retorna_201(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake(_c, payload):
+        assert payload.PESSOA_id_pessoa == 1
+        assert payload.especialidade == "Corte"
+        return barb_row()
+
+    monkeypatch.setattr(barbeiro_router.barbeiro_service, "criar_barbeiro", fake)
+
+    response = client.post(
+        "/barbeiros",
+        json={"PESSOA_id_pessoa": 1, "especialidade": "Corte", "ativo": True},
+    )
+    assert response.status_code == 201
+    clear_overrides()
+
+
+def test_post_barbeiro_repassa_409(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake(_c, _p):
+        raise HTTPException(status_code=409, detail="Pessoa ja esta cadastrada como barbeiro")
+
+    monkeypatch.setattr(barbeiro_router.barbeiro_service, "criar_barbeiro", fake)
+
+    response = client.post("/barbeiros", json={"PESSOA_id_pessoa": 1})
+    assert response.status_code == 409
+    clear_overrides()
+
+
+def test_put_barbeiro_delega(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake(_c, barb_id, payload):
+        assert barb_id == 1
+        assert payload.ativo is False
+        return barb_row() | {"ativo": False}
+
+    monkeypatch.setattr(barbeiro_router.barbeiro_service, "atualizar_barbeiro", fake)
+
+    response = client.put("/barbeiros/1", json={"ativo": False})
+    assert response.status_code == 200
+    assert response.json()["ativo"] is False
+    clear_overrides()
+
+
+def test_delete_barbeiro_retorna_204(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    called = []
+    monkeypatch.setattr(
+        barbeiro_router.barbeiro_service, "deletar_barbeiro", lambda _c, i: called.append(i)
+    )
+
+    response = client.delete("/barbeiros/1")
+    assert response.status_code == 204
+    assert called == [1]
+    clear_overrides()
+
+
+def test_delete_barbeiro_repassa_409(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake(_c, _i):
+        raise HTTPException(status_code=409, detail="Barbeiro possui atendimentos")
+
+    monkeypatch.setattr(barbeiro_router.barbeiro_service, "deletar_barbeiro", fake)
+
+    response = client.delete("/barbeiros/1")
+    assert response.status_code == 409
+    clear_overrides()
+
+
+def test_router_nao_contem_sql():
+    source = inspect.getsource(barbeiro_router)
+    for verb in ("SELECT ", "INSERT ", "UPDATE ", "DELETE "):
+        assert verb not in source
