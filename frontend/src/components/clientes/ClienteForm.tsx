@@ -50,9 +50,8 @@ export function ClienteForm({
   const isEdit = mode === "edit";
   const isSubmitting = createCliente.isPending || updatePessoa.isPending;
   const mutationError = createCliente.error ?? updatePessoa.error;
-  const isLoading =
-    isEdit && (clienteQuery.isLoading || pessoaQuery.isLoading);
-  const loadError = isEdit ? clienteQuery.error ?? pessoaQuery.error : null;
+  const isLoading = isEdit && (clienteQuery.isLoading || pessoaQuery.isLoading);
+  const loadError = isEdit ? (clienteQuery.error ?? pessoaQuery.error) : null;
 
   useEffect(() => {
     if (isEdit && pessoaQuery.data) {

@@ -24,4 +24,4 @@ export interface PessoaPayload {
   data_nascimento: string | null;
 }
 
-export interface ClienteFormPayload extends PessoaPayload {}
+export type ClienteFormPayload = PessoaPayload;

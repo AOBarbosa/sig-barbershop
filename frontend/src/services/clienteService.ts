@@ -75,9 +75,7 @@ export const createPessoa = (payload: PessoaPayload) =>
   api.post<Pessoa>("/pessoas", payload).then((response) => response.data);
 
 export const updatePessoa = (id: number, payload: PessoaPayload) =>
-  api
-    .put<Pessoa>(`/pessoas/${id}`, payload)
-    .then((response) => response.data);
+  api.put<Pessoa>(`/pessoas/${id}`, payload).then((response) => response.data);
 
 export const createClienteApi = (pessoaId: number) =>
   api
@@ -93,7 +91,9 @@ export async function createClienteWithPessoa(payload: ClienteFormPayload) {
 
 export async function getClientesComPessoas(): Promise<ClienteComPessoa[]> {
   const [clientes, pessoas] = await Promise.all([getClientes(), getPessoas()]);
-  const pessoasById = new Map(pessoas.map((pessoa) => [pessoa.id_pessoa, pessoa]));
+  const pessoasById = new Map(
+    pessoas.map((pessoa) => [pessoa.id_pessoa, pessoa])
+  );
 
   return clientes.flatMap((cliente) => {
     const pessoa = pessoasById.get(cliente.PESSOA_id_pessoa);

@@ -40,7 +40,8 @@ export function useCreateCliente() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ClienteFormPayload) => createClienteWithPessoa(payload),
+    mutationFn: (payload: ClienteFormPayload) =>
+      createClienteWithPessoa(payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: clientesQueryKey });
       void queryClient.invalidateQueries({ queryKey: ["pessoas"] });

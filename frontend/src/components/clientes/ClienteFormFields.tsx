@@ -77,11 +77,7 @@ export function ClientePrimaryFields({
   );
 }
 
-export function ClienteContactFields({
-  form
-}: {
-  form: ClienteFormInstance;
-}) {
+export function ClienteContactFields({ form }: { form: ClienteFormInstance }) {
   return (
     <Card>
       <CardHeader>
@@ -110,7 +106,9 @@ export function ClienteContactFields({
         <FormField name="data_nascimento">
           {(field) => (
             <FormItem>
-              <FormLabel htmlFor="data_nascimento">Data de nascimento</FormLabel>
+              <FormLabel htmlFor="data_nascimento">
+                Data de nascimento
+              </FormLabel>
               <FormControl>
                 <Input id="data_nascimento" type="date" {...field} />
               </FormControl>

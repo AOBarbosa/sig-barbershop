@@ -4,10 +4,7 @@ import type { LucideIcon } from "lucide-react";
 import { MoreHorizontal } from "lucide-react";
 import Link from "next/link";
 
-import {
-  formatCpf,
-  formatDate
-} from "@/components/clientes/clienteFormatters";
+import { formatCpf, formatDate } from "@/components/clientes/clienteFormatters";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -79,11 +76,13 @@ export function ClienteMobileCard({ cliente }: { cliente: ClienteComPessoa }) {
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
           <p className="text-muted-foreground">Email</p>
-          <p className="font-medium truncate">{cliente.pessoa.email ?? "—"}</p>
+          <p className="truncate font-medium">{cliente.pessoa.email ?? "—"}</p>
         </div>
         <div>
           <p className="text-muted-foreground">Nascimento</p>
-          <p className="font-medium">{formatDate(cliente.pessoa.data_nascimento)}</p>
+          <p className="font-medium">
+            {formatDate(cliente.pessoa.data_nascimento)}
+          </p>
         </div>
       </div>
     </div>
