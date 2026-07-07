@@ -1,0 +1,36 @@
+{
+  "pessoas": [
+    {
+      "id_pessoa": 1,
+      "nome": "Maria Silva",
+      "cpf": "12345678901",
+      "email": "maria@email.com",
+      "data_nascimento": "1990-05-12",
+      "created_at": "2026-01-10T10:00:00",
+      "updated_at": "2026-01-10T10:00:00"
+    },
+    {
+      "id_pessoa": 2,
+      "nome": "João Souza",
+      "cpf": "23456789012",
+      "email": null,
+      "data_nascimento": "1985-08-20",
+      "created_at": "2026-01-11T10:00:00",
+      "updated_at": "2026-01-11T10:00:00"
+    },
+    {
+      "id_pessoa": 3,
+      "nome": "Ana Costa",
+      "cpf": "34567890123",
+      "email": "ana@email.com",
+      "data_nascimento": "1995-03-15",
+      "created_at": "2026-01-12T10:00:00",
+      "updated_at": "2026-01-12T10:00:00"
+    }
+  ],
+  "clientes": [
+    { "id_cliente": 1, "PESSOA_id_pessoa": 1 },
+    { "id_cliente": 2, "PESSOA_id_pessoa": 2 },
+    { "id_cliente": 3, "PESSOA_id_pessoa": 3 }
+  ]
+}
