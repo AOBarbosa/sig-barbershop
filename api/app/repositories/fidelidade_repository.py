@@ -29,6 +29,38 @@ def buscar_por_id(conn, fidelidade_id: int):
         cursor.close()
 
 
+def buscar_por_servico(conn, servico_id: int):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT id_fidelidade, SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo
+            FROM FIDELIDADE
+            WHERE SERVICO_id_servico = %s AND ativo = TRUE
+            """,
+            (servico_id,),
+        )
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+
+
+def buscar_por_produto(conn, produto_id: int):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT id_fidelidade, SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo
+            FROM FIDELIDADE
+            WHERE PRODUTO_id_produto = %s AND ativo = TRUE
+            """,
+            (produto_id,),
+        )
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+
+
 def criar(conn, data):
     cursor = conn.cursor(dictionary=True)
     try:

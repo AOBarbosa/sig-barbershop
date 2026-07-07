@@ -7,6 +7,7 @@ from app.routers.caixa_router import router as caixa_router
 from app.routers.cliente_router import router as cliente_router
 from app.routers.disponibilidade_router import router as disponibilidade_router
 from app.routers.fidelidade_router import router as fidelidade_router
+from app.routers.historico_pontos_router import router as historico_pontos_router
 from app.routers.pessoa_router import router as pessoa_router
 from app.routers.produto_router import router as produto_router
 from app.routers.servico_router import router as servico_router
@@ -34,6 +35,7 @@ app.include_router(produto_router)
 app.include_router(atendimento_router)
 app.include_router(fidelidade_router)
 app.include_router(venda_router)
+app.include_router(historico_pontos_router)
 
 
 @app.get("/health")

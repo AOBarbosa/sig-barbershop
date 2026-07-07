@@ -9,6 +9,7 @@ from app.schemas.atendimento_schema import (
     AtendimentoStatusUpdate,
     AtendimentoUpdate,
 )
+from app.services import historico_pontos_service
 
 
 def listar_atendimentos(conn):
@@ -150,10 +151,19 @@ def atualizar_status_atendimento(
 ):
     conn.start_transaction()
     try:
-        if atendimento_repository.buscar_por_id(conn, atendimento_id) is None:
+        atendimento_atual = atendimento_repository.buscar_por_id(conn, atendimento_id)
+        if atendimento_atual is None:
             raise HTTPException(status_code=404, detail="Atendimento nao encontrado")
 
         atendimento = atendimento_repository.atualizar_status(conn, atendimento_id, payload.status)
+
+        if payload.status == "concluido" and atendimento_atual["status"] != "concluido":
+            historico_pontos_service.acumular_pontos_atendimento(
+                conn,
+                atendimento_id,
+                atendimento_atual["CLIENTE_id_cliente"],
+            )
+
         conn.commit()
         return atendimento
     except Exception:
