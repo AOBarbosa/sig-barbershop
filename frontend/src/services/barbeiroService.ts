@@ -1,9 +1,5 @@
 import api from "@/lib/axios";
-import {
-  getPessoa,
-  getPessoas,
-  updatePessoa
-} from "@/services/clienteService";
+import { getPessoa, getPessoas, updatePessoa } from "@/services/clienteService";
 import type {
   Barbeiro,
   BarbeiroComPessoa,
