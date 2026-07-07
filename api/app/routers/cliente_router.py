@@ -1,7 +1,12 @@
 from fastapi import APIRouter, Depends, Response, status
 
 from app.dependencies import get_db
-from app.schemas.cliente_schema import ClienteCreate, ClienteResponse
+from app.schemas.cliente_schema import (
+    ClienteCompletoCreate,
+    ClienteCompletoResponse,
+    ClienteCreate,
+    ClienteResponse,
+)
 from app.services import cliente_service
 
 router = APIRouter(prefix="/clientes", tags=["clientes"])
@@ -20,6 +25,15 @@ def buscar_cliente(cliente_id: int, conn=Depends(get_db)):
 @router.post("", response_model=ClienteResponse, status_code=status.HTTP_201_CREATED)
 def criar_cliente(payload: ClienteCreate, conn=Depends(get_db)):
     return cliente_service.criar_cliente(conn, payload)
+
+
+@router.post(
+    "/completo",
+    response_model=ClienteCompletoResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def criar_cliente_completo(payload: ClienteCompletoCreate, conn=Depends(get_db)):
+    return cliente_service.criar_cliente_completo(conn, payload)
 
 
 @router.delete("/{cliente_id}", status_code=status.HTTP_204_NO_CONTENT)

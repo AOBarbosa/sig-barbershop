@@ -1,7 +1,11 @@
 from fastapi import HTTPException
 
 from app.repositories import barbeiro_repository, pessoa_repository
-from app.schemas.barbeiro_schema import BarbeiroCreate, BarbeiroUpdate
+from app.schemas.barbeiro_schema import (
+    BarbeiroCompletoCreate,
+    BarbeiroCreate,
+    BarbeiroUpdate,
+)
 
 
 def listar_barbeiros(conn):
@@ -27,6 +31,37 @@ def criar_barbeiro(conn, payload: BarbeiroCreate):
         barbeiro = barbeiro_repository.criar(conn, payload.model_dump())
         conn.commit()
         return barbeiro
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def criar_barbeiro_completo(conn, payload: BarbeiroCompletoCreate):
+    conn.start_transaction()
+    try:
+        if pessoa_repository.buscar_por_cpf(conn, payload.cpf) is not None:
+            raise HTTPException(status_code=409, detail="CPF ja cadastrado")
+
+        if payload.email and pessoa_repository.buscar_por_email(conn, payload.email) is not None:
+            raise HTTPException(status_code=409, detail="Email ja cadastrado")
+
+        pessoa_data = {
+            "nome": payload.nome,
+            "cpf": payload.cpf,
+            "email": payload.email,
+            "data_nascimento": payload.data_nascimento,
+        }
+        pessoa = pessoa_repository.criar(conn, pessoa_data)
+        barbeiro = barbeiro_repository.criar(
+            conn,
+            {
+                "PESSOA_id_pessoa": pessoa["id_pessoa"],
+                "especialidade": payload.especialidade,
+                "ativo": payload.ativo,
+            },
+        )
+        conn.commit()
+        return {"barbeiro": barbeiro, "pessoa": pessoa}
     except Exception:
         conn.rollback()
         raise
