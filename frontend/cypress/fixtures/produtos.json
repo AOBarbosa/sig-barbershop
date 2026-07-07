@@ -1,0 +1,26 @@
+[
+  {
+    "id_produto": 1,
+    "nome": "Pomada modeladora",
+    "descricao": "Fixação forte, acabamento fosco",
+    "preco": "45.00",
+    "estoque": 12,
+    "ativo": true
+  },
+  {
+    "id_produto": 2,
+    "nome": "Óleo para barba",
+    "descricao": "Hidratação e brilho natural",
+    "preco": "35.00",
+    "estoque": 8,
+    "ativo": true
+  },
+  {
+    "id_produto": 3,
+    "nome": "Shampoo antiqueda",
+    "descricao": "Linha descontinuada",
+    "preco": "50.00",
+    "estoque": 0,
+    "ativo": false
+  }
+]

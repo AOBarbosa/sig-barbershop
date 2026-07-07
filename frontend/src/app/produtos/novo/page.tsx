@@ -1,0 +1,5 @@
+import { ProdutoForm } from "@/components/produtos/ProdutoForm";
+
+export default function NovoProdutoPage() {
+  return <ProdutoForm mode="create" />;
+}
