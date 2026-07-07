@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.pessoa_schema import PessoaCreate, PessoaResponse
+
 
 class BarbeiroCreate(BaseModel):
     PESSOA_id_pessoa: int = Field(gt=0)
@@ -19,3 +21,13 @@ class BarbeiroResponse(BaseModel):
     PESSOA_id_pessoa: int
     especialidade: str | None
     ativo: bool
+
+
+class BarbeiroCompletoCreate(PessoaCreate):
+    especialidade: str | None = Field(default=None, max_length=100)
+    ativo: bool = True
+
+
+class BarbeiroCompletoResponse(BaseModel):
+    barbeiro: BarbeiroResponse
+    pessoa: PessoaResponse
