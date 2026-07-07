@@ -1,7 +1,13 @@
 from fastapi import APIRouter, Depends, Response, status
 
 from app.dependencies import get_db
-from app.schemas.barbeiro_schema import BarbeiroCreate, BarbeiroResponse, BarbeiroUpdate
+from app.schemas.barbeiro_schema import (
+    BarbeiroCompletoCreate,
+    BarbeiroCompletoResponse,
+    BarbeiroCreate,
+    BarbeiroResponse,
+    BarbeiroUpdate,
+)
 from app.schemas.disponibilidade_schema import DisponibilidadeResponse
 from app.services import barbeiro_service, disponibilidade_service
 
@@ -26,6 +32,15 @@ def listar_disponibilidades_do_barbeiro(barbeiro_id: int, conn=Depends(get_db)):
 @router.post("", response_model=BarbeiroResponse, status_code=status.HTTP_201_CREATED)
 def criar_barbeiro(payload: BarbeiroCreate, conn=Depends(get_db)):
     return barbeiro_service.criar_barbeiro(conn, payload)
+
+
+@router.post(
+    "/completo",
+    response_model=BarbeiroCompletoResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def criar_barbeiro_completo(payload: BarbeiroCompletoCreate, conn=Depends(get_db)):
+    return barbeiro_service.criar_barbeiro_completo(conn, payload)
 
 
 @router.put("/{barbeiro_id}", response_model=BarbeiroResponse)
