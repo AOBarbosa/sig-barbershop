@@ -1,5 +1,5 @@
 import api from "@/lib/axios";
-import { getPessoa, getPessoas, updatePessoa } from "@/services/clienteService";
+import { getPessoa, getPessoas } from "@/services/clienteService";
 import type {
   Barbeiro,
   BarbeiroComPessoa,
@@ -92,21 +92,18 @@ export async function createBarbeiroWithPessoa(payload: BarbeiroFormPayload) {
 
 export async function updateBarbeiroWithPessoa(
   barbeiroId: number,
-  pessoaId: number,
   payload: BarbeiroFormPayload
 ) {
-  const pessoa = await updatePessoa(pessoaId, {
-    nome: payload.nome,
-    cpf: payload.cpf,
-    email: payload.email,
-    data_nascimento: payload.data_nascimento
-  });
-  const barbeiro = await updateBarbeiroApi(barbeiroId, {
-    especialidade: payload.especialidade,
-    ativo: payload.ativo
-  });
+  const response = await api.put<unknown>(
+    `/barbeiros/${barbeiroId}/completo`,
+    payload
+  );
 
-  return { barbeiro, pessoa };
+  if (!isBarbeiroCompletoResponse(response.data)) {
+    throw new Error("Resposta inválida ao atualizar barbeiro");
+  }
+
+  return response.data;
 }
 
 export async function getBarbeirosComPessoas(): Promise<BarbeiroComPessoa[]> {

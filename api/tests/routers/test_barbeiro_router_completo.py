@@ -125,3 +125,40 @@ def test_post_barbeiro_completo_ativo_default_true(client, monkeypatch):
     assert capturado["ativo"] is True
     assert capturado["especialidade"] is None
     clear_overrides()
+
+
+def test_put_barbeiro_completo_atualiza_pessoa_e_barbeiro(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake(_c, barbeiro_id, payload):
+        assert barbeiro_id == 1
+        assert payload.nome == "Pedro Atualizado"
+        assert payload.especialidade == "Barba"
+        assert payload.ativo is False
+        return {
+            "barbeiro": _barbeiro_row() | {"especialidade": "Barba", "ativo": False},
+            "pessoa": _pessoa_row() | {"nome": "Pedro Atualizado"},
+        }
+
+    monkeypatch.setattr(
+        barbeiro_router.barbeiro_service, "atualizar_barbeiro_completo", fake
+    )
+
+    response = client.put(
+        "/barbeiros/1/completo",
+        json={
+            "nome": "Pedro Atualizado",
+            "cpf": "55566677788",
+            "email": "p@ex.com",
+            "data_nascimento": "1988-11-03",
+            "especialidade": "Barba",
+            "ativo": False,
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["barbeiro"]["especialidade"] == "Barba"
+    assert body["barbeiro"]["ativo"] is False
+    assert body["pessoa"]["nome"] == "Pedro Atualizado"
+    clear_overrides()

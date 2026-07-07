@@ -76,18 +76,17 @@ describe("Módulo Barbeiros - formulário", () => {
       statusCode: 200,
       body: this.barbeirosFixture.pessoas
     }).as("listarPessoasDepois");
-    cy.intercept("PUT", "**/pessoas/10", {
-      statusCode: 200,
-      body: this.barbeirosFixture.pessoas[0]
-    }).as("atualizarPessoa");
-    cy.intercept("PUT", "**/barbeiros/1", {
+    cy.intercept("PUT", "**/barbeiros/1/completo", {
       statusCode: 200,
       body: {
-        ...this.barbeirosFixture.barbeiros[0],
-        especialidade: "Corte moderno",
-        ativo: false
+        barbeiro: {
+          ...this.barbeirosFixture.barbeiros[0],
+          especialidade: "Corte moderno",
+          ativo: false
+        },
+        pessoa: this.barbeirosFixture.pessoas[0]
       }
-    }).as("atualizarBarbeiro");
+    }).as("atualizarBarbeiroCompleto");
 
     cy.visit("/barbeiros/1/editar");
     cy.wait(["@buscarBarbeiro", "@buscarPessoa"]);
@@ -100,10 +99,13 @@ describe("Módulo Barbeiros - formulário", () => {
     cy.contains("Barbeiro ativo").click();
     cy.contains("Salvar barbeiro").click();
 
-    cy.wait("@atualizarPessoa");
-    cy.wait("@atualizarBarbeiro")
+    cy.wait("@atualizarBarbeiroCompleto")
       .its("request.body")
       .should("deep.include", {
+        nome: "Pedro Barreto",
+        cpf: "55566677788",
+        email: "pedro@barbearia.com",
+        data_nascimento: "1988-11-03",
         especialidade: "Corte moderno",
         ativo: false
       });

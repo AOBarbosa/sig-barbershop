@@ -1,6 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.pessoa_schema import PessoaCreate, PessoaResponse
+from app.schemas.pessoa_schema import PessoaCreate, PessoaResponse, PessoaUpdate
 
 
 class BarbeiroCreate(BaseModel):
@@ -26,6 +26,11 @@ class BarbeiroResponse(BaseModel):
 class BarbeiroCompletoCreate(PessoaCreate):
     especialidade: str | None = Field(default=None, max_length=100)
     ativo: bool = True
+
+
+class BarbeiroCompletoUpdate(PessoaUpdate):
+    especialidade: str | None = Field(default=None, max_length=100)
+    ativo: bool | None = None
 
 
 class BarbeiroCompletoResponse(BaseModel):
