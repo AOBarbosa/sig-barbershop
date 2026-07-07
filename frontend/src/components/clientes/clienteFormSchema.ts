@@ -9,10 +9,7 @@ export const clienteFormSchema = z.object({
   email: z
     .string()
     .trim()
-    .refine(
-      (value) => value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
-      "Email inválido"
-    )
+    .regex(/^([^\s@]+@[^\s@]+\.[^\s@]+)?$/, "Email inválido")
     .transform((value) => (value === "" ? null : value)),
   data_nascimento: z
     .string()
