@@ -4,6 +4,7 @@ from fastapi import HTTPException
 
 from app.repositories import produto_repository, venda_produto_repository, venda_repository
 from app.schemas.venda_schema import VendaCreate, VendaProdutoCreate, VendaStatusUpdate
+from app.services import historico_pontos_service
 
 
 def listar_vendas(conn):
@@ -53,10 +54,19 @@ def criar_venda(conn, payload: VendaCreate):
 def atualizar_status_venda(conn, venda_id: int, payload: VendaStatusUpdate):
     conn.start_transaction()
     try:
-        if venda_repository.buscar_por_id(conn, venda_id) is None:
+        venda_atual = venda_repository.buscar_por_id(conn, venda_id)
+        if venda_atual is None:
             raise HTTPException(status_code=404, detail="Venda nao encontrada")
 
         venda = venda_repository.atualizar_status(conn, venda_id, payload.status)
+
+        if payload.status == "concluida" and venda_atual["status"] != "concluida":
+            historico_pontos_service.acumular_pontos_venda(
+                conn,
+                venda_id,
+                venda_atual["CLIENTE_id_cliente"],
+            )
+
         conn.commit()
         return venda
     except Exception:

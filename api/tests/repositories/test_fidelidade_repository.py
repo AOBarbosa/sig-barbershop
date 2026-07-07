@@ -100,6 +100,52 @@ def test_criar_fidelidade_insere_sql_puro_e_retorna_registro_criado():
     assert cursor.closed is True
 
 
+def test_buscar_por_servico_consulta_regra_ativa_do_servico():
+    cursor = FakeCursor(row=fidelidade_row(servico_id=7))
+    conn = FakeConn(cursor)
+
+    result = fidelidade_repository.buscar_por_servico(conn, 7)
+
+    sql, params = cursor.statements[0]
+    assert "FROM FIDELIDADE" in sql
+    assert "WHERE SERVICO_id_servico = %s" in sql
+    assert "ativo = TRUE" in sql
+    assert params == (7,)
+    assert result["SERVICO_id_servico"] == 7
+
+
+def test_buscar_por_servico_retorna_none_quando_nao_encontra():
+    cursor = FakeCursor(row=None)
+    conn = FakeConn(cursor)
+
+    result = fidelidade_repository.buscar_por_servico(conn, 99)
+
+    assert result is None
+
+
+def test_buscar_por_produto_consulta_regra_ativa_do_produto():
+    cursor = FakeCursor(row=fidelidade_row(servico_id=None, produto_id=8))
+    conn = FakeConn(cursor)
+
+    result = fidelidade_repository.buscar_por_produto(conn, 8)
+
+    sql, params = cursor.statements[0]
+    assert "FROM FIDELIDADE" in sql
+    assert "WHERE PRODUTO_id_produto = %s" in sql
+    assert "ativo = TRUE" in sql
+    assert params == (8,)
+    assert result["PRODUTO_id_produto"] == 8
+
+
+def test_buscar_por_produto_retorna_none_quando_nao_encontra():
+    cursor = FakeCursor(row=None)
+    conn = FakeConn(cursor)
+
+    result = fidelidade_repository.buscar_por_produto(conn, 99)
+
+    assert result is None
+
+
 def test_atualizar_fidelidade_executa_update_apenas_dos_campos_recebidos_e_retorna_registro():
     updated = fidelidade_row(fidelidade_id=4) | {"pontos": 20}
     cursor = FakeCursor(row=updated)

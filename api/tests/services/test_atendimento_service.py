@@ -255,8 +255,14 @@ def test_atualizar_atendimento_faz_rollback_quando_repository_falha(monkeypatch)
 def test_atualizar_status_atendimento_existente_commita(monkeypatch):
     conn = FakeConn()
     updated = atendimento_row() | {"status": "concluido"}
+    acumulos = []
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atendimento_row())
     monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar_status", lambda _c, _id, status: updated)
+    monkeypatch.setattr(
+        atendimento_service.historico_pontos_service,
+        "acumular_pontos_atendimento",
+        lambda _c, atendimento_id, cliente_id: acumulos.append((atendimento_id, cliente_id)),
+    )
 
     result = atendimento_service.atualizar_status_atendimento(
         conn,
@@ -265,8 +271,45 @@ def test_atualizar_status_atendimento_existente_commita(monkeypatch):
     )
 
     assert result["status"] == "concluido"
+    assert acumulos == [(1, atendimento_row()["CLIENTE_id_cliente"])]
     assert conn.committed is True
     assert conn.rolled_back is False
+
+
+def test_atualizar_status_atendimento_ja_concluido_nao_acumula_pontos_novamente(monkeypatch):
+    conn = FakeConn()
+    atual = atendimento_row() | {"status": "concluido"}
+    acumulos = []
+    monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atual)
+    monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar_status", lambda _c, _id, status: atual)
+    monkeypatch.setattr(
+        atendimento_service.historico_pontos_service,
+        "acumular_pontos_atendimento",
+        lambda _c, atendimento_id, cliente_id: acumulos.append((atendimento_id, cliente_id)),
+    )
+
+    atendimento_service.atualizar_status_atendimento(conn, 1, AtendimentoStatusUpdate(status="concluido"))
+
+    assert acumulos == []
+    assert conn.committed is True
+
+
+def test_atualizar_status_atendimento_para_status_diferente_de_concluido_nao_acumula_pontos(monkeypatch):
+    conn = FakeConn()
+    updated = atendimento_row() | {"status": "cancelado"}
+    acumulos = []
+    monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atendimento_row())
+    monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar_status", lambda _c, _id, status: updated)
+    monkeypatch.setattr(
+        atendimento_service.historico_pontos_service,
+        "acumular_pontos_atendimento",
+        lambda _c, atendimento_id, cliente_id: acumulos.append((atendimento_id, cliente_id)),
+    )
+
+    atendimento_service.atualizar_status_atendimento(conn, 1, AtendimentoStatusUpdate(status="cancelado"))
+
+    assert acumulos == []
+    assert conn.committed is True
 
 
 def test_atualizar_status_atendimento_inexistente_retorna_404(monkeypatch):

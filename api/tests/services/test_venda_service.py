@@ -156,14 +156,57 @@ def test_criar_venda_faz_rollback_quando_repository_falha(monkeypatch):
 def test_atualizar_status_venda_existente_commita(monkeypatch):
     conn = FakeConn()
     updated = venda_row() | {"status": "concluida"}
+    acumulos = []
     monkeypatch.setattr(venda_service.venda_repository, "buscar_por_id", lambda _c, _id: venda_row())
     monkeypatch.setattr(venda_service.venda_repository, "atualizar_status", lambda _c, _id, status: updated)
+    monkeypatch.setattr(
+        venda_service.historico_pontos_service,
+        "acumular_pontos_venda",
+        lambda _c, venda_id, cliente_id: acumulos.append((venda_id, cliente_id)),
+    )
 
     result = venda_service.atualizar_status_venda(conn, 1, VendaStatusUpdate(status="concluida"))
 
     assert result["status"] == "concluida"
+    assert acumulos == [(1, venda_row()["CLIENTE_id_cliente"])]
     assert conn.committed is True
     assert conn.rolled_back is False
+
+
+def test_atualizar_status_venda_ja_concluida_nao_acumula_pontos_novamente(monkeypatch):
+    conn = FakeConn()
+    atual = venda_row() | {"status": "concluida"}
+    acumulos = []
+    monkeypatch.setattr(venda_service.venda_repository, "buscar_por_id", lambda _c, _id: atual)
+    monkeypatch.setattr(venda_service.venda_repository, "atualizar_status", lambda _c, _id, status: atual)
+    monkeypatch.setattr(
+        venda_service.historico_pontos_service,
+        "acumular_pontos_venda",
+        lambda _c, venda_id, cliente_id: acumulos.append((venda_id, cliente_id)),
+    )
+
+    venda_service.atualizar_status_venda(conn, 1, VendaStatusUpdate(status="concluida"))
+
+    assert acumulos == []
+    assert conn.committed is True
+
+
+def test_atualizar_status_venda_para_status_diferente_de_concluida_nao_acumula_pontos(monkeypatch):
+    conn = FakeConn()
+    updated = venda_row() | {"status": "cancelada"}
+    acumulos = []
+    monkeypatch.setattr(venda_service.venda_repository, "buscar_por_id", lambda _c, _id: venda_row())
+    monkeypatch.setattr(venda_service.venda_repository, "atualizar_status", lambda _c, _id, status: updated)
+    monkeypatch.setattr(
+        venda_service.historico_pontos_service,
+        "acumular_pontos_venda",
+        lambda _c, venda_id, cliente_id: acumulos.append((venda_id, cliente_id)),
+    )
+
+    venda_service.atualizar_status_venda(conn, 1, VendaStatusUpdate(status="cancelada"))
+
+    assert acumulos == []
+    assert conn.committed is True
 
 
 def test_atualizar_status_venda_inexistente_retorna_404(monkeypatch):
