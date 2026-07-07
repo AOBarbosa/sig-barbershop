@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from fastapi import HTTPException
 
-from app.repositories import venda_repository
-from app.schemas.venda_schema import VendaCreate, VendaStatusUpdate
+from app.repositories import produto_repository, venda_produto_repository, venda_repository
+from app.schemas.venda_schema import VendaCreate, VendaProdutoCreate, VendaStatusUpdate
 
 
 def listar_vendas(conn):
@@ -71,6 +71,86 @@ def deletar_venda(conn, venda_id: int):
             raise HTTPException(status_code=404, detail="Venda nao encontrada")
 
         venda_repository.deletar(conn, venda_id)
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def _validar_venda_existe(conn, venda_id: int):
+    if venda_repository.buscar_por_id(conn, venda_id) is None:
+        raise HTTPException(status_code=404, detail="Venda nao encontrada")
+
+
+def _buscar_produto(conn, produto_id: int):
+    produto = produto_repository.buscar_por_id(conn, produto_id)
+    if produto is None:
+        raise HTTPException(status_code=404, detail="Produto nao encontrado")
+    return produto
+
+
+def _buscar_vinculo_venda_produto(conn, venda_id: int, produto_id: int):
+    vinculo = venda_produto_repository.buscar_por_ids(conn, venda_id, produto_id)
+    if vinculo is None:
+        raise HTTPException(status_code=404, detail="Produto nao vinculado a venda")
+    return vinculo
+
+
+def _validar_produto_disponivel_para_venda(conn, venda_id: int, produto_id: int):
+    vinculo = venda_produto_repository.buscar_por_ids(conn, venda_id, produto_id)
+    if vinculo is not None:
+        raise HTTPException(status_code=409, detail="Produto ja vinculado a venda")
+
+
+def listar_produtos_venda(conn, venda_id: int):
+    _validar_venda_existe(conn, venda_id)
+    return venda_produto_repository.listar_por_venda(conn, venda_id)
+
+
+def adicionar_produto_venda(conn, venda_id: int, payload: VendaProdutoCreate):
+    conn.start_transaction()
+    try:
+        _validar_venda_existe(conn, venda_id)
+        produto = _buscar_produto(conn, payload.PRODUTO_id_produto)
+        _validar_produto_disponivel_para_venda(conn, venda_id, payload.PRODUTO_id_produto)
+
+        if produto["estoque"] < payload.quantidade:
+            raise HTTPException(status_code=422, detail="Estoque insuficiente")
+
+        produto_repository.atualizar(
+            conn,
+            payload.PRODUTO_id_produto,
+            {"estoque": produto["estoque"] - payload.quantidade},
+        )
+        vinculo = venda_produto_repository.criar(
+            conn,
+            venda_id=venda_id,
+            produto_id=payload.PRODUTO_id_produto,
+            quantidade=payload.quantidade,
+            preco_unitario=produto["preco"],
+        )
+        _recalcular_valor_total(conn, venda_id)
+        conn.commit()
+        return vinculo
+    except Exception:
+        conn.rollback()
+        raise
+
+
+def remover_produto_venda(conn, venda_id: int, produto_id: int):
+    conn.start_transaction()
+    try:
+        _validar_venda_existe(conn, venda_id)
+        vinculo = _buscar_vinculo_venda_produto(conn, venda_id, produto_id)
+        produto = _buscar_produto(conn, produto_id)
+
+        produto_repository.atualizar(
+            conn,
+            produto_id,
+            {"estoque": produto["estoque"] + vinculo["quantidade"]},
+        )
+        venda_produto_repository.deletar_por_ids(conn, venda_id, produto_id)
+        _recalcular_valor_total(conn, venda_id)
         conn.commit()
     except Exception:
         conn.rollback()

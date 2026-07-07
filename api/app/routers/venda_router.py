@@ -1,7 +1,13 @@
 from fastapi import APIRouter, Depends, Response, status
 
 from app.dependencies import get_db
-from app.schemas.venda_schema import VendaCreate, VendaResponse, VendaStatusUpdate
+from app.schemas.venda_schema import (
+    VendaCreate,
+    VendaProdutoCreate,
+    VendaProdutoResponse,
+    VendaResponse,
+    VendaStatusUpdate,
+)
 from app.services import venda_service
 
 router = APIRouter(prefix="/vendas", tags=["vendas"])
@@ -30,4 +36,27 @@ def atualizar_status_venda(venda_id: int, payload: VendaStatusUpdate, conn=Depen
 @router.delete("/{venda_id}", status_code=status.HTTP_204_NO_CONTENT)
 def deletar_venda(venda_id: int, conn=Depends(get_db)):
     venda_service.deletar_venda(conn, venda_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/{venda_id}/produtos", response_model=list[VendaProdutoResponse])
+def listar_produtos_venda(venda_id: int, conn=Depends(get_db)):
+    return venda_service.listar_produtos_venda(conn, venda_id)
+
+
+@router.post(
+    "/{venda_id}/produtos",
+    response_model=VendaProdutoResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def adicionar_produto_venda(venda_id: int, payload: VendaProdutoCreate, conn=Depends(get_db)):
+    return venda_service.adicionar_produto_venda(conn, venda_id, payload)
+
+
+@router.delete(
+    "/{venda_id}/produtos/{produto_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def remover_produto_venda(venda_id: int, produto_id: int, conn=Depends(get_db)):
+    venda_service.remover_produto_venda(conn, venda_id, produto_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

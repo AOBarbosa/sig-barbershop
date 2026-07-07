@@ -32,3 +32,20 @@ class VendaResponse(BaseModel):
     valor_total: Decimal
     status: VendaStatus
     forma_pagamento: FormaPagamento | None = None
+
+
+class VendaProdutoCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    PRODUTO_id_produto: int = Field(gt=0)
+    quantidade: int = Field(gt=0)
+
+
+class VendaProdutoResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id_venda_produto: int
+    VENDA_id_venda: int
+    PRODUTO_id_produto: int
+    quantidade: int
+    preco_unitario: Decimal
