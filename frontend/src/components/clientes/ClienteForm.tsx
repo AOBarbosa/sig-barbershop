@@ -67,13 +67,16 @@ export function ClienteForm({
   async function onSubmit(values: ClienteFormValues) {
     const payload: PessoaPayload = { ...values };
 
-    if (isEdit) {
-      await updatePessoa.mutateAsync(payload);
-    } else {
-      await createCliente.mutateAsync(payload);
+    try {
+      if (isEdit) {
+        await updatePessoa.mutateAsync(payload);
+      } else {
+        await createCliente.mutateAsync(payload);
+      }
+      router.push("/clientes?salvo=1");
+    } catch {
+      // erro já exibido via mutationError
     }
-
-    router.push("/clientes?salvo=1");
   }
 
   if (isLoading) {

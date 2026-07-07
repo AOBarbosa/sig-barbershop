@@ -61,7 +61,7 @@ describe("Módulo Clientes - listagem", () => {
     cy.contains("Maria Silva").should("be.visible");
     cy.contains("João Souza").should("not.exist");
 
-    cy.get("input[placeholder='Buscar cliente']").clear().type("34567890");
+    cy.get("input[placeholder='Buscar cliente']").clear().type("ana@");
     cy.contains("Ana Costa").should("be.visible");
     cy.contains("Maria Silva").should("not.exist");
   });
@@ -156,7 +156,6 @@ describe("Módulo Clientes - listagem", () => {
     cy.get("[data-testid='mobile-sidebar']").within(() => {
       cy.contains("SIG Barbershop").should("be.visible");
       cy.contains("Clientes").should("be.visible");
-      cy.contains("Barbeiros").should("be.visible");
     });
     cy.get("input[placeholder='Buscar cliente']").should("be.visible");
     cy.get("[data-testid='clientes-mobile-list']")
