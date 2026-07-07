@@ -7,6 +7,7 @@ import {
   Package,
   Scissors,
   ShoppingCart,
+  UserCog,
   Users
 } from "lucide-react";
 import Link from "next/link";
@@ -31,7 +32,8 @@ const navigationGroups = [
     items: [
       { href: "/servicos", label: "Serviços", icon: Scissors },
       { href: "/atendimentos", label: "Atendimentos", icon: CalendarClock },
-      { href: "/clientes", label: "Clientes", icon: Users }
+      { href: "/clientes", label: "Clientes", icon: Users },
+      { href: "/barbeiros", label: "Barbeiros", icon: UserCog }
     ]
   },
   {
