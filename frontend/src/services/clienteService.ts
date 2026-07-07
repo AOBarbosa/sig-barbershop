@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+
 import type {
   Cliente,
   ClienteComPessoa,
@@ -82,11 +83,24 @@ export const createClienteApi = (pessoaId: number) =>
     .post<Cliente>("/clientes", { PESSOA_id_pessoa: pessoaId })
     .then((response) => response.data);
 
-export async function createClienteWithPessoa(payload: ClienteFormPayload) {
-  const pessoa = await createPessoa(payload);
-  const cliente = await createClienteApi(pessoa.id_pessoa);
+function isClienteCompletoResponse(
+  data: unknown
+): data is { cliente: Cliente; pessoa: Pessoa } {
+  return (
+    hasKeys(data, ["cliente", "pessoa"]) &&
+    isCliente((data as { cliente: unknown }).cliente) &&
+    isPessoa((data as { pessoa: unknown }).pessoa)
+  );
+}
 
-  return { cliente, pessoa };
+export async function createClienteWithPessoa(payload: ClienteFormPayload) {
+  const response = await api.post<unknown>("/clientes/completo", payload);
+
+  if (!isClienteCompletoResponse(response.data)) {
+    throw new Error("Resposta inválida ao criar cliente");
+  }
+
+  return response.data;
 }
 
 export async function getClientesComPessoas(): Promise<ClienteComPessoa[]> {

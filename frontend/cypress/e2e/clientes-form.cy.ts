@@ -10,22 +10,21 @@ describe("Módulo Clientes - formulário", () => {
     cy.intercept("GET", "**/pessoas", { statusCode: 200, body: [] }).as(
       "listarPessoasDepois"
     );
-    cy.intercept("POST", "**/pessoas", {
+    cy.intercept("POST", "**/clientes/completo", {
       statusCode: 201,
       body: {
-        id_pessoa: 10,
-        nome: "Carlos Mendes",
-        cpf: "45678901234",
-        email: "carlos@email.com",
-        data_nascimento: "1988-04-10",
-        created_at: "2026-07-01T10:00:00",
-        updated_at: "2026-07-01T10:00:00"
+        cliente: { id_cliente: 10, PESSOA_id_pessoa: 10 },
+        pessoa: {
+          id_pessoa: 10,
+          nome: "Carlos Mendes",
+          cpf: "45678901234",
+          email: "carlos@email.com",
+          data_nascimento: "1988-04-10",
+          created_at: "2026-07-01T10:00:00",
+          updated_at: "2026-07-01T10:00:00"
+        }
       }
-    }).as("criarPessoa");
-    cy.intercept("POST", "**/clientes", {
-      statusCode: 201,
-      body: { id_cliente: 10, PESSOA_id_pessoa: 10 }
-    }).as("criarCliente");
+    }).as("criarClienteCompleto");
 
     cy.visit("/clientes/novo");
     cy.contains("Salvar cliente").click();
@@ -38,15 +37,14 @@ describe("Módulo Clientes - formulário", () => {
     cy.get("input[name='data_nascimento']").type("1988-04-10");
     cy.contains("Salvar cliente").click();
 
-    cy.wait("@criarPessoa").its("request.body").should("deep.include", {
-      nome: "Carlos Mendes",
-      cpf: "45678901234",
-      email: "carlos@email.com",
-      data_nascimento: "1988-04-10"
-    });
-    cy.wait("@criarCliente")
+    cy.wait("@criarClienteCompleto")
       .its("request.body")
-      .should("deep.include", { PESSOA_id_pessoa: 10 });
+      .should("deep.include", {
+        nome: "Carlos Mendes",
+        cpf: "45678901234",
+        email: "carlos@email.com",
+        data_nascimento: "1988-04-10"
+      });
 
     cy.location("pathname").should("eq", "/clientes");
     cy.location("search").should("eq", "?salvo=1");
@@ -104,17 +102,17 @@ describe("Módulo Clientes - formulário", () => {
   });
 
   it("exibe erro do backend ao tentar criar com CPF duplicado", () => {
-    cy.intercept("POST", "**/pessoas", {
+    cy.intercept("POST", "**/clientes/completo", {
       statusCode: 409,
       body: { detail: "CPF ja cadastrado" }
-    }).as("criarPessoaConflito");
+    }).as("criarClienteConflito");
 
     cy.visit("/clientes/novo");
     cy.get("input[name='nome']").type("Novo Cliente");
     cy.get("input[name='cpf']").type("12345678901");
     cy.contains("Salvar cliente").click();
 
-    cy.wait("@criarPessoaConflito");
+    cy.wait("@criarClienteConflito");
     cy.contains("CPF ja cadastrado").should("be.visible");
   });
 });
