@@ -7,6 +7,7 @@ import {
   Package,
   Scissors,
   ShoppingCart,
+  Star,
   UserCog,
   Users
 } from "lucide-react";
@@ -40,7 +41,8 @@ const navigationGroups = [
     label: "Comercial",
     items: [
       { href: "/produtos", label: "Produtos", icon: Package },
-      { href: "/vendas", label: "Vendas", icon: ShoppingCart }
+      { href: "/vendas", label: "Vendas", icon: ShoppingCart },
+      { href: "/fidelidade", label: "Fidelidade", icon: Star }
     ]
   }
 ];

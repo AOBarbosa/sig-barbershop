@@ -1,0 +1,54 @@
+{
+  "servicos": [
+    {
+      "id_servico": 1,
+      "nome": "Corte masculino",
+      "descricao": "Corte na tesoura e máquina",
+      "preco": "45.00",
+      "duracao_minutos": 40,
+      "ativo": true
+    },
+    {
+      "id_servico": 2,
+      "nome": "Barba completa",
+      "descricao": "Toalha quente e acabamento",
+      "preco": "35.00",
+      "duracao_minutos": 30,
+      "ativo": true
+    }
+  ],
+  "produtos": [
+    {
+      "id_produto": 1,
+      "nome": "Pomada modeladora",
+      "descricao": "Fixação forte, acabamento fosco",
+      "preco": "45.00",
+      "estoque": 12,
+      "ativo": true
+    },
+    {
+      "id_produto": 2,
+      "nome": "Óleo para barba",
+      "descricao": "Hidratação e brilho natural",
+      "preco": "35.00",
+      "estoque": 8,
+      "ativo": true
+    }
+  ],
+  "fidelidades": [
+    {
+      "id_fidelidade": 1,
+      "SERVICO_id_servico": 1,
+      "PRODUTO_id_produto": null,
+      "pontos": 10,
+      "ativo": true
+    },
+    {
+      "id_fidelidade": 2,
+      "SERVICO_id_servico": null,
+      "PRODUTO_id_produto": 1,
+      "pontos": 5,
+      "ativo": true
+    }
+  ]
+}
