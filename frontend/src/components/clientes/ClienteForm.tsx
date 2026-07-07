@@ -109,7 +109,10 @@ export function ClienteForm({
         </Link>
       </Button>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="space-y-5"
+          noValidate>
           <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
             <ClientePrimaryFields form={form} isEdit={isEdit} />
             <ClienteContactFields form={form} />
