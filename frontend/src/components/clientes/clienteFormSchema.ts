@@ -10,7 +10,7 @@ export const clienteFormSchema = z.object({
     .string()
     .trim()
     .refine(
-      (value) => value === "" || z.string().email().safeParse(value).success,
+      (value) => value === "" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value),
       "Email inválido"
     )
     .transform((value) => (value === "" ? null : value)),
