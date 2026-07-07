@@ -1,9 +1,6 @@
 import type { BarbeiroComPessoa } from "@/types/barbeiro";
 
-export {
-  formatCpf,
-  formatDate
-} from "@/components/clientes/clienteFormatters";
+export { formatCpf, formatDate } from "@/components/clientes/clienteFormatters";
 
 export function getBarbeirosAtivos(barbeiros: BarbeiroComPessoa[]) {
   return barbeiros.filter((barbeiro) => barbeiro.ativo).length;

@@ -1,6 +1,5 @@
 import api from "@/lib/axios";
 import {
-  createPessoa,
   getPessoa,
   getPessoas,
   updatePessoa
@@ -71,10 +70,7 @@ export const getBarbeiro = (id: number) =>
     return response.data;
   });
 
-export const createBarbeiroApi = (
-  pessoaId: number,
-  payload: BarbeiroPayload
-) =>
+export const createBarbeiroApi = (pessoaId: number, payload: BarbeiroPayload) =>
   api
     .post<Barbeiro>("/barbeiros", {
       PESSOA_id_pessoa: pessoaId,

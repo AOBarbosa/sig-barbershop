@@ -162,10 +162,7 @@ function MobileResults({
     <div className="space-y-3 md:hidden" data-testid="barbeiros-mobile-list">
       {barbeiros.length > 0 ? (
         barbeiros.map((barbeiro) => (
-          <BarbeiroMobileCard
-            key={barbeiro.id_barbeiro}
-            barbeiro={barbeiro}
-          />
+          <BarbeiroMobileCard key={barbeiro.id_barbeiro} barbeiro={barbeiro} />
         ))
       ) : (
         <div className="text-muted-foreground flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border text-center text-sm">

@@ -120,9 +120,7 @@ export function BarbeiroProfessionalFields({
     <Card>
       <CardHeader>
         <CardTitle>Perfil profissional</CardTitle>
-        <CardDescription>
-          Configurações da atuação do barbeiro.
-        </CardDescription>
+        <CardDescription>Configurações da atuação do barbeiro.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <FormField name="especialidade">
