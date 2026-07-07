@@ -45,7 +45,7 @@ export function useUpdateBarbeiro(barbeiroId: number, pessoaId: number) {
 
   return useMutation({
     mutationFn: (payload: BarbeiroFormPayload) =>
-      updateBarbeiroWithPessoa(barbeiroId, pessoaId, payload),
+      updateBarbeiroWithPessoa(barbeiroId, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: barbeirosQueryKey });
       void queryClient.invalidateQueries({ queryKey: ["pessoas", pessoaId] });

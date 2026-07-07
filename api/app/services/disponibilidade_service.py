@@ -42,6 +42,33 @@ def criar_disponibilidade(conn, payload: DisponibilidadeCreate):
         raise
 
 
+def _normalizar_dia_semana(data):
+    if "dia_semana" not in data:
+        return
+
+    dia_semana = data["dia_semana"]
+    data["dia_semana"] = dia_semana.value if hasattr(dia_semana, "value") else dia_semana
+
+
+def _validar_conflito_dia(conn, disponibilidade_id: int, barbeiro_id: int, dia_semana: str):
+    conflito = disponibilidade_repository.buscar_por_barbeiro_e_dia(
+        conn, barbeiro_id, dia_semana
+    )
+    if conflito is not None and conflito["id_disponibilidade"] != disponibilidade_id:
+        raise HTTPException(
+            status_code=409,
+            detail="Barbeiro ja possui disponibilidade cadastrada para este dia",
+        )
+
+
+def _validar_horario(hora_inicio, hora_fim):
+    if hora_fim <= hora_inicio:
+        raise HTTPException(
+            status_code=422,
+            detail="hora_fim deve ser posterior a hora_inicio",
+        )
+
+
 def atualizar_disponibilidade(conn, disponibilidade_id: int, payload: DisponibilidadeUpdate):
     conn.start_transaction()
     try:
@@ -50,26 +77,19 @@ def atualizar_disponibilidade(conn, disponibilidade_id: int, payload: Disponibil
             raise HTTPException(status_code=404, detail="Disponibilidade nao encontrada")
 
         data = payload.model_dump(exclude_unset=True)
+        _normalizar_dia_semana(data)
 
-        if "dia_semana" in data:
-            data["dia_semana"] = data["dia_semana"].value if hasattr(data["dia_semana"], "value") else data["dia_semana"]
-            if data["dia_semana"] != atual["dia_semana"]:
-                conflito = disponibilidade_repository.buscar_por_barbeiro_e_dia(
-                    conn, atual["BARBEIRO_id_barbeiro"], data["dia_semana"]
-                )
-                if conflito is not None and conflito["id_disponibilidade"] != disponibilidade_id:
-                    raise HTTPException(
-                        status_code=409,
-                        detail="Barbeiro ja possui disponibilidade cadastrada para este dia",
-                    )
+        if "dia_semana" in data and data["dia_semana"] != atual["dia_semana"]:
+            _validar_conflito_dia(
+                conn,
+                disponibilidade_id,
+                atual["BARBEIRO_id_barbeiro"],
+                data["dia_semana"],
+            )
 
         hora_inicio = data.get("hora_inicio", atual["hora_inicio"])
         hora_fim = data.get("hora_fim", atual["hora_fim"])
-        if hora_fim <= hora_inicio:
-            raise HTTPException(
-                status_code=422,
-                detail="hora_fim deve ser posterior a hora_inicio",
-            )
+        _validar_horario(hora_inicio, hora_fim)
 
         disp = disponibilidade_repository.atualizar(conn, disponibilidade_id, data)
         conn.commit()

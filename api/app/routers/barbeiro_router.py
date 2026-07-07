@@ -4,6 +4,7 @@ from app.dependencies import get_db
 from app.schemas.barbeiro_schema import (
     BarbeiroCompletoCreate,
     BarbeiroCompletoResponse,
+    BarbeiroCompletoUpdate,
     BarbeiroCreate,
     BarbeiroResponse,
     BarbeiroUpdate,
@@ -41,6 +42,15 @@ def criar_barbeiro(payload: BarbeiroCreate, conn=Depends(get_db)):
 )
 def criar_barbeiro_completo(payload: BarbeiroCompletoCreate, conn=Depends(get_db)):
     return barbeiro_service.criar_barbeiro_completo(conn, payload)
+
+
+@router.put("/{barbeiro_id}/completo", response_model=BarbeiroCompletoResponse)
+def atualizar_barbeiro_completo(
+    barbeiro_id: int,
+    payload: BarbeiroCompletoUpdate,
+    conn=Depends(get_db),
+):
+    return barbeiro_service.atualizar_barbeiro_completo(conn, barbeiro_id, payload)
 
 
 @router.put("/{barbeiro_id}", response_model=BarbeiroResponse)
