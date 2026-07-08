@@ -13,9 +13,9 @@ describe("Módulo Serviços - formulário", () => {
       body: {
         id_servico: 3,
         nome: "Sobrancelha",
-        descricao: "Design simples",
-        preco: "20.00",
-        duracao_minutos: 20,
+        preco: "25.00",
+        duracao_em_minutos: 20,
+        pontos_gerados: 2,
         ativo: true
       }
     }).as("criarServico");
@@ -23,25 +23,21 @@ describe("Módulo Serviços - formulário", () => {
     cy.visit("/servicos/novo");
     cy.contains("Salvar serviço").click();
     cy.contains("Nome é obrigatório").should("be.visible");
-    cy.contains("Preço deve ser maior que zero").should("be.visible");
 
     cy.get("input[name='nome']").type("Sobrancelha");
-    cy.get("textarea[name='descricao']").type("Design simples");
-    cy.get("input[name='preco']").clear().type("20");
-    cy.get("input[name='duracao_minutos']").clear().type("20");
-    cy.contains("R$ 20,00").should("be.visible");
+    cy.get("input[name='preco']").clear().type("25");
+    cy.get("input[name='duracao_em_minutos']").clear().type("20");
+    cy.get("input[name='pontos_gerados']").clear().type("2");
     cy.contains("Serviço ativo").click();
     cy.contains("Salvar serviço").click();
 
-    cy.wait("@criarServico")
-      .its("request.body")
-      .should("deep.include", {
-        nome: "Sobrancelha",
-        descricao: "Design simples",
-        preco: 20,
-        duracao_minutos: 20,
-        ativo: false
-      });
+    cy.wait("@criarServico").its("request.body").should("deep.include", {
+      nome: "Sobrancelha",
+      preco: 25,
+      duracao_em_minutos: 20,
+      pontos_gerados: 2,
+      ativo: false
+    });
     cy.location("pathname").should("eq", "/servicos");
     cy.location("search").should("eq", "?salvo=1");
     cy.wait("@listarDepoisDeCriar");
@@ -62,7 +58,9 @@ describe("Módulo Serviços - formulário", () => {
       body: {
         ...this.servicos[0],
         nome: "Corte premium",
-        preco: "55.00"
+        preco: "50.00",
+        duracao_em_minutos: 50,
+        pontos_gerados: 6
       }
     }).as("atualizarServico");
 
@@ -70,15 +68,17 @@ describe("Módulo Serviços - formulário", () => {
     cy.wait("@buscarServico");
 
     cy.get("input[name='nome']").clear().type("Corte premium");
-    cy.get("input[name='preco']").clear().type("55");
+    cy.get("input[name='preco']").clear().type("50");
+    cy.get("input[name='duracao_em_minutos']").clear().type("50");
+    cy.get("input[name='pontos_gerados']").clear().type("6");
     cy.contains("Salvar serviço").click();
 
-    cy.wait("@atualizarServico")
-      .its("request.body")
-      .should("deep.include", {
-        nome: "Corte premium",
-        preco: 55
-      });
+    cy.wait("@atualizarServico").its("request.body").should("deep.include", {
+      nome: "Corte premium",
+      preco: 50,
+      duracao_em_minutos: 50,
+      pontos_gerados: 6
+    });
     cy.location("pathname").should("eq", "/servicos");
     cy.location("search").should("eq", "?salvo=1");
     cy.wait("@listarDepoisDeEditar");

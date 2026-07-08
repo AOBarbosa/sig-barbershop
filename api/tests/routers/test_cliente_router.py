@@ -20,7 +20,7 @@ def clear_overrides():
 
 
 def cli_row(cli_id=1):
-    return {"id_cliente": cli_id, "PESSOA_id_pessoa": 1}
+    return {"PESSOA_id_pessoa": cli_id, "preferencias": None, "observacoes": None}
 
 
 def test_get_clientes_delega(client, monkeypatch):
@@ -46,7 +46,7 @@ def test_get_cliente_por_id_delega(client, monkeypatch):
 
     response = client.get("/clientes/1")
     assert response.status_code == 200
-    assert response.json()["id_cliente"] == 1
+    assert response.json()["PESSOA_id_pessoa"] == 1
     clear_overrides()
 
 

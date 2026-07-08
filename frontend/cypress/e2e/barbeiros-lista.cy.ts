@@ -3,7 +3,7 @@ describe("Módulo Barbeiros - listagem", () => {
     cy.fixture("barbeiros").as("barbeirosFixture");
   });
 
-  it("lista barbeiros com dados e badges de status", function () {
+  it("lista barbeiros com dados de pessoa e comissão", function () {
     cy.viewport(1280, 720);
     cy.intercept(
       {
@@ -27,12 +27,13 @@ describe("Módulo Barbeiros - listagem", () => {
 
     cy.contains("Barbeiros").should("be.visible");
     cy.contains("Pedro Barreto").should("be.visible");
-    cy.contains("Corte masculino").should("be.visible");
+    cy.contains("Pedro").should("be.visible");
+    cy.contains("40.00%").should("be.visible");
     cy.contains("Rafael Torres").should("be.visible");
     cy.contains("Diego Almeida").should("be.visible");
     cy.contains("Total de barbeiros").should("be.visible");
-    cy.contains("Barbeiros ativos").should("be.visible");
-    cy.contains("Especialidades").should("be.visible");
+    cy.contains("Barbeiros cadastrados").should("be.visible");
+    cy.contains("Apelidos").should("be.visible");
     cy.contains("Novo barbeiro").should(
       "have.attr",
       "href",
@@ -40,7 +41,7 @@ describe("Módulo Barbeiros - listagem", () => {
     );
   });
 
-  it("filtra barbeiros por busca e status", function () {
+  it("filtra barbeiros por busca", function () {
     cy.intercept(
       {
         method: "GET",
@@ -64,11 +65,6 @@ describe("Módulo Barbeiros - listagem", () => {
     cy.get("input[placeholder='Buscar barbeiro']").type("pedro");
     cy.contains("Pedro Barreto").should("be.visible");
     cy.contains("Rafael Torres").should("not.exist");
-
-    cy.get("input[placeholder='Buscar barbeiro']").clear();
-    cy.contains("Inativos").click();
-    cy.contains("Diego Almeida").should("be.visible");
-    cy.contains("Pedro Barreto").should("not.exist");
   });
 
   it("mostra estado vazio filtrado e ação de editar", function () {
@@ -96,7 +92,7 @@ describe("Módulo Barbeiros - listagem", () => {
       .filter(":visible")
       .first()
       .click();
-    cy.contains("Editar").should("have.attr", "href", "/barbeiros/1/editar");
+    cy.contains("Editar").should("have.attr", "href", "/barbeiros/10/editar");
 
     cy.visit("/barbeiros");
     cy.wait(["@listarBarbeiros", "@listarPessoas"]);

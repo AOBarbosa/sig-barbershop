@@ -13,15 +13,18 @@ describe("Módulo Clientes - formulário", () => {
     cy.intercept("POST", "**/clientes/completo", {
       statusCode: 201,
       body: {
-        cliente: { id_cliente: 10, PESSOA_id_pessoa: 10 },
+        cliente: {
+          PESSOA_id_pessoa: 10,
+          preferencias: null,
+          observacoes: null
+        },
         pessoa: {
           id_pessoa: 10,
           nome: "Carlos Mendes",
           cpf: "45678901234",
           email: "carlos@email.com",
           data_nascimento: "1988-04-10",
-          created_at: "2026-07-01T10:00:00",
-          updated_at: "2026-07-01T10:00:00"
+          admin: false
         }
       }
     }).as("criarClienteCompleto");

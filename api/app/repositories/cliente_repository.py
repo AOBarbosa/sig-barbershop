@@ -1,13 +1,13 @@
+CLIENTE_SELECT = """
+SELECT PESSOA_id_pessoa, preferencias, observacoes
+FROM CLIENTE
+"""
+
+
 def listar(conn):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            SELECT id_cliente, PESSOA_id_pessoa
-            FROM CLIENTE
-            ORDER BY id_cliente
-            """
-        )
+        cursor.execute(f"{CLIENTE_SELECT} ORDER BY PESSOA_id_pessoa")
         return cursor.fetchall()
     finally:
         cursor.close()
@@ -16,33 +16,14 @@ def listar(conn):
 def buscar_por_id(conn, cliente_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            SELECT id_cliente, PESSOA_id_pessoa
-            FROM CLIENTE
-            WHERE id_cliente = %s
-            """,
-            (cliente_id,),
-        )
+        cursor.execute(f"{CLIENTE_SELECT} WHERE PESSOA_id_pessoa = %s", (cliente_id,))
         return cursor.fetchone()
     finally:
         cursor.close()
 
 
 def buscar_por_pessoa(conn, pessoa_id: int):
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            """
-            SELECT id_cliente, PESSOA_id_pessoa
-            FROM CLIENTE
-            WHERE PESSOA_id_pessoa = %s
-            """,
-            (pessoa_id,),
-        )
-        return cursor.fetchone()
-    finally:
-        cursor.close()
+    return buscar_por_id(conn, pessoa_id)
 
 
 def criar(conn, data):
@@ -50,12 +31,16 @@ def criar(conn, data):
     try:
         cursor.execute(
             """
-            INSERT INTO CLIENTE (PESSOA_id_pessoa)
-            VALUES (%s)
+            INSERT INTO CLIENTE (PESSOA_id_pessoa, preferencias, observacoes)
+            VALUES (%s, %s, %s)
             """,
-            (data["PESSOA_id_pessoa"],),
+            (
+                data["PESSOA_id_pessoa"],
+                data.get("preferencias"),
+                data.get("observacoes"),
+            ),
         )
-        return buscar_por_id(conn, cursor.lastrowid)
+        return buscar_por_id(conn, data["PESSOA_id_pessoa"])
     finally:
         cursor.close()
 
@@ -63,13 +48,7 @@ def criar(conn, data):
 def deletar(conn, cliente_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            DELETE FROM CLIENTE
-            WHERE id_cliente = %s
-            """,
-            (cliente_id,),
-        )
+        cursor.execute("DELETE FROM CLIENTE WHERE PESSOA_id_pessoa = %s", (cliente_id,))
     finally:
         cursor.close()
 
@@ -80,9 +59,9 @@ def existe_vinculo(conn, cliente_id: int):
         cursor.execute(
             """
             SELECT
-                (SELECT COUNT(*) FROM ATENDIMENTO      WHERE CLIENTE_id_cliente = %s) AS atendimentos,
-                (SELECT COUNT(*) FROM VENDA            WHERE CLIENTE_id_cliente = %s) AS vendas,
-                (SELECT COUNT(*) FROM HISTORICO_PONTOS WHERE CLIENTE_id_cliente = %s) AS pontos
+                (SELECT COUNT(*) FROM ATENDIMENTO WHERE CLIENTE_PESSOA_id_pessoa = %s) AS atendimentos,
+                (SELECT COUNT(*) FROM VENDA WHERE CLIENTE_PESSOA_id_pessoa = %s) AS vendas,
+                (SELECT COUNT(*) FROM HISTORICO_PONTOS WHERE CLIENTE_PESSOA_id_pessoa = %s) AS pontos
             """,
             (cliente_id, cliente_id, cliente_id),
         )

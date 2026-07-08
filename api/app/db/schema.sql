@@ -1,247 +1,200 @@
-CREATE DATABASE IF NOT EXISTS sig_barbershop
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_unicode_ci;
+CREATE DATABASE IF NOT EXISTS sig_barbershop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 USE sig_barbershop;
-
--- -----------------------------------------------------
--- PESSOA
--- -----------------------------------------------------
 CREATE TABLE PESSOA (
-    id_pessoa      INT          AUTO_INCREMENT PRIMARY KEY,
-    nome           VARCHAR(100) NOT NULL,
-    cpf            CHAR(11)     NOT NULL UNIQUE,
-    email          VARCHAR(100) UNIQUE,
+    id_pessoa       INT          NOT NULL AUTO_INCREMENT,
+    nome            VARCHAR(100) NOT NULL,
+    cpf             VARCHAR(14)  UNIQUE,
+    email           VARCHAR(100) UNIQUE,
     data_nascimento DATE,
-    created_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
-    updated_at     TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    admin           TINYINT      NOT NULL DEFAULT 0,
+    PRIMARY KEY (id_pessoa)
 );
-
--- -----------------------------------------------------
--- TELEFONE
--- -----------------------------------------------------
 CREATE TABLE TELEFONE (
-    id_telefone      INT      AUTO_INCREMENT PRIMARY KEY,
-    PESSOA_id_pessoa INT      NOT NULL,
-    numero           CHAR(11) NOT NULL,
-    FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa) ON DELETE CASCADE
+    PESSOA_id_pessoa INT         NOT NULL,
+    telefone         VARCHAR(20) NOT NULL,
+    PRIMARY KEY (PESSOA_id_pessoa, telefone),
+    CONSTRAINT FK_TELEFONE_PESSOA
+        FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa)
+        ON DELETE CASCADE
 );
-
--- -----------------------------------------------------
--- CLIENTE
--- -----------------------------------------------------
 CREATE TABLE CLIENTE (
-    id_cliente       INT AUTO_INCREMENT PRIMARY KEY,
-    PESSOA_id_pessoa INT NOT NULL UNIQUE,
-    FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa) ON DELETE CASCADE
+    PESSOA_id_pessoa INT NOT NULL PRIMARY KEY,
+    preferencias     TEXT,
+    observacoes      TEXT,
+    CONSTRAINT FK_CLIENTE_PESSOA
+        FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa)
+        ON DELETE CASCADE
 );
-
--- -----------------------------------------------------
--- CAIXA
--- -----------------------------------------------------
 CREATE TABLE CAIXA (
-    id_caixa         INT AUTO_INCREMENT PRIMARY KEY,
-    PESSOA_id_pessoa INT NOT NULL UNIQUE,
-    FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa) ON DELETE CASCADE
+    PESSOA_id_pessoa INT NOT NULL PRIMARY KEY,
+    CONSTRAINT FK_CAIXA_PESSOA
+        FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa)
+        ON DELETE CASCADE
 );
-
--- -----------------------------------------------------
--- BARBEIRO
--- -----------------------------------------------------
 CREATE TABLE BARBEIRO (
-    id_barbeiro      INT          AUTO_INCREMENT PRIMARY KEY,
-    PESSOA_id_pessoa INT          NOT NULL UNIQUE,
-    especialidade    VARCHAR(100),
-    ativo            BOOLEAN      DEFAULT TRUE,
-    FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa) ON DELETE CASCADE
+    PESSOA_id_pessoa     INT NOT NULL PRIMARY KEY,
+    apelido              VARCHAR(60),
+    comissao_percentual  DECIMAL(5,2),
+    CONSTRAINT FK_BARBEIRO_PESSOA
+        FOREIGN KEY (PESSOA_id_pessoa) REFERENCES PESSOA (id_pessoa)
+        ON DELETE CASCADE
 );
 
--- -----------------------------------------------------
--- DISPONIBILIDADE
--- -----------------------------------------------------
 CREATE TABLE DISPONIBILIDADE (
-    id_disponibilidade   INT  AUTO_INCREMENT PRIMARY KEY,
-    BARBEIRO_id_barbeiro INT  NOT NULL,
-    dia_semana           ENUM('segunda','terca','quarta','quinta','sexta','sabado','domingo') NOT NULL,
-    hora_inicio          TIME NOT NULL,
-    hora_fim             TIME NOT NULL,
-    FOREIGN KEY (BARBEIRO_id_barbeiro) REFERENCES BARBEIRO (id_barbeiro) ON DELETE CASCADE,
-    UNIQUE KEY uk_barbeiro_dia (BARBEIRO_id_barbeiro, dia_semana)
+    id_disponibilidade       INT NOT NULL AUTO_INCREMENT,
+    BARBEIRO_PESSOA_id_pessoa INT NOT NULL,
+    dia_semana               ENUM('SEGUNDA','TERCA','QUARTA','QUINTA','SEXTA','SABADO','DOMINGO') NOT NULL,
+    hora_inicio              TIME NOT NULL,
+    hora_fim                 TIME NOT NULL,
+    ativo                    TINYINT NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_disponibilidade),
+    KEY FK_DISPONIBILIDADE_BARBEIRO (BARBEIRO_PESSOA_id_pessoa),
+    CONSTRAINT FK_DISPONIBILIDADE_BARBEIRO
+        FOREIGN KEY (BARBEIRO_PESSOA_id_pessoa) REFERENCES BARBEIRO (PESSOA_id_pessoa)
+        ON DELETE CASCADE
 );
 
--- -----------------------------------------------------
--- SERVICO
--- -----------------------------------------------------
 CREATE TABLE SERVICO (
-    id_servico       INT           AUTO_INCREMENT PRIMARY KEY,
-    nome             VARCHAR(100)  NOT NULL,
-    descricao        TEXT,
-    preco            DECIMAL(10,2) NOT NULL,
-    duracao_minutos  INT           NOT NULL,
-    ativo            BOOLEAN       DEFAULT TRUE,
-    created_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    updated_at       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    id_servico INT         NOT NULL AUTO_INCREMENT,
+    nome       VARCHAR(80) NOT NULL,
+    ativo      TINYINT     NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_servico)
 );
 
--- -----------------------------------------------------
--- HISTORICO_SERVICO
--- -----------------------------------------------------
 CREATE TABLE HISTORICO_SERVICO (
-    id_historico       INT           AUTO_INCREMENT PRIMARY KEY,
+    id_historico       INT           NOT NULL AUTO_INCREMENT,
     SERVICO_id_servico INT           NOT NULL,
-    preco_anterior     DECIMAL(10,2),
-    preco_novo         DECIMAL(10,2),
-    ativo              BOOLEAN       NOT NULL,
-    alterado_em        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (SERVICO_id_servico) REFERENCES SERVICO (id_servico)
+    preco              DECIMAL(10,2) NOT NULL,
+    duracao_em_minutos INT           NOT NULL,
+    pontos_gerados     INT           NOT NULL DEFAULT 0,
+    data_inicio        DATE          NOT NULL,
+    data_fim           DATE,
+    ativo              TINYINT       NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_historico),
+    KEY FK_HISTORICO_SERVICO_SERVICO (SERVICO_id_servico),
+    CONSTRAINT FK_HISTORICO_SERVICO_SERVICO
+        FOREIGN KEY (SERVICO_id_servico) REFERENCES SERVICO (id_servico)
 );
 
--- -----------------------------------------------------
--- ATENDIMENTO
--- -----------------------------------------------------
 CREATE TABLE ATENDIMENTO (
-    id_atendimento       INT           AUTO_INCREMENT PRIMARY KEY,
-    CLIENTE_id_cliente   INT           NOT NULL,
-    BARBEIRO_id_barbeiro INT           NOT NULL,
-    data_hora            DATETIME      NOT NULL,
-    status               ENUM('agendado','em_andamento','concluido','cancelado') DEFAULT 'agendado',
-    valor_total          DECIMAL(10,2) DEFAULT 0.00,
-    observacao           TEXT,
-    created_at           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    updated_at           TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (CLIENTE_id_cliente)   REFERENCES CLIENTE  (id_cliente),
-    FOREIGN KEY (BARBEIRO_id_barbeiro) REFERENCES BARBEIRO (id_barbeiro)
+    id_atendimento          INT           NOT NULL AUTO_INCREMENT,
+    CLIENTE_PESSOA_id_pessoa INT          NOT NULL,
+    BARBEIRO_PESSOA_id_pessoa INT         NOT NULL,
+    data_hora_inicio        DATETIME      NOT NULL,
+    data_hora_fim           DATETIME,
+    valor_total             DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    status                  ENUM('AGENDADO','EM_EXECUCAO','CONCLUIDO','CANCELADO') NOT NULL DEFAULT 'AGENDADO',
+    observacoes             TEXT,
+    PRIMARY KEY (id_atendimento),
+    KEY FK_ATENDIMENTO_CLIENTE (CLIENTE_PESSOA_id_pessoa),
+    KEY FK_ATENDIMENTO_BARBEIRO (BARBEIRO_PESSOA_id_pessoa),
+    CONSTRAINT FK_ATENDIMENTO_CLIENTE
+        FOREIGN KEY (CLIENTE_PESSOA_id_pessoa) REFERENCES CLIENTE (PESSOA_id_pessoa),
+    CONSTRAINT FK_ATENDIMENTO_BARBEIRO
+        FOREIGN KEY (BARBEIRO_PESSOA_id_pessoa) REFERENCES BARBEIRO (PESSOA_id_pessoa)
 );
 
--- -----------------------------------------------------
--- ATENDIMENTO_SERVICO
--- -----------------------------------------------------
 CREATE TABLE ATENDIMENTO_SERVICO (
-    id_atendimento_servico   INT           AUTO_INCREMENT PRIMARY KEY,
-    ATENDIMENTO_id_atendimento INT         NOT NULL,
-    SERVICO_id_servico       INT           NOT NULL,
-    preco_cobrado            DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (ATENDIMENTO_id_atendimento) REFERENCES ATENDIMENTO (id_atendimento) ON DELETE CASCADE,
-    FOREIGN KEY (SERVICO_id_servico)         REFERENCES SERVICO     (id_servico)
+    ATENDIMENTO_id_atendimento INT           NOT NULL,
+    SERVICO_id_servico         INT           NOT NULL,
+    preco_cobrado              DECIMAL(10,2) NOT NULL,
+    PRIMARY KEY (ATENDIMENTO_id_atendimento, SERVICO_id_servico),
+    KEY FK_ATENDIMENTO_SERVICO_SERVICO (SERVICO_id_servico),
+    CONSTRAINT FK_ATENDIMENTO_SERVICO_ATENDIMENTO
+        FOREIGN KEY (ATENDIMENTO_id_atendimento) REFERENCES ATENDIMENTO (id_atendimento)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_ATENDIMENTO_SERVICO_SERVICO
+        FOREIGN KEY (SERVICO_id_servico) REFERENCES SERVICO (id_servico)
 );
 
--- -----------------------------------------------------
--- PRODUTO
--- -----------------------------------------------------
 CREATE TABLE PRODUTO (
-    id_produto  INT           AUTO_INCREMENT PRIMARY KEY,
-    nome        VARCHAR(100)  NOT NULL,
-    descricao   TEXT,
-    preco       DECIMAL(10,2) NOT NULL,
-    estoque     INT           NOT NULL DEFAULT 0,
-    ativo       BOOLEAN       DEFAULT TRUE,
-    created_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    updated_at  TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    id_produto INT         NOT NULL AUTO_INCREMENT,
+    nome       VARCHAR(80) NOT NULL,
+    categoria  VARCHAR(60),
+    ativo      TINYINT     NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_produto)
 );
 
--- -----------------------------------------------------
--- HISTORICO_PRODUTO
--- -----------------------------------------------------
 CREATE TABLE HISTORICO_PRODUTO (
-    id_historico      INT           AUTO_INCREMENT PRIMARY KEY,
+    id_historico      INT           NOT NULL AUTO_INCREMENT,
     PRODUTO_id_produto INT          NOT NULL,
-    preco_anterior    DECIMAL(10,2),
-    preco_novo        DECIMAL(10,2),
-    estoque_anterior  INT,
-    estoque_novo      INT,
-    ativo             BOOLEAN       NOT NULL,
-    alterado_em       TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (PRODUTO_id_produto) REFERENCES PRODUTO (id_produto)
+    preco_venda       DECIMAL(10,2) NOT NULL,
+    preco_custo       DECIMAL(10,2) NOT NULL,
+    pontos_gerados    INT           NOT NULL DEFAULT 0,
+    data_inicio       DATE          NOT NULL,
+    data_fim          DATE,
+    ativo             TINYINT       NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_historico),
+    KEY FK_HISTORICO_PRODUTO_PRODUTO (PRODUTO_id_produto),
+    CONSTRAINT FK_HISTORICO_PRODUTO_PRODUTO
+        FOREIGN KEY (PRODUTO_id_produto) REFERENCES PRODUTO (id_produto)
 );
 
--- -----------------------------------------------------
--- VENDA
--- -----------------------------------------------------
 CREATE TABLE VENDA (
-    id_venda          INT           AUTO_INCREMENT PRIMARY KEY,
-    CLIENTE_id_cliente INT          NOT NULL,
-    CAIXA_id_caixa    INT           NOT NULL,
-    data_venda        DATETIME      DEFAULT CURRENT_TIMESTAMP,
-    valor_total       DECIMAL(10,2) DEFAULT 0.00,
-    status            ENUM('pendente','concluida','cancelada')                    DEFAULT 'pendente',
-    forma_pagamento   ENUM('dinheiro','cartao_debito','cartao_credito','pix'),
-    created_at        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (CLIENTE_id_cliente) REFERENCES CLIENTE (id_cliente),
-    FOREIGN KEY (CAIXA_id_caixa)     REFERENCES CAIXA   (id_caixa)
+    id_venda               INT           NOT NULL AUTO_INCREMENT,
+    CLIENTE_PESSOA_id_pessoa INT         NOT NULL,
+    CAIXA_PESSOA_id_pessoa INT           NOT NULL,
+    data_hora              DATETIME      NOT NULL,
+    valor_total            DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    status                 ENUM('ABERTA','PAGA','CANCELADA','ESTORNADA') NOT NULL DEFAULT 'ABERTA',
+    forma_pagamento        ENUM('DINHEIRO','PIX','CARTAO_CREDITO','CARTAO_DEBITO','OUTRO') NOT NULL,
+    desconto               DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    PRIMARY KEY (id_venda),
+    KEY FK_VENDA_CLIENTE (CLIENTE_PESSOA_id_pessoa),
+    KEY FK_VENDA_CAIXA (CAIXA_PESSOA_id_pessoa),
+    CONSTRAINT FK_VENDA_CLIENTE
+        FOREIGN KEY (CLIENTE_PESSOA_id_pessoa) REFERENCES CLIENTE (PESSOA_id_pessoa),
+    CONSTRAINT FK_VENDA_CAIXA
+        FOREIGN KEY (CAIXA_PESSOA_id_pessoa) REFERENCES CAIXA (PESSOA_id_pessoa)
 );
 
--- -----------------------------------------------------
--- VENDA_PRODUTO
--- -----------------------------------------------------
 CREATE TABLE VENDA_PRODUTO (
-    id_venda_produto   INT           AUTO_INCREMENT PRIMARY KEY,
     VENDA_id_venda     INT           NOT NULL,
     PRODUTO_id_produto INT           NOT NULL,
     quantidade         INT           NOT NULL,
-    preco_unitario     DECIMAL(10,2) NOT NULL,
-    FOREIGN KEY (VENDA_id_venda)     REFERENCES VENDA   (id_venda)   ON DELETE CASCADE,
-    FOREIGN KEY (PRODUTO_id_produto) REFERENCES PRODUTO (id_produto)
+    preco_unitario     DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    PRIMARY KEY (VENDA_id_venda, PRODUTO_id_produto),
+    KEY FK_VENDA_PRODUTO_PRODUTO (PRODUTO_id_produto),
+    CONSTRAINT FK_VENDA_PRODUTO_VENDA
+        FOREIGN KEY (VENDA_id_venda) REFERENCES VENDA (id_venda)
+        ON DELETE CASCADE,
+    CONSTRAINT FK_VENDA_PRODUTO_PRODUTO
+        FOREIGN KEY (PRODUTO_id_produto) REFERENCES PRODUTO (id_produto)
 );
 
--- -----------------------------------------------------
--- FIDELIDADE  (categoria/union type de SERVICO e PRODUTO)
--- XOR: exatamente um dos dois FKs deve ser não-nulo
--- -----------------------------------------------------
 CREATE TABLE FIDELIDADE (
-    id_fidelidade      INT     AUTO_INCREMENT PRIMARY KEY,
-    SERVICO_id_servico INT     DEFAULT NULL,
-    PRODUTO_id_produto INT     DEFAULT NULL,
-    pontos             INT     NOT NULL,
-    ativo              BOOLEAN DEFAULT TRUE,
-    CONSTRAINT chk_fidelidade_xor CHECK (
-        (SERVICO_id_servico IS NOT NULL AND PRODUTO_id_produto IS NULL) OR
-        (SERVICO_id_servico IS NULL     AND PRODUTO_id_produto IS NOT NULL)
-    ),
-    FOREIGN KEY (SERVICO_id_servico) REFERENCES SERVICO (id_servico),
-    FOREIGN KEY (PRODUTO_id_produto) REFERENCES PRODUTO (id_produto)
+    id_fidelidade     INT     NOT NULL AUTO_INCREMENT,
+    PRODUTO_id_produto INT,
+    SERVICO_id_servico INT,
+    pontos_acumulados INT     NOT NULL DEFAULT 0,
+    pontos_uso        INT     NOT NULL DEFAULT 0,
+    ativo             TINYINT NOT NULL DEFAULT 1,
+    PRIMARY KEY (id_fidelidade),
+    KEY FK_FIDELIDADE_PRODUTO (PRODUTO_id_produto),
+    KEY FK_FIDELIDADE_SERVICO (SERVICO_id_servico),
+    CONSTRAINT FK_FIDELIDADE_PRODUTO
+        FOREIGN KEY (PRODUTO_id_produto) REFERENCES PRODUTO (id_produto),
+    CONSTRAINT FK_FIDELIDADE_SERVICO
+        FOREIGN KEY (SERVICO_id_servico) REFERENCES SERVICO (id_servico)
 );
 
--- -----------------------------------------------------
--- HISTORICO_PONTOS
--- -----------------------------------------------------
 CREATE TABLE HISTORICO_PONTOS (
-    id_historico       INT     AUTO_INCREMENT PRIMARY KEY,
-    CLIENTE_id_cliente INT     NOT NULL,
-    pontos             INT     NOT NULL,
-    tipo_movimentacao  ENUM('acumulo','resgate') NOT NULL,
-    descricao          VARCHAR(200),
-    data_movimentacao  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (CLIENTE_id_cliente) REFERENCES CLIENTE (id_cliente)
+    id_movimentacao         INT      NOT NULL AUTO_INCREMENT,
+    CLIENTE_PESSOA_id_pessoa INT     NOT NULL,
+    VENDA_id_venda          INT      NOT NULL,
+    FIDELIDADE_id_fidelidade INT     NOT NULL,
+    pontos                  INT      NOT NULL,
+    tipo_movimentacao       ENUM('ACUMULA','USA') NOT NULL,
+    data_movimentacao       DATETIME NOT NULL,
+    PRIMARY KEY (id_movimentacao),
+    KEY FK_HISTORICO_PONTOS_CLIENTE (CLIENTE_PESSOA_id_pessoa),
+    KEY FK_HISTORICO_PONTOS_VENDA (VENDA_id_venda),
+    KEY FK_HISTORICO_PONTOS_FIDELIDADE (FIDELIDADE_id_fidelidade),
+    CONSTRAINT FK_HISTORICO_PONTOS_CLIENTE
+        FOREIGN KEY (CLIENTE_PESSOA_id_pessoa) REFERENCES CLIENTE (PESSOA_id_pessoa),
+    CONSTRAINT FK_HISTORICO_PONTOS_VENDA
+        FOREIGN KEY (VENDA_id_venda) REFERENCES VENDA (id_venda),
+    CONSTRAINT FK_HISTORICO_PONTOS_FIDELIDADE
+        FOREIGN KEY (FIDELIDADE_id_fidelidade) REFERENCES FIDELIDADE (id_fidelidade)
 );
-
--- -----------------------------------------------------
--- TRIGGERs — FIDELIDADE XOR (belt-and-suspenders)
--- -----------------------------------------------------
-DELIMITER //
-
-CREATE TRIGGER trg_fidelidade_xor_insert
-BEFORE INSERT ON FIDELIDADE
-FOR EACH ROW
-BEGIN
-    IF (NEW.SERVICO_id_servico IS NULL AND NEW.PRODUTO_id_produto IS NULL)
-    OR (NEW.SERVICO_id_servico IS NOT NULL AND NEW.PRODUTO_id_produto IS NOT NULL)
-    THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'FIDELIDADE deve referenciar exatamente um de SERVICO ou PRODUTO';
-    END IF;
-END //
-
-CREATE TRIGGER trg_fidelidade_xor_update
-BEFORE UPDATE ON FIDELIDADE
-FOR EACH ROW
-BEGIN
-    IF (NEW.SERVICO_id_servico IS NULL AND NEW.PRODUTO_id_produto IS NULL)
-    OR (NEW.SERVICO_id_servico IS NOT NULL AND NEW.PRODUTO_id_produto IS NOT NULL)
-    THEN
-        SIGNAL SQLSTATE '45000'
-            SET MESSAGE_TEXT = 'FIDELIDADE deve referenciar exatamente um de SERVICO ou PRODUTO';
-    END IF;
-END //
-
-DELIMITER ;

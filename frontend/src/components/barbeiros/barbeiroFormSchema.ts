@@ -16,12 +16,12 @@ export const barbeiroFormSchema = z.object({
     .trim()
     .or(z.literal(""))
     .transform((value) => (value === "" ? null : value)),
-  especialidade: z
+  apelido: z
     .string()
     .trim()
     .or(z.literal(""))
     .transform((value) => (value === "" ? null : value)),
-  ativo: z.boolean()
+  comissao_percentual: z.coerce.number().min(0).max(100).nullable()
 });
 
 export type BarbeiroFormInput = z.input<typeof barbeiroFormSchema>;
@@ -32,6 +32,6 @@ export const defaultBarbeiroFormValues: BarbeiroFormInput = {
   cpf: "",
   email: "",
   data_nascimento: "",
-  especialidade: "",
-  ativo: true
+  apelido: "",
+  comissao_percentual: null
 };

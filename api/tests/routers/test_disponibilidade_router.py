@@ -22,8 +22,8 @@ def clear_overrides():
 def disp_row(disp_id=1):
     return {
         "id_disponibilidade": disp_id,
-        "BARBEIRO_id_barbeiro": 1,
-        "dia_semana": "segunda",
+        "BARBEIRO_PESSOA_id_pessoa": 1,
+        "dia_semana": "SEGUNDA",
         "hora_inicio": "09:00:00",
         "hora_fim": "18:00:00",
     }
@@ -62,8 +62,8 @@ def test_post_disponibilidade_valida_e_retorna_201(client, monkeypatch):
     app.dependency_overrides[get_db] = override_db
 
     def fake(_c, payload):
-        assert payload.BARBEIRO_id_barbeiro == 1
-        assert payload.dia_semana.value == "segunda"
+        assert payload.BARBEIRO_PESSOA_id_pessoa == 1
+        assert payload.dia_semana.value == "SEGUNDA"
         return disp_row()
 
     monkeypatch.setattr(
@@ -73,8 +73,8 @@ def test_post_disponibilidade_valida_e_retorna_201(client, monkeypatch):
     response = client.post(
         "/disponibilidades",
         json={
-            "BARBEIRO_id_barbeiro": 1,
-            "dia_semana": "segunda",
+            "BARBEIRO_PESSOA_id_pessoa": 1,
+            "dia_semana": "SEGUNDA",
             "hora_inicio": "09:00:00",
             "hora_fim": "18:00:00",
         },
@@ -89,8 +89,8 @@ def test_post_disponibilidade_rejeita_hora_fim_menor_ou_igual(client):
     response = client.post(
         "/disponibilidades",
         json={
-            "BARBEIRO_id_barbeiro": 1,
-            "dia_semana": "segunda",
+            "BARBEIRO_PESSOA_id_pessoa": 1,
+            "dia_semana": "SEGUNDA",
             "hora_inicio": "18:00:00",
             "hora_fim": "09:00:00",
         },
@@ -105,7 +105,7 @@ def test_post_disponibilidade_rejeita_dia_invalido(client):
     response = client.post(
         "/disponibilidades",
         json={
-            "BARBEIRO_id_barbeiro": 1,
+            "BARBEIRO_PESSOA_id_pessoa": 1,
             "dia_semana": "sabbatical",
             "hora_inicio": "09:00:00",
             "hora_fim": "18:00:00",
@@ -128,8 +128,8 @@ def test_post_disponibilidade_repassa_404_do_service(client, monkeypatch):
     response = client.post(
         "/disponibilidades",
         json={
-            "BARBEIRO_id_barbeiro": 999,
-            "dia_semana": "segunda",
+            "BARBEIRO_PESSOA_id_pessoa": 999,
+            "dia_semana": "SEGUNDA",
             "hora_inicio": "09:00:00",
             "hora_fim": "18:00:00",
         },
@@ -151,8 +151,8 @@ def test_post_disponibilidade_repassa_409_do_service(client, monkeypatch):
     response = client.post(
         "/disponibilidades",
         json={
-            "BARBEIRO_id_barbeiro": 1,
-            "dia_semana": "segunda",
+            "BARBEIRO_PESSOA_id_pessoa": 1,
+            "dia_semana": "SEGUNDA",
             "hora_inicio": "09:00:00",
             "hora_fim": "18:00:00",
         },

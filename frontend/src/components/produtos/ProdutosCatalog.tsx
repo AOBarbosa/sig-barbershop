@@ -95,9 +95,9 @@ export function ProdutoResults({
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Descrição</TableHead>
+              <TableHead>Categoria</TableHead>
               <TableHead>Preço</TableHead>
-              <TableHead>Estoque</TableHead>
+              <TableHead>Pontos</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>

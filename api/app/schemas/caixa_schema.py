@@ -8,5 +8,4 @@ class CaixaCreate(BaseModel):
 class CaixaResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id_caixa: int
     PESSOA_id_pessoa: int

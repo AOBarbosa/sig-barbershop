@@ -56,7 +56,7 @@ def test_buscar_por_id():
     result = caixa_repository.buscar_por_id(conn, 3)
 
     sql, params = cursor.statements[0]
-    assert "WHERE id_caixa = %s" in sql
+    assert "WHERE PESSOA_id_pessoa = %s" in sql
     assert params == (3,)
     assert result["id_caixa"] == 3
 

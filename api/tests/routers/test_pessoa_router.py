@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date
 import inspect
 
 from fastapi import HTTPException
@@ -27,8 +27,7 @@ def pessoa_response(pessoa_id=1):
         "cpf": "12345678901",
         "email": "f@ex.com",
         "data_nascimento": "1990-01-01",
-        "created_at": "2026-07-01T10:00:00",
-        "updated_at": "2026-07-01T10:00:00",
+        "admin": False,
     }
 
 
@@ -39,8 +38,7 @@ def pessoa_row(pessoa_id=1):
         "cpf": "12345678901",
         "email": "f@ex.com",
         "data_nascimento": date(1990, 1, 1),
-        "created_at": datetime(2026, 7, 1, 10, 0, 0),
-        "updated_at": datetime(2026, 7, 1, 10, 0, 0),
+        "admin": False,
     }
 
 
@@ -87,7 +85,7 @@ def test_get_pessoa_por_id_repassa_404(client, monkeypatch):
 
 def test_get_telefones_da_pessoa_delega_para_service(client, monkeypatch):
     app.dependency_overrides[get_db] = override_db
-    tels = [{"id_telefone": 1, "PESSOA_id_pessoa": 1, "numero": "84999999999"}]
+    tels = [{"PESSOA_id_pessoa": 1, "telefone": "84999999999"}]
 
     def fake(_c, pessoa_id):
         assert pessoa_id == 1
@@ -131,7 +129,7 @@ def test_post_pessoas_rejeita_cpf_invalido(client):
 
     response = client.post(
         "/pessoas",
-        json={"nome": "X", "cpf": "abc", "email": None},
+        json={"nome": "X", "cpf": "123456789012345", "email": None},
     )
 
     assert response.status_code == 422

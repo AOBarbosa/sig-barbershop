@@ -51,10 +51,10 @@ export function ProdutoRow({ produto }: { produto: Produto }) {
     <TableRow>
       <TableCell className="font-medium">{produto.nome}</TableCell>
       <TableCell className="text-muted-foreground">
-        {produto.descricao || "Sem descrição"}
+        {produto.categoria || "Sem categoria"}
       </TableCell>
-      <TableCell>{formatCurrency(produto.preco)}</TableCell>
-      <TableCell>{produto.estoque} un.</TableCell>
+      <TableCell>{formatCurrency(produto.preco_venda)}</TableCell>
+      <TableCell>{produto.pontos_gerados}</TableCell>
       <TableCell>
         <Badge variant={produto.ativo ? "secondary" : "outline"}>
           {produto.ativo ? "Ativo" : "Inativo"}
@@ -74,19 +74,27 @@ export function ProdutoMobileCard({ produto }: { produto: Produto }) {
         <div className="min-w-0">
           <p className="font-medium">{produto.nome}</p>
           <p className="text-muted-foreground mt-1 text-sm">
-            {produto.descricao || "Sem descrição"}
+            {produto.categoria || "Sem categoria"}
           </p>
         </div>
         <ProdutoActions produto={produto} />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
-          <p className="text-muted-foreground">Preço</p>
-          <p className="font-medium">{formatCurrency(produto.preco)}</p>
+          <p className="text-muted-foreground">Categoria</p>
+          <p className="font-medium">{produto.categoria || "-"}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Estoque</p>
-          <p className="font-medium">{produto.estoque} un.</p>
+          <p className="text-muted-foreground">Preço</p>
+          <p className="font-medium">{formatCurrency(produto.preco_venda)}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Pontos</p>
+          <p className="font-medium">{produto.pontos_gerados}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Status</p>
+          <p className="font-medium">{produto.ativo ? "Ativo" : "Inativo"}</p>
         </div>
       </div>
       <Badge className="mt-4" variant={produto.ativo ? "secondary" : "outline"}>
@@ -101,7 +109,7 @@ export function LoadingRows() {
     <>
       {[1, 2, 3].map((row) => (
         <TableRow key={row}>
-          <TableCell colSpan={6}>
+          <TableCell colSpan={4}>
             <Skeleton className="h-8 w-full" />
           </TableCell>
         </TableRow>

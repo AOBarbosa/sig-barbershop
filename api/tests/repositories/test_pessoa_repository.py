@@ -118,7 +118,7 @@ def test_criar_pessoa_insere_sql_puro_e_retorna_registro_criado():
     insert_sql, insert_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "INSERT INTO PESSOA" in insert_sql
-    assert insert_params == ("Novo", "99999999999", "n@ex.com", date(1985, 5, 20))
+    assert insert_params == ("Novo", "99999999999", "n@ex.com", date(1985, 5, 20), False)
     assert "FROM PESSOA" in select_sql
     assert select_params == (10,)
     assert result == created
@@ -132,7 +132,7 @@ def test_criar_pessoa_aceita_email_e_data_nulos():
     pessoa_repository.criar(conn, {"nome": "X", "cpf": "11111111111"})
 
     _, insert_params = cursor.statements[0]
-    assert insert_params == ("X", "11111111111", None, None)
+    assert insert_params == ("X", "11111111111", None, None, False)
 
 
 def test_atualizar_pessoa_executa_update_apenas_dos_campos_recebidos():

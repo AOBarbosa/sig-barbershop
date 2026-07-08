@@ -2,14 +2,8 @@ from decimal import Decimal
 
 
 VENDA_SELECT = """
-SELECT
-    id_venda,
-    CLIENTE_id_cliente,
-    CAIXA_id_caixa,
-    data_venda,
-    valor_total,
-    status,
-    forma_pagamento
+SELECT id_venda, CLIENTE_PESSOA_id_pessoa, CAIXA_PESSOA_id_pessoa,
+       data_hora, valor_total, status, forma_pagamento, desconto
 FROM VENDA
 """
 
@@ -17,12 +11,7 @@ FROM VENDA
 def listar(conn):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            f"""
-            {VENDA_SELECT}
-            ORDER BY data_venda DESC, id_venda DESC
-            """
-        )
+        cursor.execute(f"{VENDA_SELECT} ORDER BY data_hora DESC, id_venda DESC")
         return cursor.fetchall()
     finally:
         cursor.close()
@@ -31,13 +20,7 @@ def listar(conn):
 def buscar_por_id(conn, venda_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            f"""
-            {VENDA_SELECT}
-            WHERE id_venda = %s
-            """,
-            (venda_id,),
-        )
+        cursor.execute(f"{VENDA_SELECT} WHERE id_venda = %s", (venda_id,))
         return cursor.fetchone()
     finally:
         cursor.close()
@@ -49,20 +32,19 @@ def criar(conn, data):
         cursor.execute(
             """
             INSERT INTO VENDA (
-                CLIENTE_id_cliente,
-                CAIXA_id_caixa,
-                valor_total,
-                status,
-                forma_pagamento
+                CLIENTE_PESSOA_id_pessoa, CAIXA_PESSOA_id_pessoa,
+                data_hora, valor_total, status, forma_pagamento, desconto
             )
-            VALUES (%s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
-                data["CLIENTE_id_cliente"],
-                data["CAIXA_id_caixa"],
+                data["CLIENTE_PESSOA_id_pessoa"],
+                data["CAIXA_PESSOA_id_pessoa"],
+                data["data_hora"],
                 data["valor_total"],
                 data["status"],
                 data["forma_pagamento"],
+                data["desconto"],
             ),
         )
         return buscar_por_id(conn, cursor.lastrowid)
@@ -73,14 +55,7 @@ def criar(conn, data):
 def atualizar_status(conn, venda_id: int, status: str):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            UPDATE VENDA
-            SET status = %s
-            WHERE id_venda = %s
-            """,
-            (status, venda_id),
-        )
+        cursor.execute("UPDATE VENDA SET status = %s WHERE id_venda = %s", (status, venda_id))
     finally:
         cursor.close()
 
@@ -90,13 +65,7 @@ def atualizar_status(conn, venda_id: int, status: str):
 def deletar(conn, venda_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            DELETE FROM VENDA
-            WHERE id_venda = %s
-            """,
-            (venda_id,),
-        )
+        cursor.execute("DELETE FROM VENDA WHERE id_venda = %s", (venda_id,))
     finally:
         cursor.close()
 
@@ -105,11 +74,7 @@ def cliente_existe(conn, cliente_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            """
-            SELECT COUNT(*) AS total
-            FROM CLIENTE
-            WHERE id_cliente = %s
-            """,
+            "SELECT COUNT(*) AS total FROM CLIENTE WHERE PESSOA_id_pessoa = %s",
             (cliente_id,),
         )
         row = cursor.fetchone()
@@ -122,11 +87,7 @@ def caixa_existe(conn, caixa_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            """
-            SELECT COUNT(*) AS total
-            FROM CAIXA
-            WHERE id_caixa = %s
-            """,
+            "SELECT COUNT(*) AS total FROM CAIXA WHERE PESSOA_id_pessoa = %s",
             (caixa_id,),
         )
         row = cursor.fetchone()
@@ -156,11 +117,7 @@ def atualizar_valor_total(conn, venda_id: int, valor_total):
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            """
-            UPDATE VENDA
-            SET valor_total = %s
-            WHERE id_venda = %s
-            """,
+            "UPDATE VENDA SET valor_total = %s WHERE id_venda = %s",
             (valor_total, venda_id),
         )
     finally:

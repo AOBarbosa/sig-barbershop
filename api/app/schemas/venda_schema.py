@@ -4,16 +4,18 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-VendaStatus = Literal["pendente", "concluida", "cancelada"]
-FormaPagamento = Literal["dinheiro", "cartao_debito", "cartao_credito", "pix"]
+VendaStatus = Literal["ABERTA", "PAGA", "CANCELADA", "ESTORNADA"]
+FormaPagamento = Literal["DINHEIRO", "PIX", "CARTAO_CREDITO", "CARTAO_DEBITO", "OUTRO"]
 
 
 class VendaCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    CLIENTE_id_cliente: int = Field(gt=0)
-    CAIXA_id_caixa: int = Field(gt=0)
-    forma_pagamento: FormaPagamento | None = None
+    CLIENTE_PESSOA_id_pessoa: int = Field(gt=0)
+    CAIXA_PESSOA_id_pessoa: int = Field(gt=0)
+    data_hora: datetime
+    forma_pagamento: FormaPagamento
+    desconto: Decimal = Field(default=Decimal("0.00"), ge=0, max_digits=10, decimal_places=2)
 
 
 class VendaStatusUpdate(BaseModel):
@@ -26,12 +28,13 @@ class VendaResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id_venda: int
-    CLIENTE_id_cliente: int
-    CAIXA_id_caixa: int
-    data_venda: datetime
+    CLIENTE_PESSOA_id_pessoa: int
+    CAIXA_PESSOA_id_pessoa: int
+    data_hora: datetime
     valor_total: Decimal
     status: VendaStatus
-    forma_pagamento: FormaPagamento | None = None
+    forma_pagamento: FormaPagamento
+    desconto: Decimal = Decimal("0.00")
 
 
 class VendaProdutoCreate(BaseModel):
@@ -44,7 +47,6 @@ class VendaProdutoCreate(BaseModel):
 class VendaProdutoResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id_venda_produto: int
     VENDA_id_venda: int
     PRODUTO_id_produto: int
     quantidade: int

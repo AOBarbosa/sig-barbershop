@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, Plus, Scissors, UserCheck } from "lucide-react";
+import { BadgePercent, Plus, Scissors, UserRoundCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -28,8 +28,8 @@ export function BarbeirosList() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("todos");
   const saved = searchParams.get("salvo") === "1";
 
-  const ativos = getBarbeirosAtivos(barbeiros);
-  const especialidades = getEspecialidadesUnicas(barbeiros);
+  const cadastrados = getBarbeirosAtivos(barbeiros);
+  const apelidos = getEspecialidadesUnicas(barbeiros);
   const filteredBarbeiros = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
 
@@ -37,23 +37,19 @@ export function BarbeirosList() {
       const matchesSearch =
         normalizedSearch.length === 0 ||
         barbeiro.pessoa.nome.toLowerCase().includes(normalizedSearch) ||
-        (barbeiro.especialidade ?? "").toLowerCase().includes(normalizedSearch);
-      const matchesStatus =
-        statusFilter === "todos" ||
-        (statusFilter === "ativos" && barbeiro.ativo) ||
-        (statusFilter === "inativos" && !barbeiro.ativo);
+        (barbeiro.apelido ?? "").toLowerCase().includes(normalizedSearch);
 
-      return matchesSearch && matchesStatus;
+      return matchesSearch;
     });
-  }, [barbeiros, search, statusFilter]);
+  }, [barbeiros, search]);
 
   return (
     <section className="space-y-5">
       <BarbeirosHeader saved={saved} />
       <BarbeirosSummary
         barbeiros={barbeiros}
-        ativos={ativos}
-        especialidades={especialidades}
+        cadastrados={cadastrados}
+        apelidos={apelidos}
       />
       <Card>
         <CardHeader>
@@ -89,7 +85,7 @@ function BarbeirosHeader({ saved }: { saved: boolean }) {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Barbeiros</h1>
           <p className="text-muted-foreground text-sm">
-            Equipe de profissionais e suas especialidades.
+            Equipe de profissionais e suas comissões.
           </p>
         </div>
         <Button asChild>
@@ -113,12 +109,12 @@ function BarbeirosHeader({ saved }: { saved: boolean }) {
 
 function BarbeirosSummary({
   barbeiros,
-  ativos,
-  especialidades
+  cadastrados,
+  apelidos
 }: {
   barbeiros: BarbeiroComPessoa[];
-  ativos: number;
-  especialidades: number;
+  cadastrados: number;
+  apelidos: number;
 }) {
   return (
     <div className="grid gap-4 md:grid-cols-3">
@@ -129,16 +125,16 @@ function BarbeirosSummary({
         icon={Scissors}
       />
       <SummaryCard
-        title="Barbeiros ativos"
-        value={String(ativos)}
-        description="Disponíveis para atendimento"
-        icon={UserCheck}
+        title="Barbeiros cadastrados"
+        value={String(cadastrados)}
+        description="Vinculados a pessoas"
+        icon={UserRoundCheck}
       />
       <SummaryCard
-        title="Especialidades"
-        value={String(especialidades)}
-        description="Diferentes áreas de atuação"
-        icon={Award}
+        title="Apelidos"
+        value={String(apelidos)}
+        description="Identificações profissionais"
+        icon={BadgePercent}
       />
     </div>
   );

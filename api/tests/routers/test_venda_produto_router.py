@@ -21,7 +21,6 @@ def clear_overrides():
 
 def vinculo_response():
     return {
-        "id_venda_produto": 20,
         "VENDA_id_venda": 1,
         "PRODUTO_id_produto": 2,
         "quantidade": 3,
@@ -40,7 +39,7 @@ def test_get_produtos_venda_delega_para_service(client, monkeypatch):
     response = client.get("/vendas/1/produtos")
 
     assert response.status_code == 200
-    assert response.json()[0]["id_venda_produto"] == 20
+    assert response.json()[0]["VENDA_id_venda"] == 1
     clear_overrides()
 
 

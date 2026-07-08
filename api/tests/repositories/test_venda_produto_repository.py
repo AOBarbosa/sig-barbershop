@@ -34,9 +34,8 @@ class FakeConn:
         return self.fake_cursor
 
 
-def vinculo_row(venda_produto_id=1):
+def vinculo_row():
     return {
-        "id_venda_produto": venda_produto_id,
         "VENDA_id_venda": 1,
         "PRODUTO_id_produto": 2,
         "quantidade": 3,
@@ -60,16 +59,17 @@ def test_listar_por_venda_consulta_vinculos_da_venda():
     assert cursor.closed is True
 
 
-def test_buscar_por_id_consulta_vinculo_por_id():
-    cursor = FakeCursor(row=vinculo_row(venda_produto_id=5))
+def test_buscar_por_id_consulta_vinculo_por_chave_composta():
+    cursor = FakeCursor(row=vinculo_row())
     conn = FakeConn(cursor)
 
-    result = venda_produto_repository.buscar_por_id(conn, 5)
+    result = venda_produto_repository.buscar_por_id(conn, (1, 2))
 
     sql, params = cursor.statements[0]
-    assert "WHERE id_venda_produto = %s" in sql
-    assert params == (5,)
-    assert result["id_venda_produto"] == 5
+    assert "VENDA_id_venda = %s" in sql
+    assert "PRODUTO_id_produto = %s" in sql
+    assert params == (1, 2)
+    assert result["PRODUTO_id_produto"] == 2
 
 
 def test_buscar_por_ids_consulta_vinculo_por_venda_e_produto():
@@ -86,7 +86,7 @@ def test_buscar_por_ids_consulta_vinculo_por_venda_e_produto():
 
 
 def test_criar_insere_vinculo_com_preco_unitario_vigente():
-    created = vinculo_row(venda_produto_id=10)
+    created = vinculo_row()
     cursor = FakeCursor(row=created, lastrowid=10)
     conn = FakeConn(cursor)
 
@@ -96,7 +96,7 @@ def test_criar_insere_vinculo_com_preco_unitario_vigente():
     select_sql, select_params = cursor.statements[1]
     assert "INSERT INTO VENDA_PRODUTO" in insert_sql
     assert insert_params == (1, 2, 3, Decimal("10.00"))
-    assert select_params == (10,)
+    assert select_params == (1, 2)
     assert result == created
 
 

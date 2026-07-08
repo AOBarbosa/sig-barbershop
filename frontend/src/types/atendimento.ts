@@ -1,7 +1,7 @@
 import type { Servico } from "@/types/servico";
 
 export type AtendimentoStatus =
-  "agendado" | "em_andamento" | "concluido" | "cancelado";
+  "AGENDADO" | "EM_EXECUCAO" | "CONCLUIDO" | "CANCELADO";
 
 export interface Pessoa {
   id_pessoa: number;
@@ -9,25 +9,24 @@ export interface Pessoa {
   cpf: string;
   email: string | null;
   data_nascimento: string | null;
-  created_at: string;
-  updated_at: string;
+  admin: boolean;
 }
 
 export interface Cliente {
-  id_cliente: number;
   PESSOA_id_pessoa: number;
+  preferencias: string | null;
+  observacoes: string | null;
 }
 
 export interface Barbeiro {
-  id_barbeiro: number;
   PESSOA_id_pessoa: number;
-  especialidade: string | null;
-  ativo: boolean;
+  apelido: string | null;
+  comissao_percentual: string | null;
 }
 
 export interface Disponibilidade {
   id_disponibilidade: number;
-  BARBEIRO_id_barbeiro: number;
+  BARBEIRO_PESSOA_id_pessoa: number;
   dia_semana: string;
   hora_inicio: string;
   hora_fim: string;
@@ -35,27 +34,28 @@ export interface Disponibilidade {
 
 export interface Atendimento {
   id_atendimento: number;
-  CLIENTE_id_cliente: number;
-  BARBEIRO_id_barbeiro: number;
-  data_hora: string;
+  CLIENTE_PESSOA_id_pessoa: number;
+  BARBEIRO_PESSOA_id_pessoa: number;
+  data_hora_inicio: string;
+  data_hora_fim: string | null;
   status: AtendimentoStatus;
   valor_total: string;
-  observacao: string | null;
+  observacoes: string | null;
 }
 
 export interface AtendimentoServico {
-  id_atendimento_servico: number;
   ATENDIMENTO_id_atendimento: number;
   SERVICO_id_servico: number;
   preco_cobrado: string;
 }
 
 export interface AtendimentoPayload {
-  CLIENTE_id_cliente: number;
-  BARBEIRO_id_barbeiro: number;
-  data_hora: string;
+  CLIENTE_PESSOA_id_pessoa: number;
+  BARBEIRO_PESSOA_id_pessoa: number;
+  data_hora_inicio: string;
+  data_hora_fim?: string | null;
   status: AtendimentoStatus;
-  observacao: string | null;
+  observacoes: string | null;
 }
 
 export interface AtendimentoFormPayload extends AtendimentoPayload {

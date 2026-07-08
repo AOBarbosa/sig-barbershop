@@ -1,6 +1,5 @@
 VENDA_PRODUTO_SELECT = """
 SELECT
-    id_venda_produto,
     VENDA_id_venda,
     PRODUTO_id_produto,
     quantidade,
@@ -16,7 +15,7 @@ def listar_por_venda(conn, venda_id: int):
             f"""
             {VENDA_PRODUTO_SELECT}
             WHERE VENDA_id_venda = %s
-            ORDER BY id_venda_produto
+            ORDER BY PRODUTO_id_produto
             """,
             (venda_id,),
         )
@@ -25,15 +24,17 @@ def listar_por_venda(conn, venda_id: int):
         cursor.close()
 
 
-def buscar_por_id(conn, venda_produto_id: int):
+def buscar_por_id(conn, venda_produto_id: tuple[int, int]):
+    venda_id, produto_id = venda_produto_id
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
             f"""
             {VENDA_PRODUTO_SELECT}
-            WHERE id_venda_produto = %s
+            WHERE VENDA_id_venda = %s
+              AND PRODUTO_id_produto = %s
             """,
-            (venda_produto_id,),
+            (venda_id, produto_id),
         )
         return cursor.fetchone()
     finally:
@@ -71,7 +72,7 @@ def criar(conn, venda_id: int, produto_id: int, quantidade: int, preco_unitario)
             """,
             (venda_id, produto_id, quantidade, preco_unitario),
         )
-        return buscar_por_id(conn, cursor.lastrowid)
+        return buscar_por_ids(conn, venda_id, produto_id)
     finally:
         cursor.close()
 

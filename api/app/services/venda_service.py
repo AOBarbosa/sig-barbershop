@@ -2,7 +2,12 @@ from decimal import Decimal
 
 from fastapi import HTTPException
 
-from app.repositories import produto_repository, venda_produto_repository, venda_repository
+from app.repositories import (
+    historico_produto_repository,
+    produto_repository,
+    venda_produto_repository,
+    venda_repository,
+)
 from app.schemas.venda_schema import VendaCreate, VendaProdutoCreate, VendaStatusUpdate
 from app.services import historico_pontos_service
 
@@ -36,12 +41,12 @@ def _recalcular_valor_total(conn, venda_id: int):
 def criar_venda(conn, payload: VendaCreate):
     conn.start_transaction()
     try:
-        _validar_cliente(conn, payload.CLIENTE_id_cliente)
-        _validar_caixa(conn, payload.CAIXA_id_caixa)
+        _validar_cliente(conn, payload.CLIENTE_PESSOA_id_pessoa)
+        _validar_caixa(conn, payload.CAIXA_PESSOA_id_pessoa)
 
         data = payload.model_dump()
         data["valor_total"] = Decimal("0.00")
-        data["status"] = "pendente"
+        data["status"] = "ABERTA"
         venda = venda_repository.criar(conn, data)
         venda = _recalcular_valor_total(conn, venda["id_venda"])
         conn.commit()
@@ -60,11 +65,11 @@ def atualizar_status_venda(conn, venda_id: int, payload: VendaStatusUpdate):
 
         venda = venda_repository.atualizar_status(conn, venda_id, payload.status)
 
-        if payload.status == "concluida" and venda_atual["status"] != "concluida":
+        if payload.status == "PAGA" and venda_atual["status"] != "PAGA":
             historico_pontos_service.acumular_pontos_venda(
                 conn,
                 venda_id,
-                venda_atual["CLIENTE_id_cliente"],
+                venda_atual["CLIENTE_PESSOA_id_pessoa"],
             )
 
         conn.commit()
@@ -99,6 +104,13 @@ def _buscar_produto(conn, produto_id: int):
     return produto
 
 
+def _buscar_historico_produto_vigente(conn, produto_id: int):
+    historico = historico_produto_repository.buscar_vigente(conn, produto_id)
+    if historico is None:
+        raise HTTPException(status_code=422, detail="Produto sem preco vigente")
+    return historico
+
+
 def _buscar_vinculo_venda_produto(conn, venda_id: int, produto_id: int):
     vinculo = venda_produto_repository.buscar_por_ids(conn, venda_id, produto_id)
     if vinculo is None:
@@ -121,23 +133,15 @@ def adicionar_produto_venda(conn, venda_id: int, payload: VendaProdutoCreate):
     conn.start_transaction()
     try:
         _validar_venda_existe(conn, venda_id)
-        produto = _buscar_produto(conn, payload.PRODUTO_id_produto)
+        _buscar_produto(conn, payload.PRODUTO_id_produto)
         _validar_produto_disponivel_para_venda(conn, venda_id, payload.PRODUTO_id_produto)
-
-        if produto["estoque"] < payload.quantidade:
-            raise HTTPException(status_code=422, detail="Estoque insuficiente")
-
-        produto_repository.atualizar(
-            conn,
-            payload.PRODUTO_id_produto,
-            {"estoque": produto["estoque"] - payload.quantidade},
-        )
+        historico = _buscar_historico_produto_vigente(conn, payload.PRODUTO_id_produto)
         vinculo = venda_produto_repository.criar(
             conn,
             venda_id=venda_id,
             produto_id=payload.PRODUTO_id_produto,
             quantidade=payload.quantidade,
-            preco_unitario=produto["preco"],
+            preco_unitario=historico["preco_venda"],
         )
         _recalcular_valor_total(conn, venda_id)
         conn.commit()
@@ -151,14 +155,8 @@ def remover_produto_venda(conn, venda_id: int, produto_id: int):
     conn.start_transaction()
     try:
         _validar_venda_existe(conn, venda_id)
-        vinculo = _buscar_vinculo_venda_produto(conn, venda_id, produto_id)
-        produto = _buscar_produto(conn, produto_id)
-
-        produto_repository.atualizar(
-            conn,
-            produto_id,
-            {"estoque": produto["estoque"] + vinculo["quantidade"]},
-        )
+        _buscar_vinculo_venda_produto(conn, venda_id, produto_id)
+        _buscar_produto(conn, produto_id)
         venda_produto_repository.deletar_por_ids(conn, venda_id, produto_id)
         _recalcular_valor_total(conn, venda_id)
         conn.commit()

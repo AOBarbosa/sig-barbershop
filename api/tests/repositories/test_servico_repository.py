@@ -1,4 +1,3 @@
-from decimal import Decimal
 import inspect
 
 from app.repositories import servico_repository
@@ -42,10 +41,10 @@ def servico_row(servico_id=1):
     return {
         "id_servico": servico_id,
         "nome": "Corte",
-        "descricao": "Corte masculino",
-        "preco": Decimal("35.00"),
-        "duracao_minutos": 30,
         "ativo": 1,
+        "preco": 40,
+        "duracao_em_minutos": 45,
+        "pontos_gerados": 4,
     }
 
 
@@ -71,7 +70,7 @@ def test_buscar_por_id_consulta_servico_por_id():
     sql, params = cursor.statements[0]
     assert conn.cursor_kwargs == {"dictionary": True}
     assert "FROM SERVICO" in sql
-    assert "WHERE id_servico = %s" in sql
+    assert "WHERE s.id_servico = %s" in sql
     assert params == (3,)
     assert result["id_servico"] == 3
     assert cursor.closed is True
@@ -80,9 +79,6 @@ def test_buscar_por_id_consulta_servico_por_id():
 def test_criar_servico_insere_sql_puro_e_retorna_registro_criado():
     created = servico_row(servico_id=10) | {
         "nome": "Barba",
-        "descricao": "Barba completa",
-        "preco": Decimal("25.00"),
-        "duracao_minutos": 20,
     }
     cursor = FakeCursor(row=created, lastrowid=10)
     conn = FakeConn(cursor)
@@ -91,9 +87,6 @@ def test_criar_servico_insere_sql_puro_e_retorna_registro_criado():
         conn,
         {
             "nome": "Barba",
-            "descricao": "Barba completa",
-            "preco": Decimal("25.00"),
-            "duracao_minutos": 20,
             "ativo": True,
         },
     )
@@ -101,7 +94,7 @@ def test_criar_servico_insere_sql_puro_e_retorna_registro_criado():
     insert_sql, insert_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "INSERT INTO SERVICO" in insert_sql
-    assert insert_params == ("Barba", "Barba completa", Decimal("25.00"), 20, True)
+    assert insert_params == ("Barba", True)
     assert "FROM SERVICO" in select_sql
     assert select_params == (10,)
     assert result == created
@@ -111,7 +104,6 @@ def test_criar_servico_insere_sql_puro_e_retorna_registro_criado():
 def test_atualizar_servico_executa_update_apenas_dos_campos_recebidos_e_retorna_registro():
     updated = servico_row(servico_id=4) | {
         "nome": "Corte premium",
-        "preco": Decimal("45.00"),
     }
     cursor = FakeCursor(row=updated)
     conn = FakeConn(cursor)
@@ -119,19 +111,15 @@ def test_atualizar_servico_executa_update_apenas_dos_campos_recebidos_e_retorna_
     result = servico_repository.atualizar(
         conn,
         4,
-        {
-            "nome": "Corte premium",
-            "preco": Decimal("45.00"),
-        },
+        {"nome": "Corte premium"},
     )
 
     update_sql, update_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "UPDATE SERVICO" in update_sql
     assert "nome = %s" in update_sql
-    assert "preco = %s" in update_sql
-    assert "descricao = %s" not in update_sql
-    assert update_params == ("Corte premium", Decimal("45.00"), 4)
+    assert "preco = %s" not in update_sql
+    assert update_params == ("Corte premium", 4)
     assert "FROM SERVICO" in select_sql
     assert select_params == (4,)
     assert result == updated

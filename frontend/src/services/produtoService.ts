@@ -7,7 +7,7 @@ function isProduto(data: unknown): data is Produto {
     data !== null &&
     "id_produto" in data &&
     "nome" in data &&
-    "preco" in data
+    "ativo" in data
   );
 }
 

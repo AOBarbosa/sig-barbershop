@@ -1,6 +1,6 @@
 "use client";
 
-import { Package, PackageCheck, Plus, Wallet } from "lucide-react";
+import { Layers, Package, PackageCheck, Plus } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -11,10 +11,7 @@ import {
   type StatusFilter
 } from "@/components/produtos/ProdutosCatalog";
 import { SummaryCard } from "@/components/produtos/ProdutoListParts";
-import {
-  formatCurrency,
-  getEstoqueValue
-} from "@/components/produtos/produtoFormatters";
+import { getCategoriasCount } from "@/components/produtos/produtoFormatters";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -36,7 +33,7 @@ export function ProdutosList() {
       const matchesSearch =
         normalizedSearch.length === 0 ||
         produto.nome.toLowerCase().includes(normalizedSearch) ||
-        (produto.descricao ?? "").toLowerCase().includes(normalizedSearch);
+        (produto.categoria ?? "").toLowerCase().includes(normalizedSearch);
       const matchesStatus =
         statusFilter === "todos" ||
         (statusFilter === "ativos" && produto.ativo) ||
@@ -125,10 +122,10 @@ function ProdutosSummary({
         icon={PackageCheck}
       />
       <SummaryCard
-        title="Valor em estoque"
-        value={formatCurrency(getEstoqueValue(produtos))}
-        description="Preço x estoque do catálogo atual"
-        icon={Wallet}
+        title="Categorias"
+        value={String(getCategoriasCount(produtos))}
+        description="Grupos distintos no catálogo"
+        icon={Layers}
       />
     </div>
   );

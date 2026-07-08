@@ -2,25 +2,25 @@
   {
     "id_servico": 1,
     "nome": "Corte masculino",
-    "descricao": "Corte na tesoura e máquina",
-    "preco": "45.00",
-    "duracao_minutos": 40,
+    "preco": "40.00",
+    "duracao_em_minutos": 45,
+    "pontos_gerados": 4,
     "ativo": true
   },
   {
     "id_servico": 2,
     "nome": "Barba completa",
-    "descricao": "Toalha quente e acabamento",
     "preco": "35.00",
-    "duracao_minutos": 30,
+    "duracao_em_minutos": 30,
+    "pontos_gerados": 3,
     "ativo": true
   },
   {
     "id_servico": 3,
-    "nome": "Coloração",
-    "descricao": "Serviço temporariamente pausado",
-    "preco": "80.00",
-    "duracao_minutos": 90,
+    "nome": "Coloracao",
+    "preco": "90.00",
+    "duracao_em_minutos": 120,
+    "pontos_gerados": 10,
     "ativo": false
   }
 ]

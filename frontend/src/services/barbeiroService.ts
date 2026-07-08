@@ -21,7 +21,7 @@ function isPessoa(data: unknown): data is Pessoa {
 }
 
 function isBarbeiro(data: unknown): data is Barbeiro {
-  return hasKeys(data, ["id_barbeiro", "PESSOA_id_pessoa", "ativo"]);
+  return hasKeys(data, ["PESSOA_id_pessoa"]);
 }
 
 function isBarbeiroCompletoResponse(
@@ -70,8 +70,8 @@ export const createBarbeiroApi = (pessoaId: number, payload: BarbeiroPayload) =>
   api
     .post<Barbeiro>("/barbeiros", {
       PESSOA_id_pessoa: pessoaId,
-      especialidade: payload.especialidade,
-      ativo: payload.ativo
+      apelido: payload.apelido,
+      comissao_percentual: payload.comissao_percentual
     })
     .then((response) => response.data);
 

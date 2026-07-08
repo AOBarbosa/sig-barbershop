@@ -2,25 +2,28 @@
   {
     "id_produto": 1,
     "nome": "Pomada modeladora",
-    "descricao": "Fixação forte, acabamento fosco",
-    "preco": "45.00",
-    "estoque": 12,
+    "categoria": "Finalizador",
+    "preco_venda": "45.00",
+    "preco_custo": "25.00",
+    "pontos_gerados": 5,
     "ativo": true
   },
   {
     "id_produto": 2,
-    "nome": "Óleo para barba",
-    "descricao": "Hidratação e brilho natural",
-    "preco": "35.00",
-    "estoque": 8,
+    "nome": "Oleo para barba",
+    "categoria": "Barba",
+    "preco_venda": "38.00",
+    "preco_custo": "22.00",
+    "pontos_gerados": 4,
     "ativo": true
   },
   {
     "id_produto": 3,
     "nome": "Shampoo antiqueda",
-    "descricao": "Linha descontinuada",
-    "preco": "50.00",
-    "estoque": 0,
+    "categoria": "Higiene",
+    "preco_venda": "55.00",
+    "preco_custo": "30.00",
+    "pontos_gerados": 6,
     "ativo": false
   }
 ]

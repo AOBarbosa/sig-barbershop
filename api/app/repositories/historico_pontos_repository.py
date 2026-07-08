@@ -1,7 +1,7 @@
 HISTORICO_PONTOS_SELECT = """
 SELECT
     id_historico,
-    CLIENTE_id_cliente,
+    CLIENTE_PESSOA_id_pessoa,
     pontos,
     tipo_movimentacao,
     descricao,
@@ -16,7 +16,7 @@ def listar_por_cliente(conn, cliente_id: int):
         cursor.execute(
             f"""
             {HISTORICO_PONTOS_SELECT}
-            WHERE CLIENTE_id_cliente = %s
+            WHERE CLIENTE_PESSOA_id_pessoa = %s
             ORDER BY data_movimentacao DESC, id_historico DESC
             """,
             (cliente_id,),
@@ -47,7 +47,7 @@ def criar(conn, cliente_id: int, pontos: int, tipo_movimentacao: str, descricao:
         cursor.execute(
             """
             INSERT INTO HISTORICO_PONTOS (
-                CLIENTE_id_cliente,
+                CLIENTE_PESSOA_id_pessoa,
                 pontos,
                 tipo_movimentacao,
                 descricao
@@ -71,7 +71,7 @@ def calcular_saldo(conn, cliente_id: int):
                 0
             ) AS saldo
             FROM HISTORICO_PONTOS
-            WHERE CLIENTE_id_cliente = %s
+            WHERE CLIENTE_PESSOA_id_pessoa = %s
             """,
             (cliente_id,),
         )

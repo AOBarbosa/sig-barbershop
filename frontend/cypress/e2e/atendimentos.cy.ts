@@ -35,7 +35,7 @@ describe("Módulo Atendimentos", () => {
 
     cy.get("main").contains("Atendimentos").should("be.visible");
     cy.contains("Maria Silva").should("be.visible");
-    cy.contains("João Barbeiro").should("be.visible");
+    cy.contains("Joao Barbeiro").should("be.visible");
     cy.contains("Agendado").should("be.visible");
     cy.contains("R$ 80,00").should("be.visible");
     cy.contains("Novo atendimento").should(
@@ -52,12 +52,13 @@ describe("Módulo Atendimentos", () => {
       statusCode: 201,
       body: {
         id_atendimento: 11,
-        CLIENTE_id_cliente: 1,
-        BARBEIRO_id_barbeiro: 2,
-        data_hora: "2026-07-06T14:30:00",
-        status: "agendado",
+        CLIENTE_PESSOA_id_pessoa: 1,
+        BARBEIRO_PESSOA_id_pessoa: 2,
+        data_hora_inicio: "2026-07-06T14:30:00",
+        data_hora_fim: null,
+        status: "AGENDADO",
         valor_total: "0.00",
-        observacao: "Cliente quer corte e barba"
+        observacoes: "Cliente quer corte e barba"
       }
     }).as("criarAtendimento");
     cy.intercept("POST", "**/atendimentos/11/servicos", {
@@ -69,22 +70,22 @@ describe("Módulo Atendimentos", () => {
     cy.contains("Salvar atendimento").click();
     cy.contains("Cliente é obrigatório").should("be.visible");
 
-    cy.get("select[name='CLIENTE_id_cliente']").select("Maria Silva");
-    cy.get("select[name='BARBEIRO_id_barbeiro']").select("João Barbeiro");
+    cy.get("select[name='CLIENTE_PESSOA_id_pessoa']").select("Maria Silva");
+    cy.get("select[name='BARBEIRO_PESSOA_id_pessoa']").select("Joao Barbeiro");
     cy.wait("@listarDisponibilidades");
-    cy.get("input[name='data_hora']").type("2026-07-06T14:30");
+    cy.get("input[name='data_hora_inicio']").type("2026-07-06T14:30");
     cy.contains("Corte masculino").click();
-    cy.get("textarea[name='observacao']").type("Cliente quer corte e barba");
+    cy.get("textarea[name='observacoes']").type("Cliente quer corte e barba");
     cy.contains("Salvar atendimento").click();
 
     cy.wait("@criarAtendimento")
       .its("request.body")
       .should("deep.include", {
-        CLIENTE_id_cliente: 1,
-        BARBEIRO_id_barbeiro: 2,
-        data_hora: "2026-07-06T14:30:00",
-        status: "agendado",
-        observacao: "Cliente quer corte e barba"
+        CLIENTE_PESSOA_id_pessoa: 1,
+        BARBEIRO_PESSOA_id_pessoa: 2,
+        data_hora_inicio: "2026-07-06T14:30:00",
+        status: "AGENDADO",
+        observacoes: "Cliente quer corte e barba"
       });
     cy.wait("@vincularServico")
       .its("request.body")
@@ -107,7 +108,7 @@ describe("Módulo Atendimentos", () => {
       statusCode: 200,
       body: {
         ...this.dados.atendimentos[0],
-        status: "em_andamento",
+        status: "EM_EXECUCAO",
         valor_total: "80.00"
       }
     }).as("iniciarAtendimento");
@@ -123,7 +124,7 @@ describe("Módulo Atendimentos", () => {
     cy.contains("Iniciar").click();
     cy.wait("@iniciarAtendimento")
       .its("request.body")
-      .should("deep.equal", { status: "em_andamento" });
+      .should("deep.equal", { status: "EM_EXECUCAO" });
     cy.contains("Em andamento").should("be.visible");
   });
 });

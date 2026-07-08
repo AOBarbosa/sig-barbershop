@@ -21,8 +21,8 @@ class FakeConn:
         self.rolled_back = True
 
 
-def tel_row(tel_id=1):
-    return {"id_telefone": tel_id, "PESSOA_id_pessoa": 1, "numero": "84999999999"}
+def tel_row(pessoa_id=1, telefone="84999999999"):
+    return {"PESSOA_id_pessoa": pessoa_id, "telefone": telefone}
 
 
 def test_buscar_telefone_existente_retorna_registro(monkeypatch):
@@ -31,7 +31,7 @@ def test_buscar_telefone_existente_retorna_registro(monkeypatch):
         telefone_service.telefone_repository, "buscar_por_id", lambda _c, _i: tel_row()
     )
 
-    assert telefone_service.buscar_telefone(conn, 1) == tel_row()
+    assert telefone_service.buscar_telefone(conn, 1, "84999999999") == tel_row()
     assert conn.started is False
 
 
@@ -40,7 +40,7 @@ def test_buscar_telefone_inexistente_retorna_404(monkeypatch):
     monkeypatch.setattr(telefone_service.telefone_repository, "buscar_por_id", lambda _c, _i: None)
 
     with pytest.raises(HTTPException) as exc:
-        telefone_service.buscar_telefone(conn, 404)
+        telefone_service.buscar_telefone(conn, 404, "84999999999")
 
     assert exc.value.status_code == 404
 
@@ -78,7 +78,7 @@ def test_criar_telefone_controla_transacao(monkeypatch):
     )
 
     result = telefone_service.criar_telefone(
-        conn, TelefoneCreate(PESSOA_id_pessoa=1, numero="84999999999")
+        conn, TelefoneCreate(PESSOA_id_pessoa=1, telefone="84999999999")
     )
 
     assert result == tel_row()
@@ -91,7 +91,7 @@ def test_criar_telefone_sem_pessoa_retorna_404_e_rollback(monkeypatch):
 
     with pytest.raises(HTTPException) as exc:
         telefone_service.criar_telefone(
-            conn, TelefoneCreate(PESSOA_id_pessoa=999, numero="84999999999")
+            conn, TelefoneCreate(PESSOA_id_pessoa=999, telefone="84999999999")
         )
 
     assert exc.value.status_code == 404
@@ -111,7 +111,7 @@ def test_criar_telefone_faz_rollback_quando_repository_falha(monkeypatch):
 
     with pytest.raises(RuntimeError):
         telefone_service.criar_telefone(
-            conn, TelefoneCreate(PESSOA_id_pessoa=1, numero="84999999999")
+            conn, TelefoneCreate(PESSOA_id_pessoa=1, telefone="84999999999")
         )
 
     assert conn.rolled_back is True
@@ -119,7 +119,7 @@ def test_criar_telefone_faz_rollback_quando_repository_falha(monkeypatch):
 
 def test_atualizar_telefone_existente_controla_transacao(monkeypatch):
     conn = FakeConn()
-    novo = tel_row() | {"numero": "84988888888"}
+    novo = tel_row(telefone="84988888888")
     monkeypatch.setattr(
         telefone_service.telefone_repository, "buscar_por_id", lambda _c, _i: tel_row()
     )
@@ -128,7 +128,7 @@ def test_atualizar_telefone_existente_controla_transacao(monkeypatch):
     )
 
     result = telefone_service.atualizar_telefone(
-        conn, 1, TelefoneUpdate(numero="84988888888")
+        conn, 1, "84999999999", TelefoneUpdate(telefone="84988888888")
     )
 
     assert result == novo
@@ -140,7 +140,9 @@ def test_atualizar_telefone_inexistente_retorna_404(monkeypatch):
     monkeypatch.setattr(telefone_service.telefone_repository, "buscar_por_id", lambda _c, _i: None)
 
     with pytest.raises(HTTPException) as exc:
-        telefone_service.atualizar_telefone(conn, 404, TelefoneUpdate(numero="84988888888"))
+        telefone_service.atualizar_telefone(
+            conn, 404, "84999999999", TelefoneUpdate(telefone="84988888888")
+        )
 
     assert exc.value.status_code == 404
     assert conn.rolled_back is True
@@ -156,9 +158,9 @@ def test_deletar_telefone_existente_controla_transacao(monkeypatch):
         telefone_service.telefone_repository, "deletar", lambda _c, i: called.append(i)
     )
 
-    telefone_service.deletar_telefone(conn, 1)
+    telefone_service.deletar_telefone(conn, 1, "84999999999")
 
-    assert called == [1]
+    assert called == [(1, "84999999999")]
     assert conn.committed is True
 
 
@@ -167,7 +169,7 @@ def test_deletar_telefone_inexistente_retorna_404(monkeypatch):
     monkeypatch.setattr(telefone_service.telefone_repository, "buscar_por_id", lambda _c, _i: None)
 
     with pytest.raises(HTTPException) as exc:
-        telefone_service.deletar_telefone(conn, 404)
+        telefone_service.deletar_telefone(conn, 404, "84999999999")
 
     assert exc.value.status_code == 404
     assert conn.rolled_back is True

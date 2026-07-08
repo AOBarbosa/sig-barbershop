@@ -43,7 +43,6 @@ export function ServicoForm({
     resolver: zodResolver(servicoFormSchema),
     defaultValues: defaultServicoFormValues
   });
-  const preco = Number(useWatch({ control: form.control, name: "preco" }) || 0);
   const ativo = Boolean(useWatch({ control: form.control, name: "ativo" }));
   const isEdit = mode === "edit";
   const isSubmitting = createServico.isPending || updateServico.isPending;
@@ -53,9 +52,9 @@ export function ServicoForm({
     if (isEdit && servicoQuery.data) {
       form.reset({
         nome: servicoQuery.data.nome,
-        descricao: servicoQuery.data.descricao ?? "",
         preco: Number(servicoQuery.data.preco),
-        duracao_minutos: servicoQuery.data.duracao_minutos,
+        duracao_em_minutos: servicoQuery.data.duracao_em_minutos,
+        pontos_gerados: servicoQuery.data.pontos_gerados,
         ativo: servicoQuery.data.ativo
       });
     }
@@ -105,7 +104,7 @@ export function ServicoForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
-            <ServicoPrimaryFields form={form} isEdit={isEdit} preco={preco} />
+            <ServicoPrimaryFields form={form} isEdit={isEdit} />
             <ServicoOperationalFields form={form} ativo={ativo} />
           </div>
           {mutationError ? (

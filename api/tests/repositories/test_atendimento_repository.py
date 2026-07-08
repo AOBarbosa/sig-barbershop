@@ -42,12 +42,12 @@ class FakeConn:
 def atendimento_row(atendimento_id=1):
     return {
         "id_atendimento": atendimento_id,
-        "CLIENTE_id_cliente": 1,
-        "BARBEIRO_id_barbeiro": 2,
-        "data_hora": datetime(2026, 7, 5, 9, 0),
-        "status": "agendado",
+        "CLIENTE_PESSOA_id_pessoa": 1,
+        "BARBEIRO_PESSOA_id_pessoa": 2,
+        "data_hora_inicio": datetime(2026, 7, 5, 9, 0),
+        "status": "AGENDADO",
         "valor_total": Decimal("0.00"),
-        "observacao": "Primeiro atendimento",
+        "observacoes": "Primeiro atendimento",
     }
 
 
@@ -86,12 +86,12 @@ def test_criar_atendimento_insere_sem_receber_valor_total_do_cliente():
     result = atendimento_repository.criar(
         conn,
         {
-            "CLIENTE_id_cliente": 1,
-            "BARBEIRO_id_barbeiro": 2,
-            "data_hora": datetime(2026, 7, 5, 9, 0),
-            "status": "agendado",
+            "CLIENTE_PESSOA_id_pessoa": 1,
+            "BARBEIRO_PESSOA_id_pessoa": 2,
+            "data_hora_inicio": datetime(2026, 7, 5, 9, 0),
+            "status": "AGENDADO",
             "valor_total": Decimal("0.00"),
-            "observacao": "Primeiro atendimento",
+            "observacoes": "Primeiro atendimento",
         },
     )
 
@@ -102,7 +102,8 @@ def test_criar_atendimento_insere_sem_receber_valor_total_do_cliente():
         1,
         2,
         datetime(2026, 7, 5, 9, 0),
-        "agendado",
+        None,
+        "AGENDADO",
         Decimal("0.00"),
         "Primeiro atendimento",
     )
@@ -112,16 +113,16 @@ def test_criar_atendimento_insere_sem_receber_valor_total_do_cliente():
 
 
 def test_atualizar_atendimento_executa_update_apenas_campos_recebidos():
-    updated = atendimento_row(atendimento_id=4) | {"observacao": "Remarcado"}
+    updated = atendimento_row(atendimento_id=4) | {"observacoes": "Remarcado"}
     cursor = FakeCursor(row=updated)
     conn = FakeConn(cursor)
 
-    result = atendimento_repository.atualizar(conn, 4, {"observacao": "Remarcado"})
+    result = atendimento_repository.atualizar(conn, 4, {"observacoes": "Remarcado"})
 
     update_sql, update_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "UPDATE ATENDIMENTO" in update_sql
-    assert "observacao = %s" in update_sql
+    assert "observacoes = %s" in update_sql
     assert "valor_total = %s" not in update_sql
     assert update_params == ("Remarcado", 4)
     assert "FROM ATENDIMENTO" in select_sql
@@ -143,16 +144,16 @@ def test_atualizar_atendimento_sem_campos_nao_executa_update():
 
 
 def test_atualizar_status_altera_apenas_status():
-    updated = atendimento_row(atendimento_id=6) | {"status": "concluido"}
+    updated = atendimento_row(atendimento_id=6) | {"status": "CONCLUIDO"}
     cursor = FakeCursor(row=updated)
     conn = FakeConn(cursor)
 
-    result = atendimento_repository.atualizar_status(conn, 6, "concluido")
+    result = atendimento_repository.atualizar_status(conn, 6, "CONCLUIDO")
 
     update_sql, update_params = cursor.statements[0]
     assert "UPDATE ATENDIMENTO" in update_sql
     assert "status = %s" in update_sql
-    assert update_params == ("concluido", 6)
+    assert update_params == ("CONCLUIDO", 6)
     assert result == updated
 
 

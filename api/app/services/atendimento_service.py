@@ -2,7 +2,12 @@ from decimal import Decimal
 
 from fastapi import HTTPException
 
-from app.repositories import atendimento_repository, atendimento_servico_repository, servico_repository
+from app.repositories import (
+    atendimento_repository,
+    atendimento_servico_repository,
+    historico_servico_repository,
+    servico_repository,
+)
 from app.schemas.atendimento_schema import (
     AtendimentoCreate,
     AtendimentoServicoCreate,
@@ -56,6 +61,13 @@ def _buscar_servico(conn, servico_id: int):
     return servico
 
 
+def _buscar_historico_servico_vigente(conn, servico_id: int):
+    historico = historico_servico_repository.buscar_vigente(conn, servico_id)
+    if historico is None:
+        raise HTTPException(status_code=422, detail="Servico sem preco vigente")
+    return historico
+
+
 def _buscar_vinculo_atendimento_servico(conn, atendimento_id: int, servico_id: int):
     vinculo = atendimento_servico_repository.buscar_por_ids(conn, atendimento_id, servico_id)
     if vinculo is None:
@@ -77,13 +89,14 @@ def adicionar_servico_atendimento(
     conn.start_transaction()
     try:
         _validar_atendimento_existe(conn, atendimento_id)
-        servico = _buscar_servico(conn, payload.SERVICO_id_servico)
+        _buscar_servico(conn, payload.SERVICO_id_servico)
         _validar_servico_disponivel_para_atendimento(conn, atendimento_id, payload.SERVICO_id_servico)
+        historico = _buscar_historico_servico_vigente(conn, payload.SERVICO_id_servico)
         vinculo = atendimento_servico_repository.criar(
             conn,
             atendimento_id=atendimento_id,
             servico_id=payload.SERVICO_id_servico,
-            preco_cobrado=servico["preco"],
+            preco_cobrado=historico["preco"],
         )
         _recalcular_valor_total(conn, atendimento_id)
         conn.commit()
@@ -109,8 +122,8 @@ def remover_servico_atendimento(conn, atendimento_id: int, servico_id: int):
 def criar_atendimento(conn, payload: AtendimentoCreate):
     conn.start_transaction()
     try:
-        _validar_cliente(conn, payload.CLIENTE_id_cliente)
-        _validar_barbeiro(conn, payload.BARBEIRO_id_barbeiro)
+        _validar_cliente(conn, payload.CLIENTE_PESSOA_id_pessoa)
+        _validar_barbeiro(conn, payload.BARBEIRO_PESSOA_id_pessoa)
 
         data = payload.model_dump()
         data["valor_total"] = Decimal("0.00")
@@ -130,10 +143,10 @@ def atualizar_atendimento(conn, atendimento_id: int, payload: AtendimentoUpdate)
             raise HTTPException(status_code=404, detail="Atendimento nao encontrado")
 
         data = payload.model_dump(exclude_unset=True)
-        if "CLIENTE_id_cliente" in data:
-            _validar_cliente(conn, data["CLIENTE_id_cliente"])
-        if "BARBEIRO_id_barbeiro" in data:
-            _validar_barbeiro(conn, data["BARBEIRO_id_barbeiro"])
+        if "CLIENTE_PESSOA_id_pessoa" in data:
+            _validar_cliente(conn, data["CLIENTE_PESSOA_id_pessoa"])
+        if "BARBEIRO_PESSOA_id_pessoa" in data:
+            _validar_barbeiro(conn, data["BARBEIRO_PESSOA_id_pessoa"])
 
         atendimento_repository.atualizar(conn, atendimento_id, data)
         atendimento = _recalcular_valor_total(conn, atendimento_id)
@@ -157,11 +170,11 @@ def atualizar_status_atendimento(
 
         atendimento = atendimento_repository.atualizar_status(conn, atendimento_id, payload.status)
 
-        if payload.status == "concluido" and atendimento_atual["status"] != "concluido":
+        if payload.status == "CONCLUIDO" and atendimento_atual["status"] != "CONCLUIDO":
             historico_pontos_service.acumular_pontos_atendimento(
                 conn,
                 atendimento_id,
-                atendimento_atual["CLIENTE_id_cliente"],
+                atendimento_atual["CLIENTE_PESSOA_id_pessoa"],
             )
 
         conn.commit()

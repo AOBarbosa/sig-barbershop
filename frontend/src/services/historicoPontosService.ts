@@ -10,13 +10,13 @@ function hasKeys(data: unknown, keys: string[]) {
 }
 
 function isSaldoPontos(data: unknown): data is SaldoPontos {
-  return hasKeys(data, ["CLIENTE_id_cliente", "saldo"]);
+  return hasKeys(data, ["CLIENTE_PESSOA_id_pessoa", "saldo"]);
 }
 
 function isHistoricoPontos(data: unknown): data is HistoricoPontos {
   return hasKeys(data, [
     "id_historico",
-    "CLIENTE_id_cliente",
+    "CLIENTE_PESSOA_id_pessoa",
     "pontos",
     "tipo_movimentacao",
     "data_movimentacao"

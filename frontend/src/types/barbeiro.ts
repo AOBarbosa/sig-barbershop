@@ -1,10 +1,9 @@
 import type { Pessoa, PessoaPayload } from "@/types/cliente";
 
 export interface Barbeiro {
-  id_barbeiro: number;
   PESSOA_id_pessoa: number;
-  especialidade: string | null;
-  ativo: boolean;
+  apelido: string | null;
+  comissao_percentual: string | null;
 }
 
 export interface BarbeiroComPessoa extends Barbeiro {
@@ -12,8 +11,8 @@ export interface BarbeiroComPessoa extends Barbeiro {
 }
 
 export interface BarbeiroPayload {
-  especialidade: string | null;
-  ativo: boolean;
+  apelido: string | null;
+  comissao_percentual: number | null;
 }
 
 export type BarbeiroFormPayload = PessoaPayload & BarbeiroPayload;

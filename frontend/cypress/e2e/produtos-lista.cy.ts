@@ -3,7 +3,7 @@ describe("Módulo Produtos - listagem", () => {
     cy.fixture("produtos").as("produtos");
   });
 
-  it("lista produtos com preço formatado e navega pelo shell", function () {
+  it("lista produtos por categoria e navega pelo shell", function () {
     cy.viewport(1280, 720);
     cy.intercept(
       {
@@ -25,14 +25,12 @@ describe("Módulo Produtos - listagem", () => {
     cy.contains("SIG Barbershop").should("be.visible");
     cy.contains("Produtos").should("be.visible");
     cy.contains("Pomada modeladora").should("be.visible");
-    cy.contains("Fixação forte, acabamento fosco").should("be.visible");
-    cy.contains("R$ 45,00").should("be.visible");
-    cy.contains("Óleo para barba").should("be.visible");
+    cy.contains("Finalizador").should("be.visible");
+    cy.contains("Oleo para barba").should("be.visible");
     cy.contains("Total de produtos").should("be.visible");
     cy.contains("3").should("be.visible");
     cy.contains("Produtos ativos").should("be.visible");
-    cy.contains("Valor em estoque").should("be.visible");
-    cy.contains("R$ 820,00").should("be.visible");
+    cy.contains("Categorias").should("be.visible");
     cy.contains("Novo produto").should("have.attr", "href", "/produtos/novo");
   });
 
@@ -55,13 +53,13 @@ describe("Módulo Produtos - listagem", () => {
     cy.wait("@listarProdutos");
 
     cy.get("input[placeholder='Buscar produto']").type("barba");
-    cy.contains("Óleo para barba").should("be.visible");
+    cy.contains("Oleo para barba").should("be.visible");
     cy.contains("Pomada modeladora").should("not.exist");
 
     cy.get("input[placeholder='Buscar produto']").clear();
     cy.contains("Inativos").click();
     cy.contains("Shampoo antiqueda").should("be.visible");
-    cy.contains("Óleo para barba").should("not.exist");
+    cy.contains("Oleo para barba").should("not.exist");
   });
 
   it("mostra estado vazio filtrado e expõe ação de editar", function () {

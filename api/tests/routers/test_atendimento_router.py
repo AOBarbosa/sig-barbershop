@@ -24,12 +24,12 @@ def clear_overrides():
 def atendimento_response(atendimento_id=1):
     return {
         "id_atendimento": atendimento_id,
-        "CLIENTE_id_cliente": 1,
-        "BARBEIRO_id_barbeiro": 2,
-        "data_hora": datetime(2026, 7, 5, 9, 0),
-        "status": "agendado",
+        "CLIENTE_PESSOA_id_pessoa": 1,
+        "BARBEIRO_PESSOA_id_pessoa": 2,
+        "data_hora_inicio": datetime(2026, 7, 5, 9, 0),
+        "status": "AGENDADO",
         "valor_total": Decimal("0.00"),
-        "observacao": "Primeiro atendimento",
+        "observacoes": "Primeiro atendimento",
     }
 
 
@@ -83,7 +83,7 @@ def test_post_atendimento_valida_payload_e_retorna_201(client, monkeypatch):
     app.dependency_overrides[get_db] = override_db
 
     def fake_criar(_conn, payload):
-        assert payload.CLIENTE_id_cliente == 1
+        assert payload.CLIENTE_PESSOA_id_pessoa == 1
         assert not hasattr(payload, "valor_total")
         return atendimento_response()
 
@@ -92,10 +92,10 @@ def test_post_atendimento_valida_payload_e_retorna_201(client, monkeypatch):
     response = client.post(
         "/atendimentos",
         json={
-            "CLIENTE_id_cliente": 1,
-            "BARBEIRO_id_barbeiro": 2,
-            "data_hora": "2026-07-05T09:00:00",
-            "observacao": "Primeiro atendimento",
+            "CLIENTE_PESSOA_id_pessoa": 1,
+            "BARBEIRO_PESSOA_id_pessoa": 2,
+            "data_hora_inicio": "2026-07-05T09:00:00",
+            "observacoes": "Primeiro atendimento",
         },
     )
 
@@ -110,9 +110,9 @@ def test_post_atendimento_rejeita_valor_total_do_cliente(client):
     response = client.post(
         "/atendimentos",
         json={
-            "CLIENTE_id_cliente": 1,
-            "BARBEIRO_id_barbeiro": 2,
-            "data_hora": "2026-07-05T09:00:00",
+            "CLIENTE_PESSOA_id_pessoa": 1,
+            "BARBEIRO_PESSOA_id_pessoa": 2,
+            "data_hora_inicio": "2026-07-05T09:00:00",
             "valor_total": "999.00",
         },
     )
@@ -126,15 +126,15 @@ def test_put_atendimento_delega_para_service(client, monkeypatch):
 
     def fake_atualizar(_conn, atendimento_id, payload):
         assert atendimento_id == 1
-        assert payload.observacao == "Remarcado"
-        return atendimento_response() | {"observacao": "Remarcado"}
+        assert payload.observacoes == "Remarcado"
+        return atendimento_response() | {"observacoes": "Remarcado"}
 
     monkeypatch.setattr(atendimento_router.atendimento_service, "atualizar_atendimento", fake_atualizar)
 
-    response = client.put("/atendimentos/1", json={"observacao": "Remarcado"})
+    response = client.put("/atendimentos/1", json={"observacoes": "Remarcado"})
 
     assert response.status_code == 200
-    assert response.json()["observacao"] == "Remarcado"
+    assert response.json()["observacoes"] == "Remarcado"
     clear_overrides()
 
 
@@ -155,7 +155,7 @@ def test_put_atendimento_repassa_404_do_service(client, monkeypatch):
 
     monkeypatch.setattr(atendimento_router.atendimento_service, "atualizar_atendimento", fake_atualizar)
 
-    response = client.put("/atendimentos/404", json={"observacao": "x"})
+    response = client.put("/atendimentos/404", json={"observacoes": "x"})
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Atendimento nao encontrado"}
@@ -167,15 +167,15 @@ def test_patch_status_atendimento_delega_para_service(client, monkeypatch):
 
     def fake_status(_conn, atendimento_id, payload):
         assert atendimento_id == 1
-        assert payload.status == "concluido"
-        return atendimento_response() | {"status": "concluido"}
+        assert payload.status == "CONCLUIDO"
+        return atendimento_response() | {"status": "CONCLUIDO"}
 
     monkeypatch.setattr(atendimento_router.atendimento_service, "atualizar_status_atendimento", fake_status)
 
-    response = client.patch("/atendimentos/1/status", json={"status": "concluido"})
+    response = client.patch("/atendimentos/1/status", json={"status": "CONCLUIDO"})
 
     assert response.status_code == 200
-    assert response.json()["status"] == "concluido"
+    assert response.json()["status"] == "CONCLUIDO"
     clear_overrides()
 
 
@@ -196,7 +196,7 @@ def test_patch_status_atendimento_repassa_404_do_service(client, monkeypatch):
 
     monkeypatch.setattr(atendimento_router.atendimento_service, "atualizar_status_atendimento", fake_status)
 
-    response = client.patch("/atendimentos/404/status", json={"status": "cancelado"})
+    response = client.patch("/atendimentos/404/status", json={"status": "CANCELADO"})
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Atendimento nao encontrado"}

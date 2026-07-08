@@ -4,13 +4,13 @@ export interface Pessoa {
   cpf: string;
   email: string | null;
   data_nascimento: string | null;
-  created_at: string;
-  updated_at: string;
+  admin: boolean;
 }
 
 export interface Cliente {
-  id_cliente: number;
   PESSOA_id_pessoa: number;
+  preferencias: string | null;
+  observacoes: string | null;
 }
 
 export interface ClienteComPessoa extends Cliente {
@@ -22,6 +22,7 @@ export interface PessoaPayload {
   cpf: string;
   email: string | null;
   data_nascimento: string | null;
+  admin?: boolean;
 }
 
 export type ClienteFormPayload = PessoaPayload;

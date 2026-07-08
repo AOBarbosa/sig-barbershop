@@ -1,13 +1,14 @@
-def buscar_por_id(conn, telefone_id: int):
+def buscar_por_id(conn, telefone_id: tuple[int, str]):
+    pessoa_id, telefone = telefone_id
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
             """
-            SELECT id_telefone, PESSOA_id_pessoa, numero
+            SELECT PESSOA_id_pessoa, telefone
             FROM TELEFONE
-            WHERE id_telefone = %s
+            WHERE PESSOA_id_pessoa = %s AND telefone = %s
             """,
-            (telefone_id,),
+            (pessoa_id, telefone),
         )
         return cursor.fetchone()
     finally:
@@ -19,10 +20,10 @@ def listar_por_pessoa(conn, pessoa_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_telefone, PESSOA_id_pessoa, numero
+            SELECT PESSOA_id_pessoa, telefone
             FROM TELEFONE
             WHERE PESSOA_id_pessoa = %s
-            ORDER BY id_telefone
+            ORDER BY telefone
             """,
             (pessoa_id,),
         )
@@ -36,50 +37,46 @@ def criar(conn, data):
     try:
         cursor.execute(
             """
-            INSERT INTO TELEFONE (PESSOA_id_pessoa, numero)
+            INSERT INTO TELEFONE (PESSOA_id_pessoa, telefone)
             VALUES (%s, %s)
             """,
-            (data["PESSOA_id_pessoa"], data["numero"]),
+            (data["PESSOA_id_pessoa"], data["telefone"]),
         )
-        return buscar_por_id(conn, cursor.lastrowid)
+        return buscar_por_id(conn, (data["PESSOA_id_pessoa"], data["telefone"]))
     finally:
         cursor.close()
 
 
-def atualizar(conn, telefone_id: int, data):
-    campos = []
-    valores = []
-    for campo, valor in data.items():
-        campos.append(f"{campo} = %s")
-        valores.append(valor)
-
-    if campos:
+def atualizar(conn, telefone_id: tuple[int, str], data):
+    pessoa_id, telefone_atual = telefone_id
+    novo_telefone = data.get("telefone", telefone_atual)
+    if data:
         cursor = conn.cursor(dictionary=True)
         try:
-            valores.append(telefone_id)
             cursor.execute(
-                f"""
+                """
                 UPDATE TELEFONE
-                SET {", ".join(campos)}
-                WHERE id_telefone = %s
+                SET telefone = %s
+                WHERE PESSOA_id_pessoa = %s AND telefone = %s
                 """,
-                tuple(valores),
+                (novo_telefone, pessoa_id, telefone_atual),
             )
         finally:
             cursor.close()
 
-    return buscar_por_id(conn, telefone_id)
+    return buscar_por_id(conn, (pessoa_id, novo_telefone))
 
 
-def deletar(conn, telefone_id: int):
+def deletar(conn, telefone_id: tuple[int, str]):
+    pessoa_id, telefone = telefone_id
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
             """
             DELETE FROM TELEFONE
-            WHERE id_telefone = %s
+            WHERE PESSOA_id_pessoa = %s AND telefone = %s
             """,
-            (telefone_id,),
+            (pessoa_id, telefone),
         )
     finally:
         cursor.close()

@@ -3,8 +3,13 @@ def listar(conn):
     try:
         cursor.execute(
             """
-            SELECT id_servico, nome, descricao, preco, duracao_minutos, ativo
-            FROM SERVICO
+            SELECT s.id_servico, s.nome, s.ativo,
+                   h.preco, h.duracao_em_minutos, h.pontos_gerados
+            FROM SERVICO s
+            LEFT JOIN HISTORICO_SERVICO h
+              ON h.SERVICO_id_servico = s.id_servico
+             AND h.ativo = TRUE
+             AND h.data_fim IS NULL
             ORDER BY nome
             """
         )
@@ -18,9 +23,14 @@ def buscar_por_id(conn, servico_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_servico, nome, descricao, preco, duracao_minutos, ativo
-            FROM SERVICO
-            WHERE id_servico = %s
+            SELECT s.id_servico, s.nome, s.ativo,
+                   h.preco, h.duracao_em_minutos, h.pontos_gerados
+            FROM SERVICO s
+            LEFT JOIN HISTORICO_SERVICO h
+              ON h.SERVICO_id_servico = s.id_servico
+             AND h.ativo = TRUE
+             AND h.data_fim IS NULL
+            WHERE s.id_servico = %s
             """,
             (servico_id,),
         )
@@ -34,14 +44,11 @@ def criar(conn, data):
     try:
         cursor.execute(
             """
-            INSERT INTO SERVICO (nome, descricao, preco, duracao_minutos, ativo)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO SERVICO (nome, ativo)
+            VALUES (%s, %s)
             """,
             (
                 data["nome"],
-                data["descricao"],
-                data["preco"],
-                data["duracao_minutos"],
                 data["ativo"],
             ),
         )

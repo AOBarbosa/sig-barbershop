@@ -50,11 +50,9 @@ export function ServicoRow({ servico }: { servico: Servico }) {
   return (
     <TableRow>
       <TableCell className="font-medium">{servico.nome}</TableCell>
-      <TableCell className="text-muted-foreground">
-        {servico.descricao || "Sem descrição"}
-      </TableCell>
       <TableCell>{formatCurrency(servico.preco)}</TableCell>
-      <TableCell>{servico.duracao_minutos} min</TableCell>
+      <TableCell>{servico.duracao_em_minutos} min</TableCell>
+      <TableCell>{servico.pontos_gerados}</TableCell>
       <TableCell>
         <Badge variant={servico.ativo ? "secondary" : "outline"}>
           {servico.ativo ? "Ativo" : "Inativo"}
@@ -73,9 +71,6 @@ export function ServicoMobileCard({ servico }: { servico: Servico }) {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium">{servico.nome}</p>
-          <p className="text-muted-foreground mt-1 text-sm">
-            {servico.descricao || "Sem descrição"}
-          </p>
         </div>
         <ServicoActions servico={servico} />
       </div>
@@ -86,7 +81,15 @@ export function ServicoMobileCard({ servico }: { servico: Servico }) {
         </div>
         <div>
           <p className="text-muted-foreground">Duração</p>
-          <p className="font-medium">{servico.duracao_minutos} min</p>
+          <p className="font-medium">{servico.duracao_em_minutos} min</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Pontos</p>
+          <p className="font-medium">{servico.pontos_gerados}</p>
+        </div>
+        <div>
+          <p className="text-muted-foreground">Status</p>
+          <p className="font-medium">{servico.ativo ? "Ativo" : "Inativo"}</p>
         </div>
       </div>
       <Badge className="mt-4" variant={servico.ativo ? "secondary" : "outline"}>

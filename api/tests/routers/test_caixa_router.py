@@ -20,7 +20,7 @@ def clear_overrides():
 
 
 def caixa_row(caixa_id=1):
-    return {"id_caixa": caixa_id, "PESSOA_id_pessoa": 1}
+    return {"PESSOA_id_pessoa": caixa_id}
 
 
 def test_get_caixas(client, monkeypatch):

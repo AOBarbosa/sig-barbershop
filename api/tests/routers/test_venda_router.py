@@ -24,12 +24,13 @@ def clear_overrides():
 def venda_response(venda_id=1):
     return {
         "id_venda": venda_id,
-        "CLIENTE_id_cliente": 1,
-        "CAIXA_id_caixa": 2,
-        "data_venda": datetime(2026, 7, 5, 9, 0),
+        "CLIENTE_PESSOA_id_pessoa": 1,
+        "CAIXA_PESSOA_id_pessoa": 2,
+        "data_hora": datetime(2026, 7, 5, 9, 0),
         "valor_total": Decimal("0.00"),
-        "status": "pendente",
-        "forma_pagamento": "pix",
+        "status": "ABERTA",
+        "forma_pagamento": "PIX",
+        "desconto": Decimal("0.00"),
     }
 
 
@@ -79,7 +80,7 @@ def test_post_venda_valida_payload_e_retorna_201(client, monkeypatch):
     app.dependency_overrides[get_db] = override_db
 
     def fake_criar(_conn, payload):
-        assert payload.CLIENTE_id_cliente == 1
+        assert payload.CLIENTE_PESSOA_id_pessoa == 1
         assert not hasattr(payload, "valor_total")
         return venda_response()
 
@@ -87,7 +88,12 @@ def test_post_venda_valida_payload_e_retorna_201(client, monkeypatch):
 
     response = client.post(
         "/vendas",
-        json={"CLIENTE_id_cliente": 1, "CAIXA_id_caixa": 2, "forma_pagamento": "pix"},
+        json={
+            "CLIENTE_PESSOA_id_pessoa": 1,
+            "CAIXA_PESSOA_id_pessoa": 2,
+            "data_hora": "2026-07-05T09:00:00",
+            "forma_pagamento": "PIX",
+        },
     )
 
     assert response.status_code == 201
@@ -100,7 +106,13 @@ def test_post_venda_rejeita_valor_total_do_cliente(client):
 
     response = client.post(
         "/vendas",
-        json={"CLIENTE_id_cliente": 1, "CAIXA_id_caixa": 2, "valor_total": "999.00"},
+        json={
+            "CLIENTE_PESSOA_id_pessoa": 1,
+            "CAIXA_PESSOA_id_pessoa": 2,
+            "data_hora": "2026-07-05T09:00:00",
+            "forma_pagamento": "PIX",
+            "valor_total": "999.00",
+        },
     )
 
     assert response.status_code == 422
@@ -112,15 +124,15 @@ def test_patch_status_venda_delega_para_service(client, monkeypatch):
 
     def fake_status(_conn, venda_id, payload):
         assert venda_id == 1
-        assert payload.status == "concluida"
-        return venda_response() | {"status": "concluida"}
+        assert payload.status == "PAGA"
+        return venda_response() | {"status": "PAGA"}
 
     monkeypatch.setattr(venda_router.venda_service, "atualizar_status_venda", fake_status)
 
-    response = client.patch("/vendas/1/status", json={"status": "concluida"})
+    response = client.patch("/vendas/1/status", json={"status": "PAGA"})
 
     assert response.status_code == 200
-    assert response.json()["status"] == "concluida"
+    assert response.json()["status"] == "PAGA"
     clear_overrides()
 
 
@@ -141,7 +153,7 @@ def test_patch_status_venda_repassa_404_do_service(client, monkeypatch):
 
     monkeypatch.setattr(venda_router.venda_service, "atualizar_status_venda", fake_status)
 
-    response = client.patch("/vendas/404/status", json={"status": "cancelada"})
+    response = client.patch("/vendas/404/status", json={"status": "CANCELADA"})
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Venda nao encontrada"}

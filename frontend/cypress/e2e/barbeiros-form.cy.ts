@@ -14,10 +14,9 @@ describe("Módulo Barbeiros - formulário", () => {
       statusCode: 201,
       body: {
         barbeiro: {
-          id_barbeiro: 5,
           PESSOA_id_pessoa: 20,
-          especialidade: "Degradê",
-          ativo: true
+          apelido: "Lucas",
+          comissao_percentual: "40.00"
         },
         pessoa: {
           id_pessoa: 20,
@@ -25,8 +24,7 @@ describe("Módulo Barbeiros - formulário", () => {
           cpf: "88899900011",
           email: "lucas@barbearia.com",
           data_nascimento: "1993-09-14",
-          created_at: "2026-07-01T10:00:00",
-          updated_at: "2026-07-01T10:00:00"
+          admin: false
         }
       }
     }).as("criarBarbeiroCompleto");
@@ -40,7 +38,8 @@ describe("Módulo Barbeiros - formulário", () => {
     cy.get("input[name='cpf']").type("88899900011");
     cy.get("input[name='email']").type("lucas@barbearia.com");
     cy.get("input[name='data_nascimento']").type("1993-09-14");
-    cy.get("input[name='especialidade']").type("Degradê");
+    cy.get("input[name='apelido']").type("Lucas");
+    cy.get("input[name='comissao_percentual']").clear().type("40");
     cy.contains("Salvar barbeiro").click();
 
     cy.wait("@criarBarbeiroCompleto")
@@ -50,8 +49,8 @@ describe("Módulo Barbeiros - formulário", () => {
         cpf: "88899900011",
         email: "lucas@barbearia.com",
         data_nascimento: "1993-09-14",
-        especialidade: "Degradê",
-        ativo: true
+        apelido: "Lucas",
+        comissao_percentual: 40
       });
 
     cy.location("pathname").should("eq", "/barbeiros");
@@ -60,7 +59,7 @@ describe("Módulo Barbeiros - formulário", () => {
   });
 
   it("edita um barbeiro existente", function () {
-    cy.intercept("GET", "**/barbeiros/1", {
+    cy.intercept("GET", "**/barbeiros/10", {
       statusCode: 200,
       body: this.barbeirosFixture.barbeiros[0]
     }).as("buscarBarbeiro");
@@ -76,27 +75,24 @@ describe("Módulo Barbeiros - formulário", () => {
       statusCode: 200,
       body: this.barbeirosFixture.pessoas
     }).as("listarPessoasDepois");
-    cy.intercept("PUT", "**/barbeiros/1/completo", {
+    cy.intercept("PUT", "**/barbeiros/10/completo", {
       statusCode: 200,
       body: {
         barbeiro: {
           ...this.barbeirosFixture.barbeiros[0],
-          especialidade: "Corte moderno",
-          ativo: false
+          apelido: "Pedrao",
+          comissao_percentual: "45.00"
         },
         pessoa: this.barbeirosFixture.pessoas[0]
       }
     }).as("atualizarBarbeiroCompleto");
 
-    cy.visit("/barbeiros/1/editar");
+    cy.visit("/barbeiros/10/editar");
     cy.wait(["@buscarBarbeiro", "@buscarPessoa"]);
 
-    cy.get("input[name='especialidade']").should(
-      "have.value",
-      "Corte masculino"
-    );
-    cy.get("input[name='especialidade']").clear().type("Corte moderno");
-    cy.contains("Barbeiro ativo").click();
+    cy.get("input[name='apelido']").should("have.value", "Pedro");
+    cy.get("input[name='apelido']").clear().type("Pedrao");
+    cy.get("input[name='comissao_percentual']").clear().type("45");
     cy.contains("Salvar barbeiro").click();
 
     cy.wait("@atualizarBarbeiroCompleto")
@@ -106,8 +102,8 @@ describe("Módulo Barbeiros - formulário", () => {
         cpf: "55566677788",
         email: "pedro@barbearia.com",
         data_nascimento: "1988-11-03",
-        especialidade: "Corte moderno",
-        ativo: false
+        apelido: "Pedrao",
+        comissao_percentual: 45
       });
 
     cy.location("pathname").should("eq", "/barbeiros");

@@ -43,7 +43,6 @@ export function ProdutoForm({
     resolver: zodResolver(produtoFormSchema),
     defaultValues: defaultProdutoFormValues
   });
-  const preco = Number(useWatch({ control: form.control, name: "preco" }) || 0);
   const ativo = Boolean(useWatch({ control: form.control, name: "ativo" }));
   const isEdit = mode === "edit";
   const isSubmitting = createProduto.isPending || updateProduto.isPending;
@@ -53,9 +52,10 @@ export function ProdutoForm({
     if (isEdit && produtoQuery.data) {
       form.reset({
         nome: produtoQuery.data.nome,
-        descricao: produtoQuery.data.descricao ?? "",
-        preco: Number(produtoQuery.data.preco),
-        estoque: produtoQuery.data.estoque,
+        categoria: produtoQuery.data.categoria ?? "",
+        preco_venda: Number(produtoQuery.data.preco_venda),
+        preco_custo: Number(produtoQuery.data.preco_custo),
+        pontos_gerados: produtoQuery.data.pontos_gerados,
         ativo: produtoQuery.data.ativo
       });
     }
@@ -105,7 +105,7 @@ export function ProdutoForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
-            <ProdutoPrimaryFields form={form} isEdit={isEdit} preco={preco} />
+            <ProdutoPrimaryFields form={form} isEdit={isEdit} />
             <ProdutoOperationalFields form={form} ativo={ativo} />
           </div>
           {mutationError ? (

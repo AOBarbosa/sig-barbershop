@@ -5,32 +5,31 @@ from app.schemas.pessoa_schema import PessoaCreate, PessoaResponse, PessoaUpdate
 
 class BarbeiroCreate(BaseModel):
     PESSOA_id_pessoa: int = Field(gt=0)
-    especialidade: str | None = Field(default=None, max_length=100)
-    ativo: bool = True
+    apelido: str | None = Field(default=None, max_length=60)
+    comissao_percentual: float | None = None
 
 
 class BarbeiroUpdate(BaseModel):
-    especialidade: str | None = Field(default=None, max_length=100)
-    ativo: bool | None = None
+    apelido: str | None = Field(default=None, max_length=60)
+    comissao_percentual: float | None = None
 
 
 class BarbeiroResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id_barbeiro: int
     PESSOA_id_pessoa: int
-    especialidade: str | None
-    ativo: bool
+    apelido: str | None
+    comissao_percentual: float | None
 
 
 class BarbeiroCompletoCreate(PessoaCreate):
-    especialidade: str | None = Field(default=None, max_length=100)
-    ativo: bool = True
+    apelido: str | None = Field(default=None, max_length=60)
+    comissao_percentual: float | None = None
 
 
 class BarbeiroCompletoUpdate(PessoaUpdate):
-    especialidade: str | None = Field(default=None, max_length=100)
-    ativo: bool | None = None
+    apelido: str | None = Field(default=None, max_length=60)
+    comissao_percentual: float | None = None
 
 
 class BarbeiroCompletoResponse(BaseModel):

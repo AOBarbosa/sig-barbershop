@@ -17,10 +17,10 @@ def cliente_row(cliente_id=1):
 def historico_row(historico_id=1):
     return {
         "id_historico": historico_id,
-        "CLIENTE_id_cliente": 1,
+        "CLIENTE_PESSOA_id_pessoa": 1,
         "pontos": 10,
         "tipo_movimentacao": "acumulo",
-        "descricao": "Atendimento #1 concluido",
+        "descricao": "Atendimento #1 CONCLUIDO",
         "data_movimentacao": datetime(2026, 7, 5, 9, 0),
     }
 
@@ -42,7 +42,7 @@ def test_buscar_saldo_pontos_cliente_existente_retorna_saldo(monkeypatch):
 
     result = historico_pontos_service.buscar_saldo_pontos(conn, 1)
 
-    assert result == {"CLIENTE_id_cliente": 1, "saldo": 25}
+    assert result == {"CLIENTE_PESSOA_id_pessoa": 1, "saldo": 25}
 
 
 def test_buscar_saldo_pontos_cliente_inexistente_retorna_404(monkeypatch):
@@ -103,7 +103,7 @@ def test_acumular_pontos_atendimento_soma_pontos_dos_servicos_com_regra(monkeypa
     result = historico_pontos_service.acumular_pontos_atendimento(conn, 1, 7)
 
     assert result == 5
-    assert criados == [(7, 5, "acumulo", "Atendimento #1 concluido")]
+    assert criados == [(7, 5, "acumulo", "Atendimento #1 CONCLUIDO")]
 
 
 def test_acumular_pontos_atendimento_nao_grava_quando_nenhum_servico_tem_regra(monkeypatch):
@@ -156,7 +156,7 @@ def test_acumular_pontos_venda_soma_pontos_multiplicados_pela_quantidade(monkeyp
     result = historico_pontos_service.acumular_pontos_venda(conn, 1, 9)
 
     assert result == 6
-    assert criados == [(9, 6, "acumulo", "Venda #1 concluida")]
+    assert criados == [(9, 6, "acumulo", "Venda #1 PAGA")]
 
 
 def test_acumular_pontos_venda_nao_grava_quando_nenhum_produto_tem_regra(monkeypatch):

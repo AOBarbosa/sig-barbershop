@@ -1,12 +1,14 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useForm, useWatch } from "react-hook-form";
 
+import { FidelidadeFormActions } from "@/components/fidelidade/FidelidadeFormActions";
+import { FidelidadeRuleFields } from "@/components/fidelidade/FidelidadeRuleFields";
 import {
   defaultFidelidadeFormValues,
   fidelidadeFormSchema,
@@ -22,18 +24,8 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Form } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Switch } from "@/components/ui/switch";
 import {
   useCreateFidelidade,
   useFidelidadeItem,
@@ -72,7 +64,7 @@ export function FidelidadeForm({
         tipo: fidelidade.SERVICO_id_servico ? "servico" : "produto",
         SERVICO_id_servico: fidelidade.SERVICO_id_servico ?? undefined,
         PRODUTO_id_produto: fidelidade.PRODUTO_id_produto ?? undefined,
-        pontos: fidelidade.pontos,
+        pontos: fidelidade.pontos_acumulados,
         ativo: fidelidade.ativo
       });
     }
@@ -84,7 +76,8 @@ export function FidelidadeForm({
         values.tipo === "servico" ? (values.SERVICO_id_servico ?? null) : null,
       PRODUTO_id_produto:
         values.tipo === "produto" ? (values.PRODUTO_id_produto ?? null) : null,
-      pontos: values.pontos,
+      pontos_acumulados: values.pontos,
+      pontos_uso: 0,
       ativo: values.ativo
     };
 
@@ -151,120 +144,12 @@ export function FidelidadeForm({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-5">
-              <FormItem>
-                <FormLabel>Aplicar regra a</FormLabel>
-                <RadioGroup
-                  value={tipo}
-                  onValueChange={(value) =>
-                    form.setValue("tipo", value as "servico" | "produto", {
-                      shouldDirty: true,
-                      shouldValidate: true
-                    })
-                  }
-                  className="grid grid-cols-2 gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm">
-                    <RadioGroupItem value="servico" />
-                    Serviço
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border p-3 text-sm">
-                    <RadioGroupItem value="produto" />
-                    Produto
-                  </label>
-                </RadioGroup>
-                <FormMessage>{form.formState.errors.tipo?.message}</FormMessage>
-              </FormItem>
-              {tipo === "servico" ? (
-                <FormField name="SERVICO_id_servico">
-                  {(field) => (
-                    <FormItem>
-                      <FormLabel htmlFor="servico">Serviço</FormLabel>
-                      <FormControl>
-                        <select
-                          id="servico"
-                          className="h-10 w-full rounded-lg border px-3 text-sm"
-                          {...field}>
-                          <option value="">Selecione</option>
-                          {lookups.servicos
-                            .filter((servico) => servico.ativo)
-                            .map((servico) => (
-                              <option
-                                key={servico.id_servico}
-                                value={servico.id_servico}>
-                                {servico.nome}
-                              </option>
-                            ))}
-                        </select>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                </FormField>
-              ) : (
-                <FormField name="PRODUTO_id_produto">
-                  {(field) => (
-                    <FormItem>
-                      <FormLabel htmlFor="produto">Produto</FormLabel>
-                      <FormControl>
-                        <select
-                          id="produto"
-                          className="h-10 w-full rounded-lg border px-3 text-sm"
-                          {...field}>
-                          <option value="">Selecione</option>
-                          {lookups.produtos
-                            .filter((produto) => produto.ativo)
-                            .map((produto) => (
-                              <option
-                                key={produto.id_produto}
-                                value={produto.id_produto}>
-                                {produto.nome}
-                              </option>
-                            ))}
-                        </select>
-                      </FormControl>
-                    </FormItem>
-                  )}
-                </FormField>
-              )}
-              <FormField name="pontos">
-                {(field) => (
-                  <FormItem>
-                    <FormLabel htmlFor="pontos">Pontos</FormLabel>
-                    <FormControl>
-                      <Input
-                        id="pontos"
-                        type="number"
-                        min="1"
-                        step="1"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage>
-                      {form.formState.errors.pontos?.message}
-                    </FormMessage>
-                  </FormItem>
-                )}
-              </FormField>
-              <FormItem>
-                <div className="flex items-center justify-between rounded-lg border p-3">
-                  <div className="space-y-1">
-                    <FormLabel htmlFor="ativo">Regra ativa</FormLabel>
-                    <p className="text-muted-foreground text-sm">
-                      {ativo
-                        ? "Pontos são concedidos nas próximas vendas/atendimentos"
-                        : "Regra desativada, não concede mais pontos"}
-                    </p>
-                  </div>
-                  <Switch
-                    id="ativo"
-                    checked={ativo}
-                    onCheckedChange={(checked) =>
-                      form.setValue("ativo", checked, {
-                        shouldDirty: true,
-                        shouldValidate: true
-                      })
-                    }
-                  />
-                </div>
-              </FormItem>
+              <FidelidadeRuleFields
+                form={form}
+                lookups={lookups}
+                tipo={tipo}
+                ativo={ativo}
+              />
             </CardContent>
           </Card>
           {mutationError ? (
@@ -273,17 +158,7 @@ export function FidelidadeForm({
               <AlertDescription>{mutationError.message}</AlertDescription>
             </Alert>
           ) : null}
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button asChild variant="outline" type="button">
-              <Link href="/fidelidade">Cancelar</Link>
-            </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? (
-                <Loader2 className="size-4 animate-spin" />
-              ) : null}
-              Salvar regra
-            </Button>
-          </div>
+          <FidelidadeFormActions loading={isSubmitting} />
         </form>
       </Form>
     </section>

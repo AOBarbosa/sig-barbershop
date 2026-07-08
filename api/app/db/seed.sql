@@ -1,22 +1,16 @@
 USE sig_barbershop;
 
--- -----------------------------------------------------
--- PESSOA
--- -----------------------------------------------------
-INSERT INTO PESSOA (nome, cpf, email, data_nascimento) VALUES
-('Carlos Mendes',   '11122233344', 'carlos@email.com',   '1990-03-15'),
-('Ana Lima',        '22233344455', 'ana@email.com',       '1985-07-22'),
-('Pedro Souza',     '33344455566', 'pedro@email.com',     '1992-11-08'),
-('Juliana Costa',   '44455566677', 'juliana@email.com',   '1988-05-30'),
-('Roberto Alves',   '55566677788', 'roberto@email.com',   '1995-01-17'),
-('Fernanda Nunes',  '66677788899', 'fernanda@email.com',  '1993-09-04'),
-('Marcos Oliveira', '77788899900', 'marcos@email.com',    '1980-12-25'),
-('Beatriz Santos',  '88899900011', 'beatriz@email.com',   '1997-06-14');
+INSERT INTO PESSOA (id_pessoa, nome, cpf, email, data_nascimento, admin) VALUES
+(1, 'Carlos Mendes', '11122233344', 'carlos@email.com', '1990-03-15', 0),
+(2, 'Ana Lima', '22233344455', 'ana@email.com', '1985-07-22', 0),
+(3, 'Pedro Souza', '33344455566', 'pedro@email.com', '1992-11-08', 0),
+(4, 'Juliana Costa', '44455566677', 'juliana@email.com', '1988-05-30', 0),
+(5, 'Roberto Alves', '55566677788', 'roberto@email.com', '1995-01-17', 1),
+(6, 'Fernanda Nunes', '66677788899', 'fernanda@email.com', '1993-09-04', 0),
+(7, 'Marcos Oliveira', '77788899900', 'marcos@email.com', '1980-12-25', 0),
+(8, 'Beatriz Santos', '88899900011', 'beatriz@email.com', '1997-06-14', 0);
 
--- -----------------------------------------------------
--- TELEFONE
--- -----------------------------------------------------
-INSERT INTO TELEFONE (PESSOA_id_pessoa, numero) VALUES
+INSERT INTO TELEFONE (PESSOA_id_pessoa, telefone) VALUES
 (1, '84991110001'),
 (2, '84991110002'),
 (3, '84991110003'),
@@ -26,130 +20,153 @@ INSERT INTO TELEFONE (PESSOA_id_pessoa, numero) VALUES
 (7, '84991110007'),
 (8, '84991110008');
 
--- -----------------------------------------------------
--- CLIENTE (pessoas 1, 2, 3, 4)
--- -----------------------------------------------------
-INSERT INTO CLIENTE (PESSOA_id_pessoa) VALUES (1), (2), (3), (4);
+INSERT INTO CLIENTE (PESSOA_id_pessoa, preferencias, observacoes) VALUES
+(1, 'Corte baixo', 'Cliente mensal'),
+(2, 'Barba desenhada', NULL),
+(3, 'Corte social', NULL),
+(4, NULL, 'Prefere atendimento pela manha');
 
--- -----------------------------------------------------
--- CAIXA (pessoa 5)
--- -----------------------------------------------------
 INSERT INTO CAIXA (PESSOA_id_pessoa) VALUES (5);
 
--- -----------------------------------------------------
--- BARBEIRO (pessoas 6, 7, 8)
--- -----------------------------------------------------
-INSERT INTO BARBEIRO (PESSOA_id_pessoa, especialidade, ativo) VALUES
-(6, 'Corte degradê',      TRUE),
-(7, 'Barba e bigode',     TRUE),
-(8, 'Corte infantil',     TRUE);
+INSERT INTO BARBEIRO (PESSOA_id_pessoa, apelido, comissao_percentual) VALUES
+(6, 'Nanda', 40.00),
+(7, 'Marcos', 45.00),
+(8, 'Bia', 35.00);
 
--- -----------------------------------------------------
--- DISPONIBILIDADE
--- -----------------------------------------------------
-INSERT INTO DISPONIBILIDADE (BARBEIRO_id_barbeiro, dia_semana, hora_inicio, hora_fim) VALUES
-(1, 'segunda', '08:00', '18:00'),
-(1, 'terca',   '08:00', '18:00'),
-(1, 'quarta',  '08:00', '18:00'),
-(1, 'quinta',  '08:00', '18:00'),
-(1, 'sexta',   '08:00', '18:00'),
-(2, 'segunda', '09:00', '17:00'),
-(2, 'quarta',  '09:00', '17:00'),
-(2, 'sexta',   '09:00', '17:00'),
-(2, 'sabado',  '09:00', '14:00'),
-(3, 'terca',   '10:00', '19:00'),
-(3, 'quinta',  '10:00', '19:00'),
-(3, 'sabado',  '08:00', '16:00');
+INSERT INTO DISPONIBILIDADE (
+    BARBEIRO_PESSOA_id_pessoa,
+    dia_semana,
+    hora_inicio,
+    hora_fim,
+    ativo
+) VALUES
+(6, 'SEGUNDA', '08:00', '18:00', 1),
+(6, 'TERCA', '08:00', '18:00', 1),
+(6, 'QUARTA', '08:00', '18:00', 1),
+(7, 'SEGUNDA', '09:00', '17:00', 1),
+(7, 'SEXTA', '09:00', '17:00', 1),
+(8, 'SABADO', '08:00', '16:00', 1);
 
--- -----------------------------------------------------
--- SERVICO
--- -----------------------------------------------------
-INSERT INTO SERVICO (nome, descricao, preco, duracao_minutos, ativo) VALUES
-('Corte simples',   'Corte de cabelo simples',           25.00, 30, TRUE),
-('Corte degradê',   'Corte com técnica degradê',         40.00, 45, TRUE),
-('Barba',           'Aparar e modelar barba',            20.00, 20, TRUE),
-('Corte + Barba',   'Combo corte e barba',               55.00, 60, TRUE),
-('Hidratação',      'Hidratação capilar',                35.00, 40, TRUE),
-('Corte infantil',  'Corte para crianças até 12 anos',   20.00, 25, TRUE);
+INSERT INTO SERVICO (id_servico, nome, ativo) VALUES
+(1, 'Corte simples', 1),
+(2, 'Corte degrade', 1),
+(3, 'Barba', 1),
+(4, 'Corte + Barba', 1),
+(5, 'Hidratacao', 1),
+(6, 'Corte infantil', 1);
 
--- -----------------------------------------------------
--- HISTORICO_SERVICO
--- -----------------------------------------------------
-INSERT INTO HISTORICO_SERVICO (SERVICO_id_servico, preco_anterior, preco_novo, ativo, alterado_em) VALUES
-(1, 20.00, 25.00, TRUE, '2025-01-10 10:00:00'),
-(2, 35.00, 40.00, TRUE, '2025-01-10 10:00:00'),
-(4, 45.00, 55.00, TRUE, '2025-03-01 09:00:00');
+INSERT INTO HISTORICO_SERVICO (
+    SERVICO_id_servico,
+    preco,
+    duracao_em_minutos,
+    pontos_gerados,
+    data_inicio,
+    data_fim,
+    ativo
+) VALUES
+(1, 25.00, 30, 10, '2026-01-01', NULL, 1),
+(2, 40.00, 45, 15, '2026-01-01', NULL, 1),
+(3, 20.00, 20, 8, '2026-01-01', NULL, 1),
+(4, 55.00, 60, 20, '2026-01-01', NULL, 1),
+(5, 35.00, 40, 12, '2026-01-01', NULL, 1),
+(6, 20.00, 25, 8, '2026-01-01', NULL, 1);
 
--- -----------------------------------------------------
--- PRODUTO
--- -----------------------------------------------------
-INSERT INTO PRODUTO (nome, descricao, preco, estoque, ativo) VALUES
-('Pomada modeladora', 'Pomada para modelagem de cabelo', 35.00, 20, TRUE),
-('Shampoo masculino', 'Shampoo para cabelos masculinos', 25.00, 15, TRUE),
-('Óleo para barba',   'Óleo hidratante para barba',      30.00, 12, TRUE),
-('Cera capilar',      'Cera de fixação forte',           28.00, 18, TRUE);
+INSERT INTO PRODUTO (id_produto, nome, categoria, ativo) VALUES
+(1, 'Pomada modeladora', 'Finalizador', 1),
+(2, 'Shampoo masculino', 'Higiene', 1),
+(3, 'Oleo para barba', 'Barba', 1),
+(4, 'Cera capilar', 'Finalizador', 1);
 
--- -----------------------------------------------------
--- HISTORICO_PRODUTO
--- -----------------------------------------------------
-INSERT INTO HISTORICO_PRODUTO (PRODUTO_id_produto, preco_anterior, preco_novo, estoque_anterior, estoque_novo, ativo, alterado_em) VALUES
-(1, 30.00, 35.00, 25, 20, TRUE, '2025-02-15 11:00:00'),
-(3, 25.00, 30.00, 10, 12, TRUE, '2025-04-01 14:00:00');
+INSERT INTO HISTORICO_PRODUTO (
+    PRODUTO_id_produto,
+    preco_venda,
+    preco_custo,
+    pontos_gerados,
+    data_inicio,
+    data_fim,
+    ativo
+) VALUES
+(1, 35.00, 18.00, 5, '2026-01-01', NULL, 1),
+(2, 25.00, 12.00, 3, '2026-01-01', NULL, 1),
+(3, 30.00, 14.00, 4, '2026-01-01', NULL, 1),
+(4, 28.00, 13.00, 4, '2026-01-01', NULL, 1);
 
--- -----------------------------------------------------
--- ATENDIMENTO
--- -----------------------------------------------------
-INSERT INTO ATENDIMENTO (CLIENTE_id_cliente, BARBEIRO_id_barbeiro, data_hora, status, valor_total) VALUES
-(1, 1, '2026-06-10 09:00:00', 'concluido',    40.00),
-(2, 2, '2026-06-10 10:00:00', 'concluido',    55.00),
-(3, 3, '2026-06-11 14:00:00', 'concluido',    20.00),
-(4, 1, '2026-06-15 08:00:00', 'cancelado',     0.00),
-(1, 2, '2026-07-05 09:00:00', 'agendado',      0.00);
+INSERT INTO ATENDIMENTO (
+    id_atendimento,
+    CLIENTE_PESSOA_id_pessoa,
+    BARBEIRO_PESSOA_id_pessoa,
+    data_hora_inicio,
+    data_hora_fim,
+    valor_total,
+    status,
+    observacoes
+) VALUES
+(1, 1, 6, '2026-06-10 09:00:00', '2026-06-10 09:45:00', 40.00, 'CONCLUIDO', NULL),
+(2, 2, 7, '2026-06-10 10:00:00', '2026-06-10 11:00:00', 55.00, 'CONCLUIDO', NULL),
+(3, 3, 8, '2026-06-11 14:00:00', '2026-06-11 14:20:00', 20.00, 'CONCLUIDO', NULL),
+(4, 4, 6, '2026-06-15 08:00:00', NULL, 0.00, 'CANCELADO', 'Cliente cancelou'),
+(5, 1, 7, '2026-07-05 09:00:00', NULL, 0.00, 'AGENDADO', NULL);
 
--- -----------------------------------------------------
--- ATENDIMENTO_SERVICO
--- -----------------------------------------------------
-INSERT INTO ATENDIMENTO_SERVICO (ATENDIMENTO_id_atendimento, SERVICO_id_servico, preco_cobrado) VALUES
+INSERT INTO ATENDIMENTO_SERVICO (
+    ATENDIMENTO_id_atendimento,
+    SERVICO_id_servico,
+    preco_cobrado
+) VALUES
 (1, 2, 40.00),
 (2, 4, 55.00),
 (3, 3, 20.00);
 
--- -----------------------------------------------------
--- VENDA
--- -----------------------------------------------------
-INSERT INTO VENDA (CLIENTE_id_cliente, CAIXA_id_caixa, valor_total, status, forma_pagamento) VALUES
-(1, 1, 35.00, 'concluida', 'pix'),
-(2, 1, 55.00, 'concluida', 'cartao_credito'),
-(3, 1, 28.00, 'concluida', 'dinheiro'),
-(4, 1,  0.00, 'pendente',   NULL);
+INSERT INTO VENDA (
+    id_venda,
+    CLIENTE_PESSOA_id_pessoa,
+    CAIXA_PESSOA_id_pessoa,
+    data_hora,
+    valor_total,
+    status,
+    forma_pagamento,
+    desconto
+) VALUES
+(1, 1, 5, '2026-06-10 09:50:00', 35.00, 'PAGA', 'PIX', 0.00),
+(2, 2, 5, '2026-06-10 11:05:00', 55.00, 'PAGA', 'CARTAO_CREDITO', 0.00),
+(3, 3, 5, '2026-06-11 14:30:00', 28.00, 'PAGA', 'DINHEIRO', 0.00),
+(4, 4, 5, '2026-07-01 10:00:00', 0.00, 'ABERTA', 'OUTRO', 0.00);
 
--- -----------------------------------------------------
--- VENDA_PRODUTO
--- -----------------------------------------------------
-INSERT INTO VENDA_PRODUTO (VENDA_id_venda, PRODUTO_id_produto, quantidade, preco_unitario) VALUES
+INSERT INTO VENDA_PRODUTO (
+    VENDA_id_venda,
+    PRODUTO_id_produto,
+    quantidade,
+    preco_unitario
+) VALUES
 (1, 1, 1, 35.00),
 (2, 2, 1, 25.00),
 (2, 3, 1, 30.00),
 (3, 4, 1, 28.00);
 
--- -----------------------------------------------------
--- FIDELIDADE
--- -----------------------------------------------------
-INSERT INTO FIDELIDADE (SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo) VALUES
-(1, NULL, 10, TRUE),
-(2, NULL, 15, TRUE),
-(3, NULL,  8, TRUE),
-(4, NULL, 20, TRUE),
-(NULL, 1,  5, TRUE),
-(NULL, 2,  3, TRUE),
-(NULL, 3,  4, TRUE);
+INSERT INTO FIDELIDADE (
+    id_fidelidade,
+    PRODUTO_id_produto,
+    SERVICO_id_servico,
+    pontos_acumulados,
+    pontos_uso,
+    ativo
+) VALUES
+(1, NULL, 1, 10, 100, 1),
+(2, NULL, 2, 15, 150, 1),
+(3, NULL, 3, 8, 80, 1),
+(4, NULL, 4, 20, 200, 1),
+(5, 1, NULL, 5, 50, 1),
+(6, 2, NULL, 3, 30, 1),
+(7, 3, NULL, 4, 40, 1);
 
--- -----------------------------------------------------
--- HISTORICO_PONTOS
--- -----------------------------------------------------
-INSERT INTO HISTORICO_PONTOS (CLIENTE_id_cliente, pontos, tipo_movimentacao, descricao) VALUES
-(1, 15, 'acumulo', 'Corte degradê - atendimento #1'),
-(2, 20, 'acumulo', 'Corte + Barba - atendimento #2'),
-(3,  8, 'acumulo', 'Barba - atendimento #3'),
-(1,  5, 'acumulo', 'Compra pomada modeladora - venda #1'),
-(2, 10, 'resgate', 'Resgate de pontos por desconto');
+INSERT INTO HISTORICO_PONTOS (
+    CLIENTE_PESSOA_id_pessoa,
+    VENDA_id_venda,
+    FIDELIDADE_id_fidelidade,
+    pontos,
+    tipo_movimentacao,
+    data_movimentacao
+) VALUES
+(1, 1, 5, 5, 'ACUMULA', '2026-06-10 09:50:00'),
+(2, 2, 6, 3, 'ACUMULA', '2026-06-10 11:05:00'),
+(2, 2, 7, 4, 'ACUMULA', '2026-06-10 11:05:00'),
+(3, 3, 7, 4, 'ACUMULA', '2026-06-11 14:30:00');

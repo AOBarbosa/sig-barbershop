@@ -49,7 +49,7 @@ export function ProdutosVinculadosTable({
       </TableHeader>
       <TableBody>
         {itens.map((item) => (
-          <TableRow key={item.id_venda_produto}>
+          <TableRow key={`${item.VENDA_id_venda}-${item.PRODUTO_id_produto}`}>
             <TableCell>
               {produtosCatalogo.find(
                 (produto) => produto.id_produto === item.PRODUTO_id_produto

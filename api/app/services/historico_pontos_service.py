@@ -17,7 +17,7 @@ def _validar_cliente_existe(conn, cliente_id: int):
 def buscar_saldo_pontos(conn, cliente_id: int):
     _validar_cliente_existe(conn, cliente_id)
     saldo = historico_pontos_repository.calcular_saldo(conn, cliente_id)
-    return {"CLIENTE_id_cliente": cliente_id, "saldo": saldo}
+    return {"CLIENTE_PESSOA_id_pessoa": cliente_id, "saldo": saldo}
 
 
 def listar_historico_pontos(conn, cliente_id: int):
@@ -40,7 +40,7 @@ def acumular_pontos_atendimento(conn, atendimento_id: int, cliente_id: int):
             cliente_id,
             total_pontos,
             "acumulo",
-            f"Atendimento #{atendimento_id} concluido",
+            f"Atendimento #{atendimento_id} CONCLUIDO",
         )
 
     return total_pontos
@@ -61,7 +61,7 @@ def acumular_pontos_venda(conn, venda_id: int, cliente_id: int):
             cliente_id,
             total_pontos,
             "acumulo",
-            f"Venda #{venda_id} concluida",
+            f"Venda #{venda_id} PAGA",
         )
 
     return total_pontos

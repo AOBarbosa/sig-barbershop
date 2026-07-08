@@ -23,13 +23,12 @@ import {
 import { cn } from "@/lib/utils";
 import type { BarbeiroComPessoa } from "@/types/barbeiro";
 
-export type StatusFilter = "todos" | "ativos" | "inativos";
+export type StatusFilter = "todos";
 
-const filters = [
-  { value: "todos", label: "Todos" },
-  { value: "ativos", label: "Ativos" },
-  { value: "inativos", label: "Inativos" }
-] satisfies Array<{ value: StatusFilter; label: string }>;
+const filters = [{ value: "todos", label: "Todos" }] satisfies Array<{
+  value: StatusFilter;
+  label: string;
+}>;
 
 export function CatalogToolbar({
   search,
@@ -96,9 +95,9 @@ export function BarbeiroResults({
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>CPF</TableHead>
-              <TableHead>Especialidade</TableHead>
+              <TableHead>Apelido</TableHead>
+              <TableHead>Comissão</TableHead>
               <TableHead>Nascimento</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -122,7 +121,7 @@ function DesktopRows({ barbeiros }: { barbeiros: BarbeiroComPessoa[] }) {
   }
 
   return barbeiros.map((barbeiro) => (
-    <BarbeiroRow key={barbeiro.id_barbeiro} barbeiro={barbeiro} />
+    <BarbeiroRow key={barbeiro.PESSOA_id_pessoa} barbeiro={barbeiro} />
   ));
 }
 
@@ -162,7 +161,10 @@ function MobileResults({
     <div className="space-y-3 md:hidden" data-testid="barbeiros-mobile-list">
       {barbeiros.length > 0 ? (
         barbeiros.map((barbeiro) => (
-          <BarbeiroMobileCard key={barbeiro.id_barbeiro} barbeiro={barbeiro} />
+          <BarbeiroMobileCard
+            key={barbeiro.PESSOA_id_pessoa}
+            barbeiro={barbeiro}
+          />
         ))
       ) : (
         <div className="text-muted-foreground flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border text-center text-sm">

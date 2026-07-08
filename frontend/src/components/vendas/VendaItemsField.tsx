@@ -2,7 +2,6 @@
 
 import type { UseFormReturn } from "react-hook-form";
 
-import { formatCurrency } from "@/components/vendas/vendaFormatters";
 import type {
   VendaFormInput,
   VendaFormValues
@@ -33,13 +32,12 @@ export function VendaItemsField({
             <div className="min-w-0">
               <p className="text-sm font-medium">{produto.nome}</p>
               <p className="text-muted-foreground text-xs">
-                {formatCurrency(produto.preco)} · {produto.estoque} em estoque
+                {produto.categoria ?? "Sem categoria"}
               </p>
             </div>
             <input
               type="number"
               min="0"
-              max={produto.estoque}
               step="1"
               defaultValue={0}
               aria-label={`Quantidade de ${produto.nome}`}

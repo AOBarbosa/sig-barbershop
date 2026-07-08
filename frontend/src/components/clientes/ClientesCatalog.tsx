@@ -88,7 +88,7 @@ function DesktopRows({ clientes }: { clientes: ClienteComPessoa[] }) {
   }
 
   return clientes.map((cliente) => (
-    <ClienteRow key={cliente.id_cliente} cliente={cliente} />
+    <ClienteRow key={cliente.PESSOA_id_pessoa} cliente={cliente} />
   ));
 }
 
@@ -128,7 +128,7 @@ function MobileResults({
     <div className="space-y-3 md:hidden" data-testid="clientes-mobile-list">
       {clientes.length > 0 ? (
         clientes.map((cliente) => (
-          <ClienteMobileCard key={cliente.id_cliente} cliente={cliente} />
+          <ClienteMobileCard key={cliente.PESSOA_id_pessoa} cliente={cliente} />
         ))
       ) : (
         <div className="text-muted-foreground flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border text-center text-sm">

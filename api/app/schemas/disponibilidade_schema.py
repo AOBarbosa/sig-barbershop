@@ -5,19 +5,20 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class DiaSemana(str, Enum):
-    segunda = "segunda"
-    terca = "terca"
-    quarta = "quarta"
-    quinta = "quinta"
-    sexta = "sexta"
-    sabado = "sabado"
-    domingo = "domingo"
+    segunda = "SEGUNDA"
+    terca = "TERCA"
+    quarta = "QUARTA"
+    quinta = "QUINTA"
+    sexta = "SEXTA"
+    sabado = "SABADO"
+    domingo = "DOMINGO"
 
 
 class DisponibilidadeBase(BaseModel):
     dia_semana: DiaSemana
     hora_inicio: time
     hora_fim: time
+    ativo: bool = True
 
     @model_validator(mode="after")
     def _valida_intervalo(self):
@@ -27,13 +28,14 @@ class DisponibilidadeBase(BaseModel):
 
 
 class DisponibilidadeCreate(DisponibilidadeBase):
-    BARBEIRO_id_barbeiro: int = Field(gt=0)
+    BARBEIRO_PESSOA_id_pessoa: int = Field(gt=0)
 
 
 class DisponibilidadeUpdate(BaseModel):
     dia_semana: DiaSemana | None = None
     hora_inicio: time | None = None
     hora_fim: time | None = None
+    ativo: bool | None = None
 
     @model_validator(mode="after")
     def _valida_intervalo(self):
@@ -50,4 +52,4 @@ class DisponibilidadeResponse(DisponibilidadeBase):
     model_config = ConfigDict(from_attributes=True)
 
     id_disponibilidade: int
-    BARBEIRO_id_barbeiro: int
+    BARBEIRO_PESSOA_id_pessoa: int

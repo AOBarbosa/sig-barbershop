@@ -34,9 +34,9 @@ function parseList<T>(
 function isAtendimento(data: unknown): data is Atendimento {
   return hasKeys(data, [
     "id_atendimento",
-    "CLIENTE_id_cliente",
-    "BARBEIRO_id_barbeiro",
-    "data_hora",
+    "CLIENTE_PESSOA_id_pessoa",
+    "BARBEIRO_PESSOA_id_pessoa",
+    "data_hora_inicio",
     "status",
     "valor_total"
   ]);
@@ -47,24 +47,23 @@ function isPessoa(data: unknown): data is Pessoa {
 }
 
 function isCliente(data: unknown): data is Cliente {
-  return hasKeys(data, ["id_cliente", "PESSOA_id_pessoa"]);
+  return hasKeys(data, ["PESSOA_id_pessoa"]);
 }
 
 function isBarbeiro(data: unknown): data is Barbeiro {
-  return hasKeys(data, ["id_barbeiro", "PESSOA_id_pessoa", "ativo"]);
+  return hasKeys(data, ["PESSOA_id_pessoa"]);
 }
 
 function isDisponibilidade(data: unknown): data is Disponibilidade {
   return hasKeys(data, [
     "id_disponibilidade",
-    "BARBEIRO_id_barbeiro",
+    "BARBEIRO_PESSOA_id_pessoa",
     "dia_semana"
   ]);
 }
 
 function isAtendimentoServico(data: unknown): data is AtendimentoServico {
   return hasKeys(data, [
-    "id_atendimento_servico",
     "ATENDIMENTO_id_atendimento",
     "SERVICO_id_servico",
     "preco_cobrado"

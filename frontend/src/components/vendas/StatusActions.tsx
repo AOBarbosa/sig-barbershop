@@ -10,12 +10,13 @@ const nextActions: Record<
   VendaStatus,
   Array<{ label: string; status: VendaStatus }>
 > = {
-  pendente: [
-    { label: "Concluir", status: "concluida" },
-    { label: "Cancelar", status: "cancelada" }
+  ABERTA: [
+    { label: "Concluir", status: "PAGA" },
+    { label: "Cancelar", status: "CANCELADA" }
   ],
-  concluida: [],
-  cancelada: []
+  PAGA: [],
+  CANCELADA: [],
+  ESTORNADA: []
 };
 
 export function StatusActions({
@@ -38,7 +39,7 @@ export function StatusActions({
         <Button
           key={action.status}
           type="button"
-          variant={action.status === "cancelada" ? "outline" : "default"}
+          variant={action.status === "CANCELADA" ? "outline" : "default"}
           disabled={mutation.isPending}
           onClick={() => mutation.mutate(action.status)}>
           {mutation.isPending ? (

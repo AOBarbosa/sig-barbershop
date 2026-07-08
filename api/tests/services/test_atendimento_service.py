@@ -27,12 +27,12 @@ class FakeConn:
 def atendimento_row(atendimento_id=1):
     return {
         "id_atendimento": atendimento_id,
-        "CLIENTE_id_cliente": 1,
-        "BARBEIRO_id_barbeiro": 2,
-        "data_hora": datetime(2026, 7, 5, 9, 0),
-        "status": "agendado",
+        "CLIENTE_PESSOA_id_pessoa": 1,
+        "BARBEIRO_PESSOA_id_pessoa": 2,
+        "data_hora_inicio": datetime(2026, 7, 5, 9, 0),
+        "status": "AGENDADO",
         "valor_total": Decimal("0.00"),
-        "observacao": "Primeiro atendimento",
+        "observacoes": "Primeiro atendimento",
     }
 
 
@@ -103,10 +103,10 @@ def test_criar_atendimento_valida_refs_calcula_valor_total_e_commita(monkeypatch
     result = atendimento_service.criar_atendimento(
         conn,
         AtendimentoCreate(
-            CLIENTE_id_cliente=1,
-            BARBEIRO_id_barbeiro=2,
-            data_hora=datetime(2026, 7, 5, 9, 0),
-            observacao="Primeiro atendimento",
+            CLIENTE_PESSOA_id_pessoa=1,
+            BARBEIRO_PESSOA_id_pessoa=2,
+            data_hora_inicio=datetime(2026, 7, 5, 9, 0),
+            observacoes="Primeiro atendimento",
         ),
     )
 
@@ -124,7 +124,7 @@ def test_criar_atendimento_nao_aceita_cliente_inexistente(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         atendimento_service.criar_atendimento(
             conn,
-            AtendimentoCreate(CLIENTE_id_cliente=99, BARBEIRO_id_barbeiro=2, data_hora=datetime(2026, 7, 5, 9, 0)),
+            AtendimentoCreate(CLIENTE_PESSOA_id_pessoa=99, BARBEIRO_PESSOA_id_pessoa=2, data_hora_inicio=datetime(2026, 7, 5, 9, 0)),
         )
 
     assert exc.value.status_code == 404
@@ -140,7 +140,7 @@ def test_criar_atendimento_nao_aceita_barbeiro_inexistente(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         atendimento_service.criar_atendimento(
             conn,
-            AtendimentoCreate(CLIENTE_id_cliente=1, BARBEIRO_id_barbeiro=99, data_hora=datetime(2026, 7, 5, 9, 0)),
+            AtendimentoCreate(CLIENTE_PESSOA_id_pessoa=1, BARBEIRO_PESSOA_id_pessoa=99, data_hora_inicio=datetime(2026, 7, 5, 9, 0)),
         )
 
     assert exc.value.status_code == 404
@@ -161,7 +161,7 @@ def test_criar_atendimento_faz_rollback_quando_repository_falha(monkeypatch):
     with pytest.raises(RuntimeError):
         atendimento_service.criar_atendimento(
             conn,
-            AtendimentoCreate(CLIENTE_id_cliente=1, BARBEIRO_id_barbeiro=2, data_hora=datetime(2026, 7, 5, 9, 0)),
+            AtendimentoCreate(CLIENTE_PESSOA_id_pessoa=1, BARBEIRO_PESSOA_id_pessoa=2, data_hora_inicio=datetime(2026, 7, 5, 9, 0)),
         )
 
     assert conn.started is True
@@ -172,7 +172,7 @@ def test_criar_atendimento_faz_rollback_quando_repository_falha(monkeypatch):
 def test_atualizar_atendimento_existente_valida_refs_recalcula_total_e_commita(monkeypatch):
     conn = FakeConn()
     current = atendimento_row()
-    updated = current | {"observacao": "Remarcado"}
+    updated = current | {"observacoes": "Remarcado"}
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: current)
     monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: True)
     monkeypatch.setattr(atendimento_service.atendimento_repository, "barbeiro_existe", lambda _c, _id: True)
@@ -191,7 +191,7 @@ def test_atualizar_atendimento_existente_valida_refs_recalcula_total_e_commita(m
     result = atendimento_service.atualizar_atendimento(
         conn,
         1,
-        AtendimentoUpdate(CLIENTE_id_cliente=1, BARBEIRO_id_barbeiro=2, observacao="Remarcado"),
+        AtendimentoUpdate(CLIENTE_PESSOA_id_pessoa=1, BARBEIRO_PESSOA_id_pessoa=2, observacoes="Remarcado"),
     )
 
     assert result["valor_total"] == Decimal("75.00")
@@ -205,7 +205,7 @@ def test_atualizar_atendimento_inexistente_retorna_404(monkeypatch):
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: None)
 
     with pytest.raises(HTTPException) as exc:
-        atendimento_service.atualizar_atendimento(conn, 404, AtendimentoUpdate(observacao="x"))
+        atendimento_service.atualizar_atendimento(conn, 404, AtendimentoUpdate(observacoes="x"))
 
     assert exc.value.status_code == 404
     assert conn.rolled_back is True
@@ -218,7 +218,7 @@ def test_atualizar_atendimento_nao_aceita_cliente_inexistente(monkeypatch):
     monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: False)
 
     with pytest.raises(HTTPException) as exc:
-        atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(CLIENTE_id_cliente=99))
+        atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(CLIENTE_PESSOA_id_pessoa=99))
 
     assert exc.value.status_code == 404
     assert conn.rolled_back is True
@@ -230,7 +230,7 @@ def test_atualizar_atendimento_nao_aceita_barbeiro_inexistente(monkeypatch):
     monkeypatch.setattr(atendimento_service.atendimento_repository, "barbeiro_existe", lambda _c, _id: False)
 
     with pytest.raises(HTTPException) as exc:
-        atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(BARBEIRO_id_barbeiro=99))
+        atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(BARBEIRO_PESSOA_id_pessoa=99))
 
     assert exc.value.status_code == 404
     assert conn.rolled_back is True
@@ -246,7 +246,7 @@ def test_atualizar_atendimento_faz_rollback_quando_repository_falha(monkeypatch)
     monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar", fake_atualizar)
 
     with pytest.raises(RuntimeError):
-        atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(observacao="x"))
+        atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(observacoes="x"))
 
     assert conn.committed is False
     assert conn.rolled_back is True
@@ -254,7 +254,7 @@ def test_atualizar_atendimento_faz_rollback_quando_repository_falha(monkeypatch)
 
 def test_atualizar_status_atendimento_existente_commita(monkeypatch):
     conn = FakeConn()
-    updated = atendimento_row() | {"status": "concluido"}
+    updated = atendimento_row() | {"status": "CONCLUIDO"}
     acumulos = []
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atendimento_row())
     monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar_status", lambda _c, _id, status: updated)
@@ -267,18 +267,18 @@ def test_atualizar_status_atendimento_existente_commita(monkeypatch):
     result = atendimento_service.atualizar_status_atendimento(
         conn,
         1,
-        AtendimentoStatusUpdate(status="concluido"),
+        AtendimentoStatusUpdate(status="CONCLUIDO"),
     )
 
-    assert result["status"] == "concluido"
-    assert acumulos == [(1, atendimento_row()["CLIENTE_id_cliente"])]
+    assert result["status"] == "CONCLUIDO"
+    assert acumulos == [(1, atendimento_row()["CLIENTE_PESSOA_id_pessoa"])]
     assert conn.committed is True
     assert conn.rolled_back is False
 
 
-def test_atualizar_status_atendimento_ja_concluido_nao_acumula_pontos_novamente(monkeypatch):
+def test_atualizar_status_atendimento_ja_CONCLUIDO_nao_acumula_pontos_novamente(monkeypatch):
     conn = FakeConn()
-    atual = atendimento_row() | {"status": "concluido"}
+    atual = atendimento_row() | {"status": "CONCLUIDO"}
     acumulos = []
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atual)
     monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar_status", lambda _c, _id, status: atual)
@@ -288,15 +288,15 @@ def test_atualizar_status_atendimento_ja_concluido_nao_acumula_pontos_novamente(
         lambda _c, atendimento_id, cliente_id: acumulos.append((atendimento_id, cliente_id)),
     )
 
-    atendimento_service.atualizar_status_atendimento(conn, 1, AtendimentoStatusUpdate(status="concluido"))
+    atendimento_service.atualizar_status_atendimento(conn, 1, AtendimentoStatusUpdate(status="CONCLUIDO"))
 
     assert acumulos == []
     assert conn.committed is True
 
 
-def test_atualizar_status_atendimento_para_status_diferente_de_concluido_nao_acumula_pontos(monkeypatch):
+def test_atualizar_status_atendimento_para_status_diferente_de_CONCLUIDO_nao_acumula_pontos(monkeypatch):
     conn = FakeConn()
-    updated = atendimento_row() | {"status": "cancelado"}
+    updated = atendimento_row() | {"status": "CANCELADO"}
     acumulos = []
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atendimento_row())
     monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar_status", lambda _c, _id, status: updated)
@@ -306,7 +306,7 @@ def test_atualizar_status_atendimento_para_status_diferente_de_concluido_nao_acu
         lambda _c, atendimento_id, cliente_id: acumulos.append((atendimento_id, cliente_id)),
     )
 
-    atendimento_service.atualizar_status_atendimento(conn, 1, AtendimentoStatusUpdate(status="cancelado"))
+    atendimento_service.atualizar_status_atendimento(conn, 1, AtendimentoStatusUpdate(status="CANCELADO"))
 
     assert acumulos == []
     assert conn.committed is True
@@ -320,7 +320,7 @@ def test_atualizar_status_atendimento_inexistente_retorna_404(monkeypatch):
         atendimento_service.atualizar_status_atendimento(
             conn,
             404,
-            AtendimentoStatusUpdate(status="cancelado"),
+            AtendimentoStatusUpdate(status="CANCELADO"),
         )
 
     assert exc.value.status_code == 404
@@ -340,7 +340,7 @@ def test_atualizar_status_atendimento_faz_rollback_quando_repository_falha(monke
         atendimento_service.atualizar_status_atendimento(
             conn,
             1,
-            AtendimentoStatusUpdate(status="cancelado"),
+            AtendimentoStatusUpdate(status="CANCELADO"),
         )
 
     assert conn.committed is False

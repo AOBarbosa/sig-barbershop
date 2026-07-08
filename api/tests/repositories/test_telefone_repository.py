@@ -34,21 +34,22 @@ class FakeConn:
         return self.fake_cursor
 
 
-def tel_row(tel_id=1, pessoa_id=1):
-    return {"id_telefone": tel_id, "PESSOA_id_pessoa": pessoa_id, "numero": "84999999999"}
+def tel_row(pessoa_id=1, telefone="84999999999"):
+    return {"PESSOA_id_pessoa": pessoa_id, "telefone": telefone}
 
 
 def test_buscar_por_id_consulta_telefone():
     cursor = FakeCursor(row=tel_row(3))
     conn = FakeConn(cursor)
 
-    result = telefone_repository.buscar_por_id(conn, 3)
+    result = telefone_repository.buscar_por_id(conn, (3, "84999999999"))
 
     sql, params = cursor.statements[0]
     assert "FROM TELEFONE" in sql
-    assert "WHERE id_telefone = %s" in sql
-    assert params == (3,)
-    assert result["id_telefone"] == 3
+    assert "WHERE PESSOA_id_pessoa = %s" in sql
+    assert "AND telefone = %s" in sql
+    assert params == (3, "84999999999")
+    assert result["PESSOA_id_pessoa"] == 3
 
 
 def test_listar_por_pessoa_filtra_por_pessoa():
@@ -64,12 +65,12 @@ def test_listar_por_pessoa_filtra_por_pessoa():
 
 
 def test_criar_telefone_insere_e_retorna_registro():
-    created = tel_row(10)
-    cursor = FakeCursor(row=created, lastrowid=10)
+    created = tel_row()
+    cursor = FakeCursor(row=created)
     conn = FakeConn(cursor)
 
     result = telefone_repository.criar(
-        conn, {"PESSOA_id_pessoa": 1, "numero": "84999999999"}
+        conn, {"PESSOA_id_pessoa": 1, "telefone": "84999999999"}
     )
 
     insert_sql, insert_params = cursor.statements[0]
@@ -79,16 +80,16 @@ def test_criar_telefone_insere_e_retorna_registro():
 
 
 def test_atualizar_telefone_apenas_campos_recebidos():
-    updated = tel_row() | {"numero": "84988888888"}
+    updated = tel_row() | {"telefone": "84988888888"}
     cursor = FakeCursor(row=updated)
     conn = FakeConn(cursor)
 
-    result = telefone_repository.atualizar(conn, 1, {"numero": "84988888888"})
+    result = telefone_repository.atualizar(conn, (1, "84999999999"), {"telefone": "84988888888"})
 
     update_sql, update_params = cursor.statements[0]
     assert "UPDATE TELEFONE" in update_sql
-    assert "numero = %s" in update_sql
-    assert update_params == ("84988888888", 1)
+    assert "telefone = %s" in update_sql
+    assert update_params == ("84988888888", 1, "84999999999")
     assert result == updated
 
 
@@ -96,7 +97,7 @@ def test_atualizar_telefone_sem_campos_nao_executa_update():
     cursor = FakeCursor(row=tel_row())
     conn = FakeConn(cursor)
 
-    telefone_repository.atualizar(conn, 1, {})
+    telefone_repository.atualizar(conn, (1, "84999999999"), {})
 
     assert len(cursor.statements) == 1
     assert "SELECT" in cursor.statements[0][0]
@@ -106,11 +107,11 @@ def test_deletar_telefone_remove_por_id():
     cursor = FakeCursor()
     conn = FakeConn(cursor)
 
-    telefone_repository.deletar(conn, 5)
+    telefone_repository.deletar(conn, (5, "84999999999"))
 
     sql, params = cursor.statements[0]
     assert "DELETE FROM TELEFONE" in sql
-    assert params == (5,)
+    assert params == (5, "84999999999")
 
 
 def test_repository_nao_lanca_http_exception():

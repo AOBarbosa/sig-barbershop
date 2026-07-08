@@ -99,12 +99,12 @@ export function VendaDetail({ vendaId }: { vendaId: number }) {
             <DetailInfo
               icon={UserRound}
               label="Cliente"
-              value={clienteNome(venda.CLIENTE_id_cliente, lookups)}
+              value={clienteNome(venda.CLIENTE_PESSOA_id_pessoa, lookups)}
             />
             <DetailInfo
               icon={CalendarClock}
               label="Data"
-              value={formatDateTime(venda.data_venda)}
+              value={formatDateTime(venda.data_hora)}
             />
             <DetailInfo
               icon={CreditCard}
@@ -114,7 +114,7 @@ export function VendaDetail({ vendaId }: { vendaId: number }) {
             <DetailInfo
               icon={UserRound}
               label="Caixa"
-              value={caixaLabel(venda.CAIXA_id_caixa, lookups)}
+              value={caixaLabel(venda.CAIXA_PESSOA_id_pessoa, lookups)}
             />
             <div className="rounded-lg border p-4 sm:col-span-2">
               <div className="mb-2 flex items-center gap-2">

@@ -1,13 +1,14 @@
+FIDELIDADE_SELECT = """
+SELECT id_fidelidade, SERVICO_id_servico, PRODUTO_id_produto,
+       pontos_acumulados, pontos_uso, ativo
+FROM FIDELIDADE
+"""
+
+
 def listar(conn):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            SELECT id_fidelidade, SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo
-            FROM FIDELIDADE
-            ORDER BY id_fidelidade
-            """
-        )
+        cursor.execute(f"{FIDELIDADE_SELECT} ORDER BY id_fidelidade")
         return cursor.fetchall()
     finally:
         cursor.close()
@@ -16,14 +17,7 @@ def listar(conn):
 def buscar_por_id(conn, fidelidade_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            SELECT id_fidelidade, SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo
-            FROM FIDELIDADE
-            WHERE id_fidelidade = %s
-            """,
-            (fidelidade_id,),
-        )
+        cursor.execute(f"{FIDELIDADE_SELECT} WHERE id_fidelidade = %s", (fidelidade_id,))
         return cursor.fetchone()
     finally:
         cursor.close()
@@ -33,11 +27,7 @@ def buscar_por_servico(conn, servico_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            """
-            SELECT id_fidelidade, SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo
-            FROM FIDELIDADE
-            WHERE SERVICO_id_servico = %s AND ativo = TRUE
-            """,
+            f"{FIDELIDADE_SELECT} WHERE SERVICO_id_servico = %s AND ativo = TRUE",
             (servico_id,),
         )
         return cursor.fetchone()
@@ -49,11 +39,7 @@ def buscar_por_produto(conn, produto_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
-            """
-            SELECT id_fidelidade, SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo
-            FROM FIDELIDADE
-            WHERE PRODUTO_id_produto = %s AND ativo = TRUE
-            """,
+            f"{FIDELIDADE_SELECT} WHERE PRODUTO_id_produto = %s AND ativo = TRUE",
             (produto_id,),
         )
         return cursor.fetchone()
@@ -66,13 +52,17 @@ def criar(conn, data):
     try:
         cursor.execute(
             """
-            INSERT INTO FIDELIDADE (SERVICO_id_servico, PRODUTO_id_produto, pontos, ativo)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO FIDELIDADE (
+                SERVICO_id_servico, PRODUTO_id_produto,
+                pontos_acumulados, pontos_uso, ativo
+            )
+            VALUES (%s, %s, %s, %s, %s)
             """,
             (
                 data["SERVICO_id_servico"],
                 data["PRODUTO_id_produto"],
-                data["pontos"],
+                data["pontos_acumulados"],
+                data["pontos_uso"],
                 data["ativo"],
             ),
         )
@@ -93,11 +83,7 @@ def atualizar(conn, fidelidade_id: int, data):
         try:
             valores.append(fidelidade_id)
             cursor.execute(
-                f"""
-                UPDATE FIDELIDADE
-                SET {", ".join(campos)}
-                WHERE id_fidelidade = %s
-                """,
+                f"UPDATE FIDELIDADE SET {', '.join(campos)} WHERE id_fidelidade = %s",
                 tuple(valores),
             )
         finally:
@@ -109,12 +95,6 @@ def atualizar(conn, fidelidade_id: int, data):
 def deletar(conn, fidelidade_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(
-            """
-            DELETE FROM FIDELIDADE
-            WHERE id_fidelidade = %s
-            """,
-            (fidelidade_id,),
-        )
+        cursor.execute("DELETE FROM FIDELIDADE WHERE id_fidelidade = %s", (fidelidade_id,))
     finally:
         cursor.close()

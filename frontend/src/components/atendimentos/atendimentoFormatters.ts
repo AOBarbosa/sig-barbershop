@@ -21,10 +21,10 @@ export function formatDateTime(value: string) {
 
 export function statusLabel(status: AtendimentoStatus) {
   const labels: Record<AtendimentoStatus, string> = {
-    agendado: "Agendado",
-    em_andamento: "Em andamento",
-    concluido: "Concluído",
-    cancelado: "Cancelado"
+    AGENDADO: "Agendado",
+    EM_EXECUCAO: "Em andamento",
+    CONCLUIDO: "Concluído",
+    CANCELADO: "Cancelado"
   };
 
   return labels[status];
@@ -39,7 +39,7 @@ export function pessoaNome(pessoaId: number, lookups?: AtendimentoLookups) {
 
 export function clienteNome(clienteId: number, lookups?: AtendimentoLookups) {
   const cliente = lookups?.clientes.find(
-    (item) => item.id_cliente === clienteId
+    (item) => item.PESSOA_id_pessoa === clienteId
   );
 
   return cliente ? pessoaNome(cliente.PESSOA_id_pessoa, lookups) : "Cliente";
@@ -47,7 +47,7 @@ export function clienteNome(clienteId: number, lookups?: AtendimentoLookups) {
 
 export function barbeiroNome(barbeiroId: number, lookups?: AtendimentoLookups) {
   const barbeiro = lookups?.barbeiros.find(
-    (item) => item.id_barbeiro === barbeiroId
+    (item) => item.PESSOA_id_pessoa === barbeiroId
   );
 
   return barbeiro ? pessoaNome(barbeiro.PESSOA_id_pessoa, lookups) : "Barbeiro";

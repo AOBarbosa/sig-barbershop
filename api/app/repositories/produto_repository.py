@@ -3,8 +3,13 @@ def listar(conn):
     try:
         cursor.execute(
             """
-            SELECT id_produto, nome, descricao, preco, estoque, ativo
-            FROM PRODUTO
+            SELECT p.id_produto, p.nome, p.categoria, p.ativo,
+                   h.preco_venda, h.preco_custo, h.pontos_gerados
+            FROM PRODUTO p
+            LEFT JOIN HISTORICO_PRODUTO h
+              ON h.PRODUTO_id_produto = p.id_produto
+             AND h.ativo = TRUE
+             AND h.data_fim IS NULL
             ORDER BY nome
             """
         )
@@ -18,9 +23,14 @@ def buscar_por_id(conn, produto_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_produto, nome, descricao, preco, estoque, ativo
-            FROM PRODUTO
-            WHERE id_produto = %s
+            SELECT p.id_produto, p.nome, p.categoria, p.ativo,
+                   h.preco_venda, h.preco_custo, h.pontos_gerados
+            FROM PRODUTO p
+            LEFT JOIN HISTORICO_PRODUTO h
+              ON h.PRODUTO_id_produto = p.id_produto
+             AND h.ativo = TRUE
+             AND h.data_fim IS NULL
+            WHERE p.id_produto = %s
             """,
             (produto_id,),
         )
@@ -34,14 +44,12 @@ def criar(conn, data):
     try:
         cursor.execute(
             """
-            INSERT INTO PRODUTO (nome, descricao, preco, estoque, ativo)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO PRODUTO (nome, categoria, ativo)
+            VALUES (%s, %s, %s)
             """,
             (
                 data["nome"],
-                data["descricao"],
-                data["preco"],
-                data["estoque"],
+                data.get("categoria"),
                 data["ativo"],
             ),
         )

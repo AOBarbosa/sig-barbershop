@@ -56,7 +56,7 @@ def test_buscar_por_id_consulta_por_id():
     result = cliente_repository.buscar_por_id(conn, 3)
 
     sql, params = cursor.statements[0]
-    assert "WHERE id_cliente = %s" in sql
+    assert "WHERE PESSOA_id_pessoa = %s" in sql
     assert params == (3,)
     assert result["id_cliente"] == 3
 
@@ -82,7 +82,7 @@ def test_criar_cliente_insere_e_retorna_registro():
 
     insert_sql, insert_params = cursor.statements[0]
     assert "INSERT INTO CLIENTE" in insert_sql
-    assert insert_params == (7,)
+    assert insert_params == (7, None, None)
     assert result == created
 
 

@@ -1,6 +1,5 @@
 ATENDIMENTO_SERVICO_SELECT = """
 SELECT
-    id_atendimento_servico,
     ATENDIMENTO_id_atendimento,
     SERVICO_id_servico,
     preco_cobrado
@@ -15,7 +14,7 @@ def listar_por_atendimento(conn, atendimento_id: int):
             f"""
             {ATENDIMENTO_SERVICO_SELECT}
             WHERE ATENDIMENTO_id_atendimento = %s
-            ORDER BY id_atendimento_servico
+            ORDER BY SERVICO_id_servico
             """,
             (atendimento_id,),
         )
@@ -24,15 +23,17 @@ def listar_por_atendimento(conn, atendimento_id: int):
         cursor.close()
 
 
-def buscar_por_id(conn, atendimento_servico_id: int):
+def buscar_por_id(conn, atendimento_servico_id: tuple[int, int]):
+    atendimento_id, servico_id = atendimento_servico_id
     cursor = conn.cursor(dictionary=True)
     try:
         cursor.execute(
             f"""
             {ATENDIMENTO_SERVICO_SELECT}
-            WHERE id_atendimento_servico = %s
+            WHERE ATENDIMENTO_id_atendimento = %s
+              AND SERVICO_id_servico = %s
             """,
-            (atendimento_servico_id,),
+            (atendimento_id, servico_id),
         )
         return cursor.fetchone()
     finally:
@@ -69,7 +70,7 @@ def criar(conn, atendimento_id: int, servico_id: int, preco_cobrado):
             """,
             (atendimento_id, servico_id, preco_cobrado),
         )
-        return buscar_por_id(conn, cursor.lastrowid)
+        return buscar_por_ids(conn, atendimento_id, servico_id)
     finally:
         cursor.close()
 

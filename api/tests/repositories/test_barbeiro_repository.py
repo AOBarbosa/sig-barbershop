@@ -38,8 +38,8 @@ def barb_row(barb_id=1):
     return {
         "id_barbeiro": barb_id,
         "PESSOA_id_pessoa": 1,
-        "especialidade": "Corte masculino",
-        "ativo": 1,
+        "apelido": "Corte masculino",
+        "comissao_percentual": 1,
     }
 
 
@@ -61,7 +61,7 @@ def test_buscar_por_id():
     result = barbeiro_repository.buscar_por_id(conn, 3)
 
     sql, params = cursor.statements[0]
-    assert "WHERE id_barbeiro = %s" in sql
+    assert "WHERE PESSOA_id_pessoa = %s" in sql
     assert params == (3,)
     assert result["id_barbeiro"] == 3
 
@@ -85,12 +85,12 @@ def test_criar_barbeiro_insere_e_retorna_registro():
 
     result = barbeiro_repository.criar(
         conn,
-        {"PESSOA_id_pessoa": 1, "especialidade": "Barba", "ativo": True},
+        {"PESSOA_id_pessoa": 1, "apelido": "Barba", "comissao_percentual": 10.0},
     )
 
     insert_sql, insert_params = cursor.statements[0]
     assert "INSERT INTO BARBEIRO" in insert_sql
-    assert insert_params == (1, "Barba", True)
+    assert insert_params == (1, "Barba", 10.0)
     assert result == created
 
 
@@ -101,20 +101,20 @@ def test_criar_barbeiro_usa_defaults_quando_faltarem_campos():
     barbeiro_repository.criar(conn, {"PESSOA_id_pessoa": 1})
 
     _, insert_params = cursor.statements[0]
-    assert insert_params == (1, None, True)
+    assert insert_params == (1, None, None)
 
 
 def test_atualizar_barbeiro_apenas_campos_recebidos():
-    updated = barb_row() | {"especialidade": "Degradê"}
+    updated = barb_row() | {"apelido": "Degradê"}
     cursor = FakeCursor(row=updated)
     conn = FakeConn(cursor)
 
-    result = barbeiro_repository.atualizar(conn, 1, {"especialidade": "Degradê"})
+    result = barbeiro_repository.atualizar(conn, 1, {"apelido": "Degradê"})
 
     update_sql, update_params = cursor.statements[0]
     assert "UPDATE BARBEIRO" in update_sql
-    assert "especialidade = %s" in update_sql
-    assert "ativo = %s" not in update_sql
+    assert "apelido = %s" in update_sql
+    assert "comissao_percentual = %s" not in update_sql
     assert update_params == ("Degradê", 1)
     assert result == updated
 

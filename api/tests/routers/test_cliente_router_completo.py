@@ -26,13 +26,14 @@ def _pessoa_row(pessoa_id=1):
         "cpf": "12345678901",
         "email": "f@ex.com",
         "data_nascimento": date(1990, 1, 1),
+        "admin": False,
         "created_at": datetime(2026, 7, 1, 10, 0, 0),
         "updated_at": datetime(2026, 7, 1, 10, 0, 0),
     }
 
 
 def _cliente_row(cli_id=1, pessoa_id=1):
-    return {"id_cliente": cli_id, "PESSOA_id_pessoa": pessoa_id}
+    return {"PESSOA_id_pessoa": pessoa_id, "preferencias": None, "observacoes": None}
 
 
 def test_post_cliente_completo_cria_pessoa_e_cliente(client, monkeypatch):
@@ -57,7 +58,7 @@ def test_post_cliente_completo_cria_pessoa_e_cliente(client, monkeypatch):
 
     assert response.status_code == 201
     body = response.json()
-    assert body["cliente"]["id_cliente"] == 1
+    assert body["cliente"]["PESSOA_id_pessoa"] == 1
     assert body["pessoa"]["nome"] == "Fulano"
     clear_overrides()
 
@@ -67,7 +68,7 @@ def test_post_cliente_completo_rejeita_cpf_invalido(client):
 
     response = client.post(
         "/clientes/completo",
-        json={"nome": "X", "cpf": "abc", "email": None},
+        json={"nome": "X", "cpf": "123456789012345", "email": None},
     )
 
     assert response.status_code == 422
