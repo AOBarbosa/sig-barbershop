@@ -54,13 +54,15 @@ def listar_servicos_atendimento(
     "/{atendimento_id}/servicos",
     response_model=AtendimentoServicoResponse,
     status_code=status.HTTP_201_CREATED,
-    dependencies=[Depends(require_funcionario)],
 )
 def adicionar_servico_atendimento(
     atendimento_id: int,
     payload: AtendimentoServicoCreate,
+    usuario=Depends(get_current_user),
     conn=Depends(get_db),
 ):
+    atendimento = atendimento_service.buscar_atendimento(conn, atendimento_id)
+    _validar_dono_do_atendimento(usuario, atendimento)
     return atendimento_service.adicionar_servico_atendimento(conn, atendimento_id, payload)
 
 

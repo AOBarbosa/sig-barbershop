@@ -29,5 +29,6 @@ export interface BarbeiroDisponibilidadePayload {
 }
 
 export type BarbeiroFormPayload = PessoaPayload &
-  BarbeiroPayload &
-  BarbeiroDisponibilidadePayload;
+  BarbeiroPayload & {
+    disponibilidades: BarbeiroDisponibilidadePayload[];
+  };

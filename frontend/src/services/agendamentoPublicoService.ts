@@ -3,6 +3,7 @@ import api from "@/lib/axios";
 import { getDisponibilidadesDoBarbeiro } from "@/services/barbeiroService";
 import { getPessoas } from "@/services/clienteService";
 import { getBarbeiros } from "@/services/barbeiroService";
+import { getServicos } from "@/services/servicoService";
 import type {
   AgendamentoCatalogo,
   AgendamentoHorarios,
@@ -23,9 +24,10 @@ function rangePublico() {
 }
 
 export async function getCatalogoAgendamento(): Promise<AgendamentoCatalogo> {
-  const [barbeiros, pessoas] = await Promise.all([
+  const [barbeiros, pessoas, servicos] = await Promise.all([
     getBarbeiros(),
-    getPessoas()
+    getPessoas(),
+    getServicos()
   ]);
   const pessoasById = new Map(
     pessoas.map((pessoa) => [pessoa.id_pessoa, pessoa])
@@ -35,7 +37,8 @@ export async function getCatalogoAgendamento(): Promise<AgendamentoCatalogo> {
     barbeiros: barbeiros.flatMap((barbeiro) => {
       const pessoa = pessoasById.get(barbeiro.PESSOA_id_pessoa);
       return pessoa ? [{ ...barbeiro, pessoa }] : [];
-    })
+    }),
+    servicos: servicos.filter((servico) => servico.ativo)
   };
 }
 

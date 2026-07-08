@@ -27,7 +27,7 @@ class FakeConn:
         self.rolled_back = True
 
 
-def disp_row(disp_id=1, dia="segunda", hi=time(9, 0), hf=time(18, 0), barbeiro=1):
+def disp_row(disp_id=1, dia="SEGUNDA", hi=time(9, 0), hf=time(18, 0), barbeiro=1):
     return {
         "id_disponibilidade": disp_id,
         "BARBEIRO_PESSOA_id_pessoa": barbeiro,
@@ -106,8 +106,8 @@ def test_criar_disponibilidade_controla_transacao(monkeypatch):
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
-        "buscar_por_barbeiro_e_dia",
-        lambda _c, _b, _d: None,
+        "listar_por_barbeiro",
+        lambda _c, _b: [],
     )
     created = disp_row()
     monkeypatch.setattr(
@@ -144,8 +144,8 @@ def test_criar_disponibilidade_dia_duplicado_retorna_409(monkeypatch):
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
-        "buscar_por_barbeiro_e_dia",
-        lambda _c, _b, _d: disp_row(),
+        "listar_por_barbeiro",
+        lambda _c, _b: [disp_row()],
     )
 
     with pytest.raises(HTTPException) as exc:
@@ -164,6 +164,11 @@ def test_atualizar_disponibilidade_existente(monkeypatch):
         disponibilidade_service.disponibilidade_repository,
         "buscar_por_id",
         lambda _c, _i: atual,
+    )
+    monkeypatch.setattr(
+        disponibilidade_service.disponibilidade_repository,
+        "listar_por_barbeiro",
+        lambda _c, _b: [atual],
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
@@ -198,8 +203,8 @@ def test_atualizar_disponibilidade_inexistente_retorna_404(monkeypatch):
 
 def test_atualizar_disponibilidade_troca_dia_conflitante_retorna_409(monkeypatch):
     conn = FakeConn()
-    atual = disp_row(disp_id=1, dia="segunda")
-    outro = disp_row(disp_id=2, dia="terca")
+    atual = disp_row(disp_id=1, dia="SEGUNDA")
+    outro = disp_row(disp_id=2, dia="TERCA")
 
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
@@ -208,8 +213,8 @@ def test_atualizar_disponibilidade_troca_dia_conflitante_retorna_409(monkeypatch
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
-        "buscar_por_barbeiro_e_dia",
-        lambda _c, _b, _d: outro,
+        "listar_por_barbeiro",
+        lambda _c, _b: [outro],
     )
 
     with pytest.raises(HTTPException) as exc:

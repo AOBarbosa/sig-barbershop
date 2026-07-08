@@ -8,7 +8,9 @@ const JWT_SECRET =
   process.env.JWT_SECRET ??
   ["dev", "secret", "troque", "em", "producao", "32", "bytes+"].join("-");
 
-const funcionarioRoutes = [
+const staffRoutes = [
+  "/app",
+  "/atendimentos",
   "/barbeiros",
   "/clientes",
   "/fidelidade",
@@ -19,8 +21,8 @@ const funcionarioRoutes = [
 
 const adminOnlyRoutes = ["/barbeiros/novo", /^\/barbeiros\/[^/]+\/editar$/];
 
-function isFuncionarioRoute(pathname: string) {
-  return funcionarioRoutes.some(
+function isStaffRoute(pathname: string) {
+  return staffRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 }
@@ -88,8 +90,8 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  if (role === "cliente" && isFuncionarioRoute(pathname)) {
-    return NextResponse.redirect(new URL("/atendimentos", request.url));
+  if (isStaffRoute(pathname) && role === "cliente") {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   if (role === "funcionario" && isAdminOnlyRoute(pathname)) {

@@ -35,13 +35,14 @@ class FakeConn:
         return self.fake_cursor
 
 
-def historico_row(historico_id=1, tipo_movimentacao="acumulo"):
+def historico_row(historico_id=1, tipo_movimentacao="ACUMULA"):
     return {
-        "id_historico": historico_id,
+        "id_movimentacao": historico_id,
         "CLIENTE_PESSOA_id_pessoa": 1,
+        "VENDA_id_venda": 2,
+        "FIDELIDADE_id_fidelidade": 3,
         "pontos": 10,
         "tipo_movimentacao": tipo_movimentacao,
-        "descricao": "Atendimento #1 CONCLUIDO",
         "data_movimentacao": datetime(2026, 7, 5, 9, 0),
     }
 
@@ -69,9 +70,9 @@ def test_buscar_por_id_consulta_por_id():
     result = historico_pontos_repository.buscar_por_id(conn, 3)
 
     sql, params = cursor.statements[0]
-    assert "WHERE id_historico = %s" in sql
+    assert "WHERE id_movimentacao = %s" in sql
     assert params == (3,)
-    assert result["id_historico"] == 3
+    assert result["id_movimentacao"] == 3
 
 
 def test_criar_insere_movimentacao_de_acumulo():
@@ -79,12 +80,15 @@ def test_criar_insere_movimentacao_de_acumulo():
     cursor = FakeCursor(row=created, lastrowid=10)
     conn = FakeConn(cursor)
 
-    result = historico_pontos_repository.criar(conn, 1, 10, "acumulo", "Atendimento #1 CONCLUIDO")
+    result = historico_pontos_repository.criar(conn, 1, 2, 3, 10, "ACUMULA")
 
     insert_sql, insert_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "INSERT INTO HISTORICO_PONTOS" in insert_sql
-    assert insert_params == (1, 10, "acumulo", "Atendimento #1 CONCLUIDO")
+    assert "VENDA_id_venda" in insert_sql
+    assert "FIDELIDADE_id_fidelidade" in insert_sql
+    assert "data_movimentacao" in insert_sql
+    assert insert_params == (1, 2, 3, 10, "ACUMULA")
     assert select_params == (10,)
     assert "FROM HISTORICO_PONTOS" in select_sql
     assert result == created
@@ -98,7 +102,7 @@ def test_calcular_saldo_soma_acumulo_e_subtrai_resgate():
 
     sql, params = cursor.statements[0]
     assert "FROM HISTORICO_PONTOS" in sql
-    assert "SUM(CASE WHEN tipo_movimentacao = 'acumulo' THEN pontos ELSE -pontos END)" in sql
+    assert "SUM(CASE WHEN tipo_movimentacao = 'ACUMULA' THEN pontos ELSE -pontos END)" in sql
     assert params == (1,)
     assert result == 25
 

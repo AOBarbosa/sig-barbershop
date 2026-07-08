@@ -23,14 +23,13 @@ def criar_disponibilidade(conn, payload: DisponibilidadeCreate):
         if barbeiro_repository.buscar_por_id(conn, payload.BARBEIRO_PESSOA_id_pessoa) is None:
             raise HTTPException(status_code=404, detail="Barbeiro nao encontrado")
 
-        existente = disponibilidade_repository.buscar_por_barbeiro_e_dia(
-            conn, payload.BARBEIRO_PESSOA_id_pessoa, payload.dia_semana.value
+        _validar_conflito_intervalo(
+            conn,
+            payload.BARBEIRO_PESSOA_id_pessoa,
+            payload.dia_semana.value,
+            payload.hora_inicio,
+            payload.hora_fim,
         )
-        if existente is not None:
-            raise HTTPException(
-                status_code=409,
-                detail="Barbeiro ja possui disponibilidade cadastrada para este dia",
-            )
 
         data = payload.model_dump()
         data["dia_semana"] = payload.dia_semana.value
@@ -50,15 +49,41 @@ def _normalizar_dia_semana(data):
     data["dia_semana"] = dia_semana.value if hasattr(dia_semana, "value") else dia_semana
 
 
-def _validar_conflito_dia(conn, disponibilidade_id: int, barbeiro_id: int, dia_semana: str):
-    conflito = disponibilidade_repository.buscar_por_barbeiro_e_dia(
-        conn, barbeiro_id, dia_semana
-    )
-    if conflito is not None and conflito["id_disponibilidade"] != disponibilidade_id:
-        raise HTTPException(
-            status_code=409,
-            detail="Barbeiro ja possui disponibilidade cadastrada para este dia",
-        )
+def _hora_para_texto(hora):
+    return hora.isoformat() if hasattr(hora, "isoformat") else str(hora)
+
+
+def _intervalos_sobrepostos(inicio_a, fim_a, inicio_b, fim_b):
+    return _hora_para_texto(inicio_a) < _hora_para_texto(fim_b) and _hora_para_texto(
+        inicio_b
+    ) < _hora_para_texto(fim_a)
+
+
+def _validar_conflito_intervalo(
+    conn,
+    barbeiro_id: int,
+    dia_semana: str,
+    hora_inicio,
+    hora_fim,
+    disponibilidade_id: int | None = None,
+):
+    disponibilidades = disponibilidade_repository.listar_por_barbeiro(conn, barbeiro_id)
+
+    for disponibilidade in disponibilidades:
+        if disponibilidade["dia_semana"] != dia_semana:
+            continue
+        if disponibilidade_id == disponibilidade["id_disponibilidade"]:
+            continue
+        if _intervalos_sobrepostos(
+            hora_inicio,
+            hora_fim,
+            disponibilidade["hora_inicio"],
+            disponibilidade["hora_fim"],
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Barbeiro ja possui disponibilidade sobreposta neste dia",
+            )
 
 
 def _validar_horario(hora_inicio, hora_fim):
@@ -79,17 +104,18 @@ def atualizar_disponibilidade(conn, disponibilidade_id: int, payload: Disponibil
         data = payload.model_dump(exclude_unset=True)
         _normalizar_dia_semana(data)
 
-        if "dia_semana" in data and data["dia_semana"] != atual["dia_semana"]:
-            _validar_conflito_dia(
-                conn,
-                disponibilidade_id,
-                atual["BARBEIRO_PESSOA_id_pessoa"],
-                data["dia_semana"],
-            )
-
+        dia_semana = data.get("dia_semana", atual["dia_semana"])
         hora_inicio = data.get("hora_inicio", atual["hora_inicio"])
         hora_fim = data.get("hora_fim", atual["hora_fim"])
         _validar_horario(hora_inicio, hora_fim)
+        _validar_conflito_intervalo(
+            conn,
+            atual["BARBEIRO_PESSOA_id_pessoa"],
+            dia_semana,
+            hora_inicio,
+            hora_fim,
+            disponibilidade_id,
+        )
 
         disp = disponibilidade_repository.atualizar(conn, disponibilidade_id, data)
         conn.commit()

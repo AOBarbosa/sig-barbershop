@@ -96,6 +96,22 @@ def caixa_existe(conn, caixa_id: int):
         cursor.close()
 
 
+def buscar_primeiro_caixa(conn):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT PESSOA_id_pessoa
+            FROM CAIXA
+            ORDER BY PESSOA_id_pessoa
+            LIMIT 1
+            """
+        )
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+
+
 def calcular_valor_total(conn, venda_id: int):
     cursor = conn.cursor(dictionary=True)
     try:

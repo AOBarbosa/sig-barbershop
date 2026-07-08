@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -29,8 +28,16 @@ export function AgendamentoPublico({
   const createAtendimento = useCreateAtendimentoCliente();
   const initialBarbeiro = Number(searchParams.get("barbeiro") ?? 0);
   const initialHorario = searchParams.get("horario") ?? "";
+  const initialServicoIds = (searchParams.get("servicos") ?? "")
+    .split(",")
+    .map(Number)
+    .filter((id) => Number.isFinite(id) && id > 0);
   const [confirmed, setConfirmed] = useState(false);
-  const state = useAgendamentoPublicoState(initialBarbeiro, initialHorario);
+  const state = useAgendamentoPublicoState(
+    initialBarbeiro,
+    initialHorario,
+    initialServicoIds
+  );
   const selectedBarbeiro = state.barbeiros.find(
     (item) => item.PESSOA_id_pessoa === state.barbeiroId
   );
@@ -38,9 +45,12 @@ export function AgendamentoPublico({
     () => state.horarios.find((item) => item.value === state.horario),
     [state.horario, state.horarios]
   );
+  const selectedServicos = state.servicos.filter((servico) =>
+    state.servicoIds.includes(servico.id_servico)
+  );
 
   async function confirmar() {
-    const next = `/?barbeiro=${state.barbeiroId}&horario=${state.horario}`;
+    const next = `/?barbeiro=${state.barbeiroId}&horario=${state.horario}&servicos=${state.servicoIds.join(",")}`;
 
     if (!auth.user) {
       router.push(`/login?next=${encodeURIComponent(next)}`);
@@ -52,7 +62,8 @@ export function AgendamentoPublico({
       BARBEIRO_PESSOA_id_pessoa: state.barbeiroId,
       data_hora_inicio: state.horario,
       status: "AGENDADO",
-      observacoes: "Agendamento público"
+      observacoes: "Agendamento público",
+      servicoIds: state.servicoIds
     });
     setConfirmed(true);
   }
@@ -60,7 +71,6 @@ export function AgendamentoPublico({
   return (
     <section className="space-y-6">
       <div className="space-y-2">
-        <Badge variant="secondary">Agenda pública</Badge>
         <h2 className="text-3xl font-semibold tracking-tight">
           Agendar horário
         </h2>
@@ -82,35 +92,71 @@ export function AgendamentoPublico({
       ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Barbeiros disponíveis</CardTitle>
-            <CardDescription>
-              Selecione quem irá realizar o atendimento.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3 md:grid-cols-2">
-            {state.barbeiros.map((barbeiro) => (
-              <Button
-                key={barbeiro.PESSOA_id_pessoa}
-                variant={
-                  barbeiro.PESSOA_id_pessoa === state.barbeiroId
-                    ? "default"
-                    : "outline"
-                }
-                className="h-auto justify-start gap-3 p-3"
-                onClick={() => state.selectBarbeiro(barbeiro.PESSOA_id_pessoa)}>
-                <Scissors className="size-4" />
-                <span className="text-left">
-                  <span className="block">{barbeiro.pessoa.nome}</span>
-                  <span className="text-xs opacity-80">
-                    {barbeiro.apelido ?? "Barbeiro"}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Serviços</CardTitle>
+              <CardDescription>Escolha o que deseja agendar.</CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-2">
+              {state.servicos.map((servico) => (
+                <Button
+                  key={servico.id_servico}
+                  type="button"
+                  variant={
+                    state.servicoIds.includes(servico.id_servico)
+                      ? "default"
+                      : "outline"
+                  }
+                  className="h-auto justify-start p-3"
+                  onClick={() => state.toggleServico(servico.id_servico)}>
+                  <span className="text-left">
+                    <span className="block">{servico.nome}</span>
+                    <span className="text-xs opacity-80">
+                      {Number(servico.preco).toLocaleString("pt-BR", {
+                        style: "currency",
+                        currency: "BRL"
+                      })}{" "}
+                      · {servico.duracao_em_minutos} min
+                    </span>
                   </span>
-                </span>
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Barbeiros disponíveis</CardTitle>
+              <CardDescription>
+                Selecione quem irá realizar o atendimento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3 md:grid-cols-2">
+              {state.barbeiros.map((barbeiro) => (
+                <Button
+                  key={barbeiro.PESSOA_id_pessoa}
+                  variant={
+                    barbeiro.PESSOA_id_pessoa === state.barbeiroId
+                      ? "default"
+                      : "outline"
+                  }
+                  className="h-auto justify-start gap-3 p-3"
+                  onClick={() =>
+                    state.selectBarbeiro(barbeiro.PESSOA_id_pessoa)
+                  }>
+                  <Scissors className="size-4" />
+                  <span className="text-left">
+                    <span className="block">{barbeiro.pessoa.nome}</span>
+                    <span className="text-xs opacity-80">
+                      {barbeiro.apelido ?? "Barbeiro"}
+                    </span>
+                  </span>
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
 
         <Card>
           <CardHeader>
@@ -124,11 +170,21 @@ export function AgendamentoPublico({
               Barbeiro: {selectedBarbeiro?.pessoa.nome ?? "Selecione"}
             </p>
             <p className="text-sm">
+              Serviços:{" "}
+              {selectedServicos.length > 0
+                ? selectedServicos.map((servico) => servico.nome).join(", ")
+                : "Selecione"}
+            </p>
+            <p className="text-sm">
               Horário: {selectedHorario?.label ?? "Selecione"}
             </p>
             <Button
               className="w-full"
-              disabled={!state.barbeiroId || !state.horario}
+              disabled={
+                !state.barbeiroId ||
+                !state.horario ||
+                state.servicoIds.length === 0
+              }
               onClick={confirmar}>
               Confirmar agendamento
             </Button>

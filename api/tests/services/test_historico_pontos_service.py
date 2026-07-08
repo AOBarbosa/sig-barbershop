@@ -16,11 +16,12 @@ def cliente_row(cliente_id=1):
 
 def historico_row(historico_id=1):
     return {
-        "id_historico": historico_id,
+        "id_movimentacao": historico_id,
         "CLIENTE_PESSOA_id_pessoa": 1,
+        "VENDA_id_venda": 2,
+        "FIDELIDADE_id_fidelidade": 3,
         "pontos": 10,
-        "tipo_movimentacao": "acumulo",
-        "descricao": "Atendimento #1 CONCLUIDO",
+        "tipo_movimentacao": "ACUMULA",
         "data_movimentacao": datetime(2026, 7, 5, 9, 0),
     }
 
@@ -92,18 +93,35 @@ def test_acumular_pontos_atendimento_soma_pontos_dos_servicos_com_regra(monkeypa
         return fidelidade_row(pontos=5, servico_id=servico_id) if servico_id == 10 else None
 
     monkeypatch.setattr(historico_pontos_service.fidelidade_repository, "buscar_por_servico", fake_buscar_por_servico)
+    monkeypatch.setattr(
+        historico_pontos_service.atendimento_repository,
+        "buscar_por_id",
+        lambda _c, _id: {"id_atendimento": 1, "valor_total": 35},
+    )
+    monkeypatch.setattr(
+        historico_pontos_service.venda_repository,
+        "buscar_primeiro_caixa",
+        lambda _c: {"PESSOA_id_pessoa": 5},
+    )
+    monkeypatch.setattr(
+        historico_pontos_service.venda_repository,
+        "criar",
+        lambda _c, data: {"id_venda": 8, **data},
+    )
 
     criados = []
     monkeypatch.setattr(
         historico_pontos_service.historico_pontos_repository,
         "criar",
-        lambda _c, cliente_id, pontos, tipo, descricao: criados.append((cliente_id, pontos, tipo, descricao)),
+        lambda _c, cliente_id, venda_id, fidelidade_id, pontos, tipo: criados.append(
+            (cliente_id, venda_id, fidelidade_id, pontos, tipo)
+        ),
     )
 
     result = historico_pontos_service.acumular_pontos_atendimento(conn, 1, 7)
 
     assert result == 5
-    assert criados == [(7, 5, "acumulo", "Atendimento #1 CONCLUIDO")]
+    assert criados == [(7, 8, 1, 5, "ACUMULA")]
 
 
 def test_acumular_pontos_atendimento_nao_grava_quando_nenhum_servico_tem_regra(monkeypatch):
@@ -150,13 +168,15 @@ def test_acumular_pontos_venda_soma_pontos_multiplicados_pela_quantidade(monkeyp
     monkeypatch.setattr(
         historico_pontos_service.historico_pontos_repository,
         "criar",
-        lambda _c, cliente_id, pontos, tipo, descricao: criados.append((cliente_id, pontos, tipo, descricao)),
+        lambda _c, cliente_id, venda_id, fidelidade_id, pontos, tipo: criados.append(
+            (cliente_id, venda_id, fidelidade_id, pontos, tipo)
+        ),
     )
 
     result = historico_pontos_service.acumular_pontos_venda(conn, 1, 9)
 
     assert result == 6
-    assert criados == [(9, 6, "acumulo", "Venda #1 PAGA")]
+    assert criados == [(9, 1, 1, 6, "ACUMULA")]
 
 
 def test_acumular_pontos_venda_nao_grava_quando_nenhum_produto_tem_regra(monkeypatch):

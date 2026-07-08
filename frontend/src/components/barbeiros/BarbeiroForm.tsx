@@ -61,10 +61,14 @@ export function BarbeiroForm({
         data_nascimento: pessoa.data_nascimento ?? "",
         apelido: barbeiro.apelido ?? "",
         comissao_percentual: Number(barbeiro.comissao_percentual ?? 0),
-        dia_semana: barbeiroQuery.data.disponibilidade?.dia_semana ?? "SEGUNDA",
-        hora_inicio:
-          barbeiroQuery.data.disponibilidade?.hora_inicio.slice(0, 5) ?? "",
-        hora_fim: barbeiroQuery.data.disponibilidade?.hora_fim.slice(0, 5) ?? ""
+        disponibilidades:
+          barbeiroQuery.data.disponibilidades.length > 0
+            ? barbeiroQuery.data.disponibilidades.map((disponibilidade) => ({
+                dia_semana: disponibilidade.dia_semana,
+                hora_inicio: disponibilidade.hora_inicio.slice(0, 5),
+                hora_fim: disponibilidade.hora_fim.slice(0, 5)
+              }))
+            : defaultBarbeiroFormValues.disponibilidades
       });
     }
   }, [form, isEdit, barbeiroQuery.data]);

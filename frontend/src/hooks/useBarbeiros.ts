@@ -30,7 +30,7 @@ export function useBarbeiroComPessoa(id: number) {
         getDisponibilidadesDoBarbeiro(id)
       ]);
 
-      return { ...barbeiro, disponibilidade: disponibilidades[0] };
+      return { ...barbeiro, disponibilidades };
     },
     enabled: Number.isFinite(id)
   });
@@ -55,11 +55,7 @@ export function useUpdateBarbeiro(barbeiroId: number, pessoaId: number) {
   return useMutation({
     mutationFn: async (payload: BarbeiroFormPayload) => {
       const barbeiro = await updateBarbeiroWithPessoa(barbeiroId, payload);
-      await saveBarbeiroDisponibilidade(barbeiroId, {
-        dia_semana: payload.dia_semana,
-        hora_inicio: payload.hora_inicio,
-        hora_fim: payload.hora_fim
-      });
+      await saveBarbeiroDisponibilidade(barbeiroId, payload.disponibilidades);
       return barbeiro;
     },
     onSuccess: () => {

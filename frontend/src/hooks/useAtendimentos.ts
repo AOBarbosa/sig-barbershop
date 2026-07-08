@@ -91,7 +91,8 @@ export function useCreateAtendimentoCliente() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: createAtendimento,
+    mutationFn: (payload: AtendimentoFormPayload) =>
+      createAtendimentoWithServicos(payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: atendimentosQueryKey,

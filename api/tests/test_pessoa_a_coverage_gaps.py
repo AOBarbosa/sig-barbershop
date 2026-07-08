@@ -59,7 +59,7 @@ def pessoa_row(pessoa_id=1, cpf="12345678901", email="f@ex.com"):
     }
 
 
-def disponibilidade_row(disp_id=1, dia="segunda"):
+def disponibilidade_row(disp_id=1, dia="SEGUNDA"):
     return {
         "id_disponibilidade": disp_id,
         "BARBEIRO_PESSOA_id_pessoa": 1,
@@ -87,8 +87,8 @@ def test_pessoa_vinculo_retorna_false_quando_select_nao_retorna_linha():
 
 def test_atualizar_disponibilidade_troca_dia_sem_conflito(monkeypatch):
     conn = FakeServiceConn()
-    atual = disponibilidade_row(disp_id=1, dia="segunda")
-    novo = atual | {"dia_semana": "terca"}
+    atual = disponibilidade_row(disp_id=1, dia="SEGUNDA")
+    novo = atual | {"dia_semana": "TERCA"}
 
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
@@ -97,8 +97,8 @@ def test_atualizar_disponibilidade_troca_dia_sem_conflito(monkeypatch):
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
-        "buscar_por_barbeiro_e_dia",
-        lambda _c, _b, _d: None,
+        "listar_por_barbeiro",
+        lambda _c, _b: [atual],
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
@@ -116,8 +116,8 @@ def test_atualizar_disponibilidade_troca_dia_sem_conflito(monkeypatch):
 
 def test_atualizar_disponibilidade_troca_dia_com_mesmo_registro(monkeypatch):
     conn = FakeServiceConn()
-    atual = disponibilidade_row(disp_id=1, dia="segunda")
-    novo = atual | {"dia_semana": "terca"}
+    atual = disponibilidade_row(disp_id=1, dia="SEGUNDA")
+    novo = atual | {"dia_semana": "TERCA"}
 
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
@@ -126,8 +126,8 @@ def test_atualizar_disponibilidade_troca_dia_com_mesmo_registro(monkeypatch):
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
-        "buscar_por_barbeiro_e_dia",
-        lambda _c, _b, _d: disponibilidade_row(disp_id=1, dia="terca"),
+        "listar_por_barbeiro",
+        lambda _c, _b: [disponibilidade_row(disp_id=1, dia="TERCA")],
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,

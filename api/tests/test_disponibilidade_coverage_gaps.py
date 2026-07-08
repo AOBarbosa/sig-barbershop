@@ -28,10 +28,9 @@ def disponibilidade_row(dia="SEGUNDA"):
     }
 
 
-def test_atualizar_disponibilidade_mantem_mesmo_dia_sem_buscar_conflito(monkeypatch):
+def test_atualizar_disponibilidade_mantem_mesmo_dia_ignorando_proprio_registro(monkeypatch):
     conn = FakeConn()
     atual = disponibilidade_row(dia="SEGUNDA")
-    chamadas_conflito = []
 
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
@@ -40,8 +39,8 @@ def test_atualizar_disponibilidade_mantem_mesmo_dia_sem_buscar_conflito(monkeypa
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
-        "buscar_por_barbeiro_e_dia",
-        lambda *_args: chamadas_conflito.append(_args),
+        "listar_por_barbeiro",
+        lambda _c, _b: [atual],
     )
     monkeypatch.setattr(
         disponibilidade_service.disponibilidade_repository,
@@ -54,5 +53,4 @@ def test_atualizar_disponibilidade_mantem_mesmo_dia_sem_buscar_conflito(monkeypa
     )
 
     assert result == atual
-    assert chamadas_conflito == []
     assert conn.committed is True
