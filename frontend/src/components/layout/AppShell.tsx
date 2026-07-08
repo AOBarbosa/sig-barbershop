@@ -3,6 +3,7 @@
 import {
   CalendarClock,
   Home,
+  LogOut,
   Menu,
   Package,
   Scissors,
@@ -12,7 +13,7 @@ import {
   Users
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,6 +22,7 @@ import {
   SheetTitle,
   SheetTrigger
 } from "@/components/ui/sheet";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
 const navigationGroups = [
@@ -110,7 +112,18 @@ function SidebarContent({ pathname }: { pathname: string }) {
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout, user } = useAuth();
   const currentRoute = getCurrentRoute(pathname);
+
+  if (pathname.startsWith("/login")) {
+    return <>{children}</>;
+  }
+
+  async function handleLogout() {
+    await logout();
+    router.push("/login");
+  }
 
   return (
     <div className="bg-background min-h-screen">
@@ -145,6 +158,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <p className="text-muted-foreground text-xs">
                 Controle de serviços, atendimentos e vendas
               </p>
+            </div>
+            <div className="ml-auto flex min-w-0 items-center gap-2">
+              {user ? (
+                <div className="hidden min-w-0 text-right sm:block">
+                  <p className="truncate text-sm font-medium">{user.nome}</p>
+                  <p className="text-muted-foreground text-xs">{user.role}</p>
+                </div>
+              ) : null}
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="size-4" />
+                Sair
+              </Button>
             </div>
           </div>
         </header>
