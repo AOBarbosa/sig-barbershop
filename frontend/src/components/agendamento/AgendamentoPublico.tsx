@@ -18,7 +18,11 @@ import { useAgendamentoPublicoState } from "@/components/agendamento/useAgendame
 import { useAuth } from "@/hooks/useAuth";
 import { useCreateAtendimentoCliente } from "@/hooks/useAtendimentos";
 
-export function AgendamentoPublico() {
+export function AgendamentoPublico({
+  publicHome = false
+}: {
+  publicHome?: boolean;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const auth = useAuth();
@@ -36,7 +40,7 @@ export function AgendamentoPublico() {
   );
 
   async function confirmar() {
-    const next = `/agendar?barbeiro=${state.barbeiroId}&horario=${state.horario}`;
+    const next = `/?barbeiro=${state.barbeiroId}&horario=${state.horario}`;
 
     if (!auth.user) {
       router.push(`/login?next=${encodeURIComponent(next)}`);
@@ -57,12 +61,13 @@ export function AgendamentoPublico() {
     <section className="space-y-6">
       <div className="space-y-2">
         <Badge variant="secondary">Agenda pública</Badge>
-        <h1 className="text-3xl font-semibold tracking-tight">
+        <h2 className="text-3xl font-semibold tracking-tight">
           Agendar horário
-        </h1>
+        </h2>
         <p className="text-muted-foreground max-w-2xl text-sm">
-          Escolha um barbeiro e um horário disponível. O login só será pedido
-          para confirmar o agendamento.
+          {publicHome
+            ? "Veja os barbeiros e horários livres antes de entrar ou criar sua conta."
+            : "Escolha um barbeiro e um horário disponível. O login só será pedido para confirmar o agendamento."}
         </p>
       </div>
 

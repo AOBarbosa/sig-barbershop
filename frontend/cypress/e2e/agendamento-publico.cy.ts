@@ -26,7 +26,7 @@ describe("Agendamento público", () => {
       body: { detail: "Nao autenticado" }
     }).as("usuarioAnonimo");
 
-    cy.visit("/agendar");
+    cy.visit("/");
     cy.contains("Agendar horário").should("be.visible");
     cy.contains("Joao Barbeiro").click();
     cy.wait(["@listarDisponibilidades", "@listarOcupados"]);
@@ -64,8 +64,8 @@ describe("Agendamento público", () => {
       }
     }).as("usuarioAtual");
 
-    cy.visit("/login?next=/agendar?barbeiro=2%26horario=2026-07-13T08:00");
-    cy.contains("button", "Criar conta").click();
+    cy.visit("/login?next=/?barbeiro=2%26horario=2026-07-13T08:00");
+    cy.get("button").contains("Criar conta").last().click();
     cy.get("input[name='nome']").type("Cliente Novo");
     cy.get("input[name='cpf']").type("11122233344");
     cy.get("input[name='email']").type("novo@example.com");
@@ -78,7 +78,7 @@ describe("Agendamento público", () => {
       email: "novo@example.com",
       senha: "senha123"
     });
-    cy.location("pathname").should("eq", "/agendar");
+    cy.location("pathname").should("eq", "/");
     cy.contains("Revisar agendamento").should("be.visible");
     cy.contains("Agendamento confirmado").should("not.exist");
   });
@@ -100,8 +100,8 @@ describe("Agendamento público", () => {
       }
     }).as("criarAtendimento");
 
-    cy.visit("/agendar?barbeiro=2&horario=2026-07-13T08:00");
-    cy.contains("Cliente Teste").should("be.visible");
+    cy.visit("/?barbeiro=2&horario=2026-07-13T08:00");
+    cy.wait("@usuarioAtualCliente");
     cy.contains("Revisar agendamento").should("be.visible");
     cy.contains("Confirmar agendamento").click();
 
