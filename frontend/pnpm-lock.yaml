@@ -23,6 +23,9 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      jose:
+        specifier: ^6.2.3
+        version: 6.2.3
       lucide-react:
         specifier: ^1.23.0
         version: 1.23.0(react@19.2.4)
@@ -2332,8 +2335,8 @@ packages:
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
 
-  eslint-plugin-react-hooks@7.1.1-canary-3508aee6-20260702:
-    resolution: {integrity: sha512-HQXDsuat8KFWdhMrQLVzzwu3rgJ6atpV5QVr2ugFx52KGvegi7vZCLtL/ZQU4f+7Q5g2F9VfAdWOhkfXek7FWg==}
+  eslint-plugin-react-hooks@7.1.1-canary-12a4baec-20260707:
+    resolution: {integrity: sha512-mxEkcIqtHHyPa8lGq+ONIVrnTg654C4YOPy9pTiukqagptG//4ube0OFW0DuDcGeGSDgvsDPyi0pbEWzlE5Y5Q==}
     engines: {node: '>=18'}
     peerDependencies:
       eslint: ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0-0 || ^9.0.0 || ^10.0.0
@@ -5560,7 +5563,7 @@ snapshots:
       '@eslint/js': 9.39.4
       '@types/eslint__js': 8.42.3
       eslint: 9.39.4(jiti@2.7.0)
-      eslint-plugin-react-hooks: 7.1.1-canary-3508aee6-20260702(eslint@9.39.4(jiti@2.7.0))
+      eslint-plugin-react-hooks: 7.1.1-canary-12a4baec-20260707(eslint@9.39.4(jiti@2.7.0))
       globals: 15.15.0
       neostandard: 0.11.9(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
       typescript-eslint: 8.62.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
@@ -6714,7 +6717,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-plugin-react-hooks@7.1.1-canary-3508aee6-20260702(eslint@9.39.4(jiti@2.7.0)):
+  eslint-plugin-react-hooks@7.1.1-canary-12a4baec-20260707(eslint@9.39.4(jiti@2.7.0)):
     dependencies:
       '@babel/core': 7.29.7
       '@babel/parser': 7.29.7
