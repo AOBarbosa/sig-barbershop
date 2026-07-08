@@ -3,7 +3,7 @@ def buscar_por_id(conn, disponibilidade_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana,
+            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana, ativo,
                    CAST(hora_inicio AS CHAR) AS hora_inicio,
                    CAST(hora_fim AS CHAR) AS hora_fim
             FROM DISPONIBILIDADE
@@ -21,12 +21,13 @@ def listar_por_barbeiro(conn, barbeiro_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana,
+            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana, ativo,
                    CAST(hora_inicio AS CHAR) AS hora_inicio,
                    CAST(hora_fim AS CHAR) AS hora_fim
             FROM DISPONIBILIDADE
             WHERE BARBEIRO_PESSOA_id_pessoa = %s
-            ORDER BY FIELD(dia_semana,'SEGUNDA','TERCA','QUARTA','QUINTA','SEXTA','SABADO','DOMINGO')
+            ORDER BY FIELD(dia_semana,'SEGUNDA','TERCA','QUARTA','QUINTA','SEXTA','SABADO','DOMINGO'),
+                     hora_inicio
             """,
             (barbeiro_id,),
         )
@@ -40,7 +41,7 @@ def buscar_por_barbeiro_e_dia(conn, barbeiro_id: int, dia_semana: str):
     try:
         cursor.execute(
             """
-            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana,
+            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana, ativo,
                    CAST(hora_inicio AS CHAR) AS hora_inicio,
                    CAST(hora_fim AS CHAR) AS hora_fim
             FROM DISPONIBILIDADE

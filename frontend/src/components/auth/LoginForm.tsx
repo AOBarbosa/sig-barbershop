@@ -63,17 +63,31 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     try {
+      let user;
+
       if (mode === "register") {
-        await auth.register({
+        user = await auth.register({
           nome: values.nome ?? "",
           cpf: values.cpf || null,
           email: values.email,
           senha: values.senha
         });
       } else {
-        await auth.login({ email: values.email, senha: values.senha });
+        user = await auth.login({ email: values.email, senha: values.senha });
       }
-      router.push(getSafeNext(searchParams.get("next")));
+
+      const next = getSafeNext(searchParams.get("next"));
+      const isInternalNext =
+        next === "/app" ||
+        next.startsWith("/atendimentos") ||
+        next.startsWith("/barbeiros") ||
+        next.startsWith("/clientes") ||
+        next.startsWith("/fidelidade") ||
+        next.startsWith("/produtos") ||
+        next.startsWith("/servicos") ||
+        next.startsWith("/vendas");
+
+      router.push(user.role === "cliente" && isInternalNext ? "/" : next);
     } catch {
       // erro exibido via auth
     }

@@ -39,6 +39,7 @@ def test_get_connection_cria_pool_lazy_com_variaveis_de_ambiente(monkeypatch):
         "database": "sig_test",
         "user": "barber",
         "password": "secret",
+        "autocommit": True,
     }
 
 

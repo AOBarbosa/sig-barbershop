@@ -19,5 +19,6 @@ def get_connection():
             database=os.getenv("DB_NAME", "sig_barbershop"),
             user=os.getenv("DB_USER", "root"),
             password=os.getenv("DB_PASSWORD", ""),
+            autocommit=True,
         )
     return _pool.get_connection()

@@ -10,6 +10,8 @@ def get_db():
     try:
         yield conn
     finally:
+        if getattr(conn, "in_transaction", False):
+            conn.rollback()
         conn.close()
 
 

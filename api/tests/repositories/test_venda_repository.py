@@ -181,6 +181,21 @@ def test_caixa_existe_retorna_false_quando_nao_encontra():
     assert result is False
 
 
+def test_buscar_primeiro_caixa_retorna_menor_caixa():
+    cursor = FakeCursor(row={"PESSOA_id_pessoa": 5})
+    conn = FakeConn(cursor)
+
+    result = venda_repository.buscar_primeiro_caixa(conn)
+
+    sql, params = cursor.statements[0]
+    assert "FROM CAIXA" in sql
+    assert "ORDER BY PESSOA_id_pessoa" in sql
+    assert "LIMIT 1" in sql
+    assert params is None
+    assert result == {"PESSOA_id_pessoa": 5}
+    assert cursor.closed is True
+
+
 def test_calcular_valor_total_soma_quantidade_vezes_preco_unitario_da_venda():
     cursor = FakeCursor(row={"valor_total": Decimal("150.00")})
     conn = FakeConn(cursor)

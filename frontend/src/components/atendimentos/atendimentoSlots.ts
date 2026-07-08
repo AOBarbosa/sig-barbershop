@@ -63,30 +63,32 @@ function slotsPorOcupados(
   return Array.from({ length: 14 }).flatMap((_, index) => {
     const dia = new Date(hoje);
     dia.setDate(hoje.getDate() + index);
-    const disponibilidade = disponibilidades.find(
+    const disponibilidadesDoDia = disponibilidades.filter(
       (item) => item.dia_semana === diaSemanaMap[dia.getDay()] && item.ativo
     );
 
-    if (!disponibilidade) {
+    if (disponibilidadesDoDia.length === 0) {
       return [];
     }
 
-    const inicio = setTime(dia, disponibilidade.hora_inicio);
-    const fim = setTime(dia, disponibilidade.hora_fim);
-    const slots: AtendimentoSlot[] = [];
+    return disponibilidadesDoDia.flatMap((disponibilidade) => {
+      const inicio = setTime(dia, disponibilidade.hora_inicio);
+      const fim = setTime(dia, disponibilidade.hora_fim);
+      const slots: AtendimentoSlot[] = [];
 
-    for (
-      let slot = inicio;
-      slot < fim;
-      slot = new Date(slot.getTime() + 30 * 60000)
-    ) {
-      const value = toInputValue(slot);
-      if (!ocupados.has(value)) {
-        slots.push({ value, label: toLabel(slot) });
+      for (
+        let slot = inicio;
+        slot < fim;
+        slot = new Date(slot.getTime() + 30 * 60000)
+      ) {
+        const value = toInputValue(slot);
+        if (!ocupados.has(value)) {
+          slots.push({ value, label: toLabel(slot) });
+        }
       }
-    }
 
-    return slots;
+      return slots;
+    });
   });
 }
 

@@ -13,13 +13,15 @@ export function AtendimentoAvailabilityHint({
     );
   }
 
-  const [disponibilidade] = disponibilidades;
-
   return (
     <div className="text-muted-foreground rounded-lg border p-3 text-sm">
-      Disponível em {disponibilidade.dia_semana}, das{" "}
-      {disponibilidade.hora_inicio.slice(0, 5)} às{" "}
-      {disponibilidade.hora_fim.slice(0, 5)}
+      {disponibilidades.map((disponibilidade) => (
+        <span key={disponibilidade.id_disponibilidade} className="block">
+          Disponível em {disponibilidade.dia_semana}, das{" "}
+          {disponibilidade.hora_inicio.slice(0, 5)} às{" "}
+          {disponibilidade.hora_fim.slice(0, 5)}
+        </span>
+      ))}
     </div>
   );
 }

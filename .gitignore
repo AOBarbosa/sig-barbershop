@@ -32,6 +32,7 @@ frontend/coverage/
 frontend/*.tsbuildinfo
 frontend/next-env.d.ts
 frontend/.vercel
+frontend/.pnpm-store/
 frontend/.pnpm-debug.log*
 frontend/npm-debug.log*
 frontend/yarn-debug.log*

@@ -77,6 +77,11 @@ def test_get_servicos_atendimento_repassa_404_do_service(client, monkeypatch):
 
 def test_post_servico_atendimento_valida_payload_e_retorna_201(client, monkeypatch):
     override_funcionario()
+    monkeypatch.setattr(
+        atendimento_router.atendimento_service,
+        "buscar_atendimento",
+        lambda _c, _i: atendimento_response(),
+    )
 
     def fake_adicionar(_conn, atendimento_id, payload):
         assert atendimento_id == 1
@@ -107,6 +112,11 @@ def test_post_servico_atendimento_rejeita_payload_invalido(client):
 
 def test_post_servico_atendimento_repassa_409_do_service(client, monkeypatch):
     override_funcionario()
+    monkeypatch.setattr(
+        atendimento_router.atendimento_service,
+        "buscar_atendimento",
+        lambda _c, _i: atendimento_response(),
+    )
 
     def fake_adicionar(_conn, _atendimento_id, _payload):
         raise HTTPException(status_code=409, detail="Servico ja vinculado ao atendimento")

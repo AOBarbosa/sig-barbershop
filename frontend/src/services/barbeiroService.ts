@@ -84,15 +84,15 @@ export const updateBarbeiroApi = (id: number, payload: BarbeiroPayload) =>
     .then((response) => response.data);
 
 function separarBarbeiroPayload(payload: BarbeiroFormPayload) {
-  const { dia_semana, hora_inicio, hora_fim, ...barbeiroPayload } = payload;
+  const { disponibilidades, ...barbeiroPayload } = payload;
   return {
-    disponibilidade: { dia_semana, hora_inicio, hora_fim },
+    disponibilidades,
     barbeiroPayload
   };
 }
 
 export async function createBarbeiroWithPessoa(payload: BarbeiroFormPayload) {
-  const { disponibilidade, barbeiroPayload } = separarBarbeiroPayload(payload);
+  const { disponibilidades, barbeiroPayload } = separarBarbeiroPayload(payload);
   const response = await api.post<unknown>(
     "/barbeiros/completo",
     barbeiroPayload
@@ -102,10 +102,16 @@ export async function createBarbeiroWithPessoa(payload: BarbeiroFormPayload) {
     throw new Error("Resposta inválida ao criar barbeiro");
   }
 
-  await createDisponibilidade({
-    BARBEIRO_PESSOA_id_pessoa: response.data.barbeiro.PESSOA_id_pessoa,
-    ...disponibilidade
-  });
+  const barbeiroId = response.data.barbeiro.PESSOA_id_pessoa;
+
+  await Promise.all(
+    disponibilidades.map((disponibilidade) =>
+      createDisponibilidade({
+        BARBEIRO_PESSOA_id_pessoa: barbeiroId,
+        ...disponibilidade
+      })
+    )
+  );
 
   return response.data;
 }
@@ -132,6 +138,9 @@ export const createDisponibilidade = (payload: DisponibilidadePayload) =>
     .post<Disponibilidade>("/disponibilidades", payload)
     .then((response) => response.data);
 
+export const deleteDisponibilidade = (disponibilidadeId: number) =>
+  api.delete(`/disponibilidades/${disponibilidadeId}`).then(() => undefined);
+
 export const getDisponibilidadesDoBarbeiro = (barbeiroId: number) =>
   api
     .get<Disponibilidade[]>(`/barbeiros/${barbeiroId}/disponibilidades`)
@@ -139,23 +148,24 @@ export const getDisponibilidadesDoBarbeiro = (barbeiroId: number) =>
 
 export async function saveBarbeiroDisponibilidade(
   barbeiroId: number,
-  payload: BarbeiroDisponibilidadePayload
+  payload: BarbeiroDisponibilidadePayload[]
 ) {
   const disponibilidades = await getDisponibilidadesDoBarbeiro(barbeiroId);
 
-  if (disponibilidades.length === 0) {
-    return createDisponibilidade({
-      BARBEIRO_PESSOA_id_pessoa: barbeiroId,
-      ...payload
-    });
-  }
-
-  return api
-    .put<Disponibilidade>(
-      `/disponibilidades/${disponibilidades[0].id_disponibilidade}`,
-      payload
+  await Promise.all(
+    disponibilidades.map((disponibilidade) =>
+      deleteDisponibilidade(disponibilidade.id_disponibilidade)
     )
-    .then((response) => response.data);
+  );
+
+  return Promise.all(
+    payload.map((disponibilidade) =>
+      createDisponibilidade({
+        BARBEIRO_PESSOA_id_pessoa: barbeiroId,
+        ...disponibilidade
+      })
+    )
+  );
 }
 
 export async function getBarbeirosComPessoas(): Promise<BarbeiroComPessoa[]> {
