@@ -48,6 +48,7 @@ describe("Módulo Produtos - formulário", () => {
   });
 
   it("edita um produto existente", function () {
+    cy.loginAsAdmin();
     cy.intercept("GET", "**/produtos", {
       statusCode: 200,
       body: this.produtos
@@ -88,5 +89,38 @@ describe("Módulo Produtos - formulário", () => {
     cy.location("pathname").should("eq", "/produtos");
     cy.location("search").should("eq", "?salvo=1");
     cy.wait("@listarDepoisDeEditar");
+  });
+
+  it("funcionário edita produto sem sobrescrever o preço de custo oculto", function () {
+    cy.loginAsFuncionario();
+    cy.intercept("GET", "**/produtos/1", {
+      statusCode: 200,
+      body: { ...this.produtos[0], preco_custo: null }
+    }).as("buscarProduto");
+    cy.intercept("GET", "**/produtos", {
+      statusCode: 200,
+      body: this.produtos
+    }).as("listarDepoisDeEditar");
+    cy.intercept("PUT", "**/produtos/1", {
+      statusCode: 200,
+      body: { ...this.produtos[0], nome: "Pomada premium", preco_custo: null }
+    }).as("atualizarProduto");
+
+    cy.visit("/produtos/1/editar");
+    cy.wait("@buscarProduto");
+
+    cy.get("input[name='preco_custo']").should(
+      "have.value",
+      "Visível apenas para administradores"
+    );
+    cy.get("input[name='nome']").clear().type("Pomada premium");
+    cy.contains("Salvar produto").click();
+
+    cy.wait("@atualizarProduto")
+      .its("request.body")
+      .then((body) => {
+        expect(body).to.not.have.property("preco_custo");
+      });
+    cy.location("pathname").should("eq", "/produtos");
   });
 });

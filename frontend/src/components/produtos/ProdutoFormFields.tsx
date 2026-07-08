@@ -31,10 +31,12 @@ type ProdutoFormInstance = UseFormReturn<
 
 export function ProdutoPrimaryFields({
   form,
-  isEdit
+  isEdit,
+  mostrarPrecoCusto
 }: {
   form: ProdutoFormInstance;
   isEdit: boolean;
+  mostrarPrecoCusto: boolean;
 }) {
   return (
     <Card>
@@ -88,24 +90,39 @@ export function ProdutoPrimaryFields({
               </FormItem>
             )}
           </FormField>
-          <FormField name="preco_custo">
-            {(field) => (
-              <FormItem>
-                <FormLabel htmlFor="preco_custo">Preço custo</FormLabel>
-                <FormControl>
-                  <Input
-                    id="preco_custo"
-                    type="number"
-                    step="0.01"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage>
-                  {form.formState.errors.preco_custo?.message}
-                </FormMessage>
-              </FormItem>
-            )}
-          </FormField>
+          {mostrarPrecoCusto ? (
+            <FormField name="preco_custo">
+              {(field) => (
+                <FormItem>
+                  <FormLabel htmlFor="preco_custo">Preço custo</FormLabel>
+                  <FormControl>
+                    <Input
+                      id="preco_custo"
+                      type="number"
+                      step="0.01"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage>
+                    {form.formState.errors.preco_custo?.message}
+                  </FormMessage>
+                </FormItem>
+              )}
+            </FormField>
+          ) : (
+            <FormItem>
+              <FormLabel htmlFor="preco_custo">Preço custo</FormLabel>
+              <FormControl>
+                <Input
+                  id="preco_custo"
+                  name="preco_custo"
+                  disabled
+                  value="Visível apenas para administradores"
+                  readOnly
+                />
+              </FormControl>
+            </FormItem>
+          )}
           <FormField name="pontos_gerados">
             {(field) => (
               <FormItem>

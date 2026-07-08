@@ -27,7 +27,21 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { TableCell, TableRow } from "@/components/ui/table";
 import type { BarbeiroComPessoa } from "@/types/barbeiro";
 
-function BarbeiroActions({ barbeiro }: { barbeiro: BarbeiroComPessoa }) {
+function formatComissao(comissao: string | null) {
+  return comissao == null ? "—" : `${comissao}%`;
+}
+
+function BarbeiroActions({
+  barbeiro,
+  isAdmin
+}: {
+  barbeiro: BarbeiroComPessoa;
+  isAdmin: boolean;
+}) {
+  if (!isAdmin) {
+    return null;
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -50,7 +64,13 @@ function BarbeiroActions({ barbeiro }: { barbeiro: BarbeiroComPessoa }) {
   );
 }
 
-export function BarbeiroRow({ barbeiro }: { barbeiro: BarbeiroComPessoa }) {
+export function BarbeiroRow({
+  barbeiro,
+  isAdmin
+}: {
+  barbeiro: BarbeiroComPessoa;
+  isAdmin: boolean;
+}) {
   return (
     <TableRow>
       <TableCell className="font-medium">{barbeiro.pessoa.nome}</TableCell>
@@ -58,19 +78,21 @@ export function BarbeiroRow({ barbeiro }: { barbeiro: BarbeiroComPessoa }) {
       <TableCell className="text-muted-foreground">
         {barbeiro.apelido ?? "Sem apelido"}
       </TableCell>
-      <TableCell>{barbeiro.comissao_percentual ?? "0.00"}%</TableCell>
+      <TableCell>{formatComissao(barbeiro.comissao_percentual)}</TableCell>
       <TableCell>{formatDate(barbeiro.pessoa.data_nascimento)}</TableCell>
       <TableCell className="text-right">
-        <BarbeiroActions barbeiro={barbeiro} />
+        <BarbeiroActions barbeiro={barbeiro} isAdmin={isAdmin} />
       </TableCell>
     </TableRow>
   );
 }
 
 export function BarbeiroMobileCard({
-  barbeiro
+  barbeiro,
+  isAdmin
 }: {
   barbeiro: BarbeiroComPessoa;
+  isAdmin: boolean;
 }) {
   return (
     <div className="rounded-lg border p-4">
@@ -81,7 +103,7 @@ export function BarbeiroMobileCard({
             {barbeiro.apelido ?? "Sem apelido"}
           </p>
         </div>
-        <BarbeiroActions barbeiro={barbeiro} />
+        <BarbeiroActions barbeiro={barbeiro} isAdmin={isAdmin} />
       </div>
       <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
         <div>
@@ -91,7 +113,7 @@ export function BarbeiroMobileCard({
         <div>
           <p className="text-muted-foreground">Comissão</p>
           <p className="font-medium">
-            {barbeiro.comissao_percentual ?? "0.00"}%
+            {formatComissao(barbeiro.comissao_percentual)}
           </p>
         </div>
       </div>

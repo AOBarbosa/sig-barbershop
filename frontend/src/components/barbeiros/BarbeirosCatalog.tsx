@@ -82,10 +82,12 @@ export function CatalogToolbar({
 
 export function BarbeiroResults({
   isLoading,
-  barbeiros
+  barbeiros,
+  isAdmin
 }: {
   isLoading: boolean;
   barbeiros: BarbeiroComPessoa[];
+  isAdmin: boolean;
 }) {
   return (
     <>
@@ -105,35 +107,51 @@ export function BarbeiroResults({
             {isLoading ? (
               <LoadingRows />
             ) : (
-              <DesktopRows barbeiros={barbeiros} />
+              <DesktopRows barbeiros={barbeiros} isAdmin={isAdmin} />
             )}
           </TableBody>
         </Table>
       </div>
-      <MobileResults isLoading={isLoading} barbeiros={barbeiros} />
+      <MobileResults
+        isLoading={isLoading}
+        barbeiros={barbeiros}
+        isAdmin={isAdmin}
+      />
     </>
   );
 }
 
-function DesktopRows({ barbeiros }: { barbeiros: BarbeiroComPessoa[] }) {
+function DesktopRows({
+  barbeiros,
+  isAdmin
+}: {
+  barbeiros: BarbeiroComPessoa[];
+  isAdmin: boolean;
+}) {
   if (barbeiros.length === 0) {
-    return <EmptyTableRow />;
+    return <EmptyTableRow isAdmin={isAdmin} />;
   }
 
   return barbeiros.map((barbeiro) => (
-    <BarbeiroRow key={barbeiro.PESSOA_id_pessoa} barbeiro={barbeiro} />
+    <BarbeiroRow
+      key={barbeiro.PESSOA_id_pessoa}
+      barbeiro={barbeiro}
+      isAdmin={isAdmin}
+    />
   ));
 }
 
-function EmptyTableRow() {
+function EmptyTableRow({ isAdmin }: { isAdmin: boolean }) {
   return (
     <TableRow>
       <TableCell colSpan={6} className="text-muted-foreground h-32 text-center">
         <div className="flex flex-col items-center gap-3">
           <span>Nenhum barbeiro encontrado</span>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/barbeiros/novo">Cadastrar barbeiro</Link>
-          </Button>
+          {isAdmin ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href="/barbeiros/novo">Cadastrar barbeiro</Link>
+            </Button>
+          ) : null}
         </div>
       </TableCell>
     </TableRow>
@@ -142,10 +160,12 @@ function EmptyTableRow() {
 
 function MobileResults({
   isLoading,
-  barbeiros
+  barbeiros,
+  isAdmin
 }: {
   isLoading: boolean;
   barbeiros: BarbeiroComPessoa[];
+  isAdmin: boolean;
 }) {
   if (isLoading) {
     return (
@@ -164,14 +184,17 @@ function MobileResults({
           <BarbeiroMobileCard
             key={barbeiro.PESSOA_id_pessoa}
             barbeiro={barbeiro}
+            isAdmin={isAdmin}
           />
         ))
       ) : (
         <div className="text-muted-foreground flex min-h-40 flex-col items-center justify-center gap-3 rounded-lg border text-center text-sm">
           <span>Nenhum barbeiro encontrado</span>
-          <Button asChild variant="outline" size="sm">
-            <Link href="/barbeiros/novo">Cadastrar barbeiro</Link>
-          </Button>
+          {isAdmin ? (
+            <Button asChild variant="outline" size="sm">
+              <Link href="/barbeiros/novo">Cadastrar barbeiro</Link>
+            </Button>
+          ) : null}
         </div>
       )}
     </div>
