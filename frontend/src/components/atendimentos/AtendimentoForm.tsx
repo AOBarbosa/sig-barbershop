@@ -11,18 +11,19 @@ import { AtendimentoErrorAlert } from "@/components/atendimentos/AtendimentoErro
 import { AtendimentoFieldError } from "@/components/atendimentos/AtendimentoFieldError";
 import { AtendimentoMissingDataAlert } from "@/components/atendimentos/AtendimentoMissingDataAlert";
 import { AtendimentoSubmitButton } from "@/components/atendimentos/AtendimentoSubmitButton";
+import { AtendimentoTimeField } from "@/components/atendimentos/AtendimentoTimeField";
 import {
   defaultAtendimentoFormValues,
   atendimentoFormSchema,
   type AtendimentoFormInput,
   type AtendimentoFormValues
 } from "@/components/atendimentos/atendimentoFormSchema";
+import { gerarHorariosDisponiveis } from "@/components/atendimentos/atendimentoSlots";
 import { pessoaNome } from "@/components/atendimentos/atendimentoFormatters";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -83,6 +84,12 @@ export function AtendimentoForm() {
     );
   }
 
+  const horariosDisponiveis = gerarHorariosDisponiveis({
+    barbeiroId,
+    disponibilidades: disponibilidadesQuery.data ?? [],
+    atendimentos: lookups.atendimentos
+  });
+
   return (
     <section className="mx-auto w-full max-w-5xl space-y-5">
       <Button asChild variant="ghost" className="px-0">
@@ -142,19 +149,13 @@ export function AtendimentoForm() {
                   ))}
                 </select>
               </AtendimentoFieldError>
-              <AtendimentoFieldError
-                message={form.formState.errors.data_hora_inicio?.message}>
-                <label
-                  className="text-sm font-medium"
-                  htmlFor="data_hora_inicio">
-                  Data e hora
-                </label>
-                <Input
-                  id="data_hora_inicio"
-                  type="datetime-local"
-                  {...form.register("data_hora_inicio")}
-                />
-              </AtendimentoFieldError>
+              <AtendimentoTimeField
+                error={form.formState.errors.data_hora_inicio?.message}
+                loading={disponibilidadesQuery.isLoading}
+                barbeiroId={barbeiroId}
+                horarios={horariosDisponiveis}
+                register={form.register("data_hora_inicio")}
+              />
               <AtendimentoAvailabilityHint
                 disponibilidades={disponibilidadesQuery.data}
               />

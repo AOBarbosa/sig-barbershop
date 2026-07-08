@@ -53,6 +53,35 @@ def buscar_por_barbeiro_e_dia(conn, barbeiro_id: int, dia_semana: str):
         cursor.close()
 
 
+def barbeiro_disponivel_no_horario(conn, barbeiro_id: int, data_hora_inicio):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT COUNT(*) AS total
+            FROM DISPONIBILIDADE
+            WHERE BARBEIRO_PESSOA_id_pessoa = %s
+              AND ativo = TRUE
+              AND dia_semana = CASE DAYOFWEEK(%s)
+                  WHEN 1 THEN 'DOMINGO'
+                  WHEN 2 THEN 'SEGUNDA'
+                  WHEN 3 THEN 'TERCA'
+                  WHEN 4 THEN 'QUARTA'
+                  WHEN 5 THEN 'QUINTA'
+                  WHEN 6 THEN 'SEXTA'
+                  WHEN 7 THEN 'SABADO'
+              END
+              AND TIME(%s) >= hora_inicio
+              AND TIME(%s) < hora_fim
+            """,
+            (barbeiro_id, data_hora_inicio, data_hora_inicio, data_hora_inicio),
+        )
+        row = cursor.fetchone()
+        return bool(row and row["total"] > 0)
+    finally:
+        cursor.close()
+
+
 def criar(conn, data):
     cursor = conn.cursor(dictionary=True)
     try:

@@ -46,6 +46,7 @@ def test_listar_clientes_retorna_linhas():
 
     assert conn.cursor_kwargs == {"dictionary": True}
     assert "FROM CLIENTE" in cursor.statements[0][0]
+    assert "saldo_pontos" in cursor.statements[0][0]
     assert len(result) == 1
 
 
@@ -56,7 +57,7 @@ def test_buscar_por_id_consulta_por_id():
     result = cliente_repository.buscar_por_id(conn, 3)
 
     sql, params = cursor.statements[0]
-    assert "WHERE PESSOA_id_pessoa = %s" in sql
+    assert "WHERE c.PESSOA_id_pessoa = %s" in sql
     assert params == (3,)
     assert result["id_cliente"] == 3
 
@@ -68,7 +69,7 @@ def test_buscar_por_pessoa_consulta_por_pessoa():
     result = cliente_repository.buscar_por_pessoa(conn, 5)
 
     sql, params = cursor.statements[0]
-    assert "WHERE PESSOA_id_pessoa = %s" in sql
+    assert "WHERE c.PESSOA_id_pessoa = %s" in sql
     assert params == (5,)
     assert result is not None
 

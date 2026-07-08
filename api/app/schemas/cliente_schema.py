@@ -15,6 +15,7 @@ class ClienteResponse(BaseModel):
     PESSOA_id_pessoa: int
     preferencias: str | None = None
     observacoes: str | None = None
+    saldo_pontos: int = 0
 
 
 class ClienteCompletoCreate(PessoaCreate):

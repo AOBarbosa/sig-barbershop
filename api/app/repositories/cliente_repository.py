@@ -1,13 +1,34 @@
 CLIENTE_SELECT = """
-SELECT PESSOA_id_pessoa, preferencias, observacoes
-FROM CLIENTE
+SELECT
+    c.PESSOA_id_pessoa,
+    c.preferencias,
+    c.observacoes,
+    COALESCE(
+        SUM(
+            CASE
+                WHEN hp.tipo_movimentacao = 'ACUMULA' THEN hp.pontos
+                WHEN hp.tipo_movimentacao = 'USA' THEN -hp.pontos
+                ELSE 0
+            END
+        ),
+        0
+    ) AS saldo_pontos
+FROM CLIENTE c
+LEFT JOIN HISTORICO_PONTOS hp
+    ON hp.CLIENTE_PESSOA_id_pessoa = c.PESSOA_id_pessoa
 """
 
 
 def listar(conn):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(f"{CLIENTE_SELECT} ORDER BY PESSOA_id_pessoa")
+        cursor.execute(
+            f"""
+            {CLIENTE_SELECT}
+            GROUP BY c.PESSOA_id_pessoa, c.preferencias, c.observacoes
+            ORDER BY c.PESSOA_id_pessoa
+            """
+        )
         return cursor.fetchall()
     finally:
         cursor.close()
@@ -16,7 +37,14 @@ def listar(conn):
 def buscar_por_id(conn, cliente_id: int):
     cursor = conn.cursor(dictionary=True)
     try:
-        cursor.execute(f"{CLIENTE_SELECT} WHERE PESSOA_id_pessoa = %s", (cliente_id,))
+        cursor.execute(
+            f"""
+            {CLIENTE_SELECT}
+            WHERE c.PESSOA_id_pessoa = %s
+            GROUP BY c.PESSOA_id_pessoa, c.preferencias, c.observacoes
+            """,
+            (cliente_id,),
+        )
         return cursor.fetchone()
     finally:
         cursor.close()

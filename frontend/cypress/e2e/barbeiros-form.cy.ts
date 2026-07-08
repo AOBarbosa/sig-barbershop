@@ -28,6 +28,17 @@ describe("Módulo Barbeiros - formulário", () => {
         }
       }
     }).as("criarBarbeiroCompleto");
+    cy.intercept("POST", "**/disponibilidades", {
+      statusCode: 201,
+      body: {
+        id_disponibilidade: 9,
+        BARBEIRO_PESSOA_id_pessoa: 20,
+        dia_semana: "SEGUNDA",
+        hora_inicio: "08:00:00",
+        hora_fim: "18:00:00",
+        ativo: true
+      }
+    }).as("criarDisponibilidade");
 
     cy.visit("/barbeiros/novo");
     cy.contains("Salvar barbeiro").click();
@@ -40,6 +51,9 @@ describe("Módulo Barbeiros - formulário", () => {
     cy.get("input[name='data_nascimento']").type("1993-09-14");
     cy.get("input[name='apelido']").type("Lucas");
     cy.get("input[name='comissao_percentual']").clear().type("40");
+    cy.get("select[name='dia_semana']").select("Segunda");
+    cy.get("input[name='hora_inicio']").type("08:00");
+    cy.get("input[name='hora_fim']").type("18:00");
     cy.contains("Salvar barbeiro").click();
 
     cy.wait("@criarBarbeiroCompleto")
@@ -51,6 +65,14 @@ describe("Módulo Barbeiros - formulário", () => {
         data_nascimento: "1993-09-14",
         apelido: "Lucas",
         comissao_percentual: 40
+      });
+    cy.wait("@criarDisponibilidade")
+      .its("request.body")
+      .should("deep.include", {
+        BARBEIRO_PESSOA_id_pessoa: 20,
+        dia_semana: "SEGUNDA",
+        hora_inicio: "08:00",
+        hora_fim: "18:00"
       });
 
     cy.location("pathname").should("eq", "/barbeiros");
@@ -67,6 +89,19 @@ describe("Módulo Barbeiros - formulário", () => {
       statusCode: 200,
       body: this.barbeirosFixture.pessoas[0]
     }).as("buscarPessoa");
+    cy.intercept("GET", "**/barbeiros/10/disponibilidades", {
+      statusCode: 200,
+      body: [
+        {
+          id_disponibilidade: 1,
+          BARBEIRO_PESSOA_id_pessoa: 10,
+          dia_semana: "SEGUNDA",
+          hora_inicio: "08:00:00",
+          hora_fim: "18:00:00",
+          ativo: true
+        }
+      ]
+    }).as("listarDisponibilidades");
     cy.intercept("GET", "**/barbeiros", {
       statusCode: 200,
       body: this.barbeirosFixture.barbeiros
@@ -86,9 +121,20 @@ describe("Módulo Barbeiros - formulário", () => {
         pessoa: this.barbeirosFixture.pessoas[0]
       }
     }).as("atualizarBarbeiroCompleto");
+    cy.intercept("PUT", "**/disponibilidades/1", {
+      statusCode: 200,
+      body: {
+        id_disponibilidade: 1,
+        BARBEIRO_PESSOA_id_pessoa: 10,
+        dia_semana: "SEGUNDA",
+        hora_inicio: "08:00:00",
+        hora_fim: "18:00:00",
+        ativo: true
+      }
+    }).as("atualizarDisponibilidade");
 
     cy.visit("/barbeiros/10/editar");
-    cy.wait(["@buscarBarbeiro", "@buscarPessoa"]);
+    cy.wait(["@buscarBarbeiro", "@buscarPessoa", "@listarDisponibilidades"]);
 
     cy.get("input[name='apelido']").should("have.value", "Pedro");
     cy.get("input[name='apelido']").clear().type("Pedrao");
@@ -105,6 +151,7 @@ describe("Módulo Barbeiros - formulário", () => {
         apelido: "Pedrao",
         comissao_percentual: 45
       });
+    cy.wait("@atualizarDisponibilidade");
 
     cy.location("pathname").should("eq", "/barbeiros");
     cy.location("search").should("eq", "?salvo=1");
@@ -119,6 +166,9 @@ describe("Módulo Barbeiros - formulário", () => {
     cy.visit("/barbeiros/novo");
     cy.get("input[name='nome']").type("Novo Barbeiro");
     cy.get("input[name='cpf']").type("55566677788");
+    cy.get("select[name='dia_semana']").select("Segunda");
+    cy.get("input[name='hora_inicio']").type("08:00");
+    cy.get("input[name='hora_fim']").type("18:00");
     cy.contains("Salvar barbeiro").click();
 
     cy.wait("@criarBarbeiroConflito");

@@ -56,6 +56,7 @@ export function ClienteRow({ cliente }: { cliente: ClienteComPessoa }) {
         {cliente.pessoa.email ?? "—"}
       </TableCell>
       <TableCell>{formatDate(cliente.pessoa.data_nascimento)}</TableCell>
+      <TableCell>{cliente.saldo_pontos} pts</TableCell>
       <TableCell className="text-right">
         <ClienteActions cliente={cliente} />
       </TableCell>
@@ -86,6 +87,10 @@ export function ClienteMobileCard({ cliente }: { cliente: ClienteComPessoa }) {
             {formatDate(cliente.pessoa.data_nascimento)}
           </p>
         </div>
+        <div>
+          <p className="text-muted-foreground">Pontos</p>
+          <p className="font-medium">{cliente.saldo_pontos} pts</p>
+        </div>
       </div>
     </div>
   );
@@ -96,7 +101,7 @@ export function LoadingRows() {
     <>
       {[1, 2, 3].map((row) => (
         <TableRow key={row}>
-          <TableCell colSpan={5}>
+          <TableCell colSpan={6}>
             <Skeleton className="h-8 w-full" />
           </TableCell>
         </TableRow>

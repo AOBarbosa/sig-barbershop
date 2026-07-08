@@ -69,6 +69,7 @@ export function ClienteResults({
               <TableHead>CPF</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Nascimento</TableHead>
+              <TableHead>Pontos</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -95,7 +96,7 @@ function DesktopRows({ clientes }: { clientes: ClienteComPessoa[] }) {
 function EmptyTableRow() {
   return (
     <TableRow>
-      <TableCell colSpan={5} className="text-muted-foreground h-32 text-center">
+      <TableCell colSpan={6} className="text-muted-foreground h-32 text-center">
         <div className="flex flex-col items-center gap-3">
           <span>Nenhum cliente encontrado</span>
           <Button asChild variant="outline" size="sm">
