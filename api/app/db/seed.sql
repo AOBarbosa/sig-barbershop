@@ -1,14 +1,19 @@
 USE sig_barbershop;
 
-INSERT INTO PESSOA (id_pessoa, nome, cpf, email, data_nascimento, admin) VALUES
-(1, 'Carlos Mendes', '11122233344', 'carlos@email.com', '1990-03-15', 0),
-(2, 'Ana Lima', '22233344455', 'ana@email.com', '1985-07-22', 0),
-(3, 'Pedro Souza', '33344455566', 'pedro@email.com', '1992-11-08', 0),
-(4, 'Juliana Costa', '44455566677', 'juliana@email.com', '1988-05-30', 0),
-(5, 'Roberto Alves', '55566677788', 'roberto@email.com', '1995-01-17', 1),
-(6, 'Fernanda Nunes', '66677788899', 'fernanda@email.com', '1993-09-04', 0),
-(7, 'Marcos Oliveira', '77788899900', 'marcos@email.com', '1980-12-25', 0),
-(8, 'Beatriz Santos', '88899900011', 'beatriz@email.com', '1997-06-14', 0);
+-- Senhas de dev (texto puro, só para login local via seed):
+--   roberto@email.com (admin)       -> admin123
+--   marcos@email.com  (funcionario) -> func123
+--   carlos@email.com  (cliente)     -> cliente123
+-- Demais pessoas do seed nao possuem senha_hash (sem login ate definirem senha).
+INSERT INTO PESSOA (id_pessoa, nome, cpf, email, data_nascimento, admin, senha_hash) VALUES
+(1, 'Carlos Mendes', '11122233344', 'carlos@email.com', '1990-03-15', 0, '$2b$12$ZMOipqUt2yP85Cj7p1BUh.zsqbsSxCx90SRyyelkaA3w2vkdNTfvu'),
+(2, 'Ana Lima', '22233344455', 'ana@email.com', '1985-07-22', 0, NULL),
+(3, 'Pedro Souza', '33344455566', 'pedro@email.com', '1992-11-08', 0, NULL),
+(4, 'Juliana Costa', '44455566677', 'juliana@email.com', '1988-05-30', 0, NULL),
+(5, 'Roberto Alves', '55566677788', 'roberto@email.com', '1995-01-17', 1, '$2b$12$Ehj1ILfCg79YJc057FWFNeR.J2Jrkf4cy3Ok1VOT/wLXA6XTqKFBW'),
+(6, 'Fernanda Nunes', '66677788899', 'fernanda@email.com', '1993-09-04', 0, NULL),
+(7, 'Marcos Oliveira', '77788899900', 'marcos@email.com', '1980-12-25', 0, '$2b$12$ekRxzWJl5Nb1.daGJ.r68O9cqWMgjCuyruG8QD3wUvRgwnynkK3sO'),
+(8, 'Beatriz Santos', '88899900011', 'beatriz@email.com', '1997-06-14', 0, NULL);
 
 INSERT INTO TELEFONE (PESSOA_id_pessoa, telefone) VALUES
 (1, '84991110001'),

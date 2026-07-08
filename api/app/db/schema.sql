@@ -8,6 +8,7 @@ CREATE TABLE PESSOA (
     email           VARCHAR(100) UNIQUE,
     data_nascimento DATE,
     admin           TINYINT      NOT NULL DEFAULT 0,
+    senha_hash      VARCHAR(255),
     PRIMARY KEY (id_pessoa)
 );
 CREATE TABLE TELEFONE (
