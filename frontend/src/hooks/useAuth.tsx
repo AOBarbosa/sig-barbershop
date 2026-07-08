@@ -6,9 +6,14 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getCurrentUser,
   login,
+  registrarCliente,
   logout as logoutRequest
 } from "@/services/authService";
-import type { LoginPayload, UsuarioAtual } from "@/types/auth";
+import type {
+  LoginPayload,
+  RegistroClientePayload,
+  UsuarioAtual
+} from "@/types/auth";
 
 const authQueryKey = ["auth", "me"];
 
@@ -17,6 +22,8 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<UsuarioAtual>;
   loginError: Error | null;
   logout: () => Promise<void>;
+  register: (payload: RegistroClientePayload) => Promise<UsuarioAtual>;
+  registerError: Error | null;
   user: UsuarioAtual | null;
 }
 
@@ -31,6 +38,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const loginMutation = useMutation({
     mutationFn: login,
+    onSuccess: (user) => {
+      queryClient.setQueryData(authQueryKey, user);
+    }
+  });
+  const registerMutation = useMutation({
+    mutationFn: registrarCliente,
     onSuccess: (user) => {
       queryClient.setQueryData(authQueryKey, user);
     }
@@ -50,6 +63,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login: loginMutation.mutateAsync,
         loginError: loginMutation.error,
         logout: logoutMutation.mutateAsync,
+        register: registerMutation.mutateAsync,
+        registerError: registerMutation.error,
         user: userQuery.data ?? null
       }}>
       {children}

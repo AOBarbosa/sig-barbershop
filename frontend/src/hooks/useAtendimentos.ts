@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { getServicos } from "@/services/servicoService";
 import {
+  createAtendimento,
   createAtendimentoWithServicos,
   getAtendimento,
   getAtendimentos,
@@ -77,6 +78,20 @@ export function useCreateAtendimento() {
   return useMutation({
     mutationFn: (payload: AtendimentoFormPayload) =>
       createAtendimentoWithServicos(payload),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: atendimentosQueryKey,
+        exact: true
+      });
+    }
+  });
+}
+
+export function useCreateAtendimentoCliente() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createAtendimento,
     onSuccess: () => {
       void queryClient.invalidateQueries({
         queryKey: atendimentosQueryKey,

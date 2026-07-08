@@ -32,7 +32,7 @@ const overview = [
   }
 ];
 
-export default function Home() {
+export function AppDashboard() {
   return (
     <section className="space-y-6">
       <div className="space-y-2">

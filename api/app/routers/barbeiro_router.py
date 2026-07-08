@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import APIRouter, Depends, Response, status
 
 from app.dependencies import get_current_user_opcional, get_db, require_admin
@@ -10,7 +12,7 @@ from app.schemas.barbeiro_schema import (
     BarbeiroUpdate,
 )
 from app.schemas.disponibilidade_schema import DisponibilidadeResponse
-from app.services import barbeiro_service, disponibilidade_service
+from app.services import agenda_service, barbeiro_service, disponibilidade_service
 
 router = APIRouter(prefix="/barbeiros", tags=["barbeiros"])
 
@@ -38,6 +40,16 @@ def buscar_barbeiro(
 @router.get("/{barbeiro_id}/disponibilidades", response_model=list[DisponibilidadeResponse])
 def listar_disponibilidades_do_barbeiro(barbeiro_id: int, conn=Depends(get_db)):
     return disponibilidade_service.listar_por_barbeiro(conn, barbeiro_id)
+
+
+@router.get("/{barbeiro_id}/horarios-ocupados")
+def listar_horarios_ocupados_do_barbeiro(
+    barbeiro_id: int,
+    inicio: datetime,
+    fim: datetime,
+    conn=Depends(get_db),
+):
+    return agenda_service.listar_horarios_ocupados(conn, barbeiro_id, inicio, fim)
 
 
 @router.post(

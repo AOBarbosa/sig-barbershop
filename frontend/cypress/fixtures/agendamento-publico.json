@@ -1,0 +1,42 @@
+{
+  "pessoas": [
+    {
+      "id_pessoa": 1,
+      "nome": "Maria Silva",
+      "cpf": "12345678901",
+      "email": "maria@example.com",
+      "data_nascimento": "1995-04-12",
+      "admin": false
+    },
+    {
+      "id_pessoa": 2,
+      "nome": "Joao Barbeiro",
+      "cpf": "98765432100",
+      "email": "joao@barbearia.com",
+      "data_nascimento": "1990-02-20",
+      "admin": false
+    }
+  ],
+  "barbeiros": [
+    {
+      "PESSOA_id_pessoa": 2,
+      "apelido": "Joao",
+      "comissao_percentual": null
+    }
+  ],
+  "disponibilidades": [
+    {
+      "id_disponibilidade": 1,
+      "BARBEIRO_PESSOA_id_pessoa": 2,
+      "dia_semana": "SEGUNDA",
+      "hora_inicio": "08:00:00",
+      "hora_fim": "10:00:00",
+      "ativo": true
+    }
+  ],
+  "horariosOcupados": [
+    {
+      "data_hora_inicio": "2026-07-13T08:30:00"
+    }
+  ]
+}

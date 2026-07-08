@@ -1,5 +1,9 @@
 import api from "@/lib/axios";
-import type { LoginPayload, UsuarioAtual } from "@/types/auth";
+import type {
+  LoginPayload,
+  RegistroClientePayload,
+  UsuarioAtual
+} from "@/types/auth";
 
 function hasKeys(data: unknown, keys: string[]) {
   return (
@@ -29,6 +33,11 @@ export const login = (payload: LoginPayload) =>
 export const getCurrentUser = () =>
   api
     .get<unknown>("/auth/me")
+    .then((response) => parseUsuarioAtual(response.data));
+
+export const registrarCliente = (payload: RegistroClientePayload) =>
+  api
+    .post<unknown>("/auth/registrar-cliente", payload)
     .then((response) => parseUsuarioAtual(response.data));
 
 export const logout = () => api.post("/auth/logout").then(() => undefined);

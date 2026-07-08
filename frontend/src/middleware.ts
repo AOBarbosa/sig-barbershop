@@ -61,6 +61,10 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
+  if (pathname === "/" || pathname.startsWith("/agendar")) {
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/login")) {
     if (!token) {
       return NextResponse.next();
