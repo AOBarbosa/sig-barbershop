@@ -96,8 +96,22 @@ def test_buscar_por_email_consulta_pessoa_por_email():
 
     sql, params = cursor.statements[0]
     assert "WHERE email = %s" in sql
+    assert "senha_hash" in sql
     assert params == ("f@ex.com",)
     assert result is not None
+
+
+def test_atualizar_senha_executa_update_do_hash():
+    cursor = FakeCursor()
+    conn = FakeConn(cursor)
+
+    pessoa_repository.atualizar_senha(conn, 3, "hash-fake")
+
+    sql, params = cursor.statements[0]
+    assert "UPDATE PESSOA" in sql
+    assert "senha_hash = %s" in sql
+    assert "WHERE id_pessoa = %s" in sql
+    assert params == ("hash-fake", 3)
 
 
 def test_criar_pessoa_insere_sql_puro_e_retorna_registro_criado():

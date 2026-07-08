@@ -1,7 +1,10 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.routers.atendimento_router import router as atendimento_router
+from app.routers.auth_router import router as auth_router
 from app.routers.barbeiro_router import router as barbeiro_router
 from app.routers.caixa_router import router as caixa_router
 from app.routers.cliente_router import router as cliente_router
@@ -16,14 +19,17 @@ from app.routers.venda_router import router as venda_router
 
 app = FastAPI(title="SIG Barbershop API", version="0.1.0")
 
+_frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[_frontend_url],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+app.include_router(auth_router)
 app.include_router(pessoa_router)
 app.include_router(telefone_router)
 app.include_router(cliente_router)
