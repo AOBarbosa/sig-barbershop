@@ -4,7 +4,7 @@ export interface Produto {
   categoria: string | null;
   ativo: boolean;
   preco_venda: string | number;
-  preco_custo: string | number;
+  preco_custo: string | number | null;
   pontos_gerados: number;
 }
 
@@ -16,3 +16,7 @@ export interface ProdutoPayload {
   preco_custo: number;
   pontos_gerados: number;
 }
+
+export type ProdutoUpdatePayload = Omit<ProdutoPayload, "preco_custo"> & {
+  preco_custo?: number;
+};

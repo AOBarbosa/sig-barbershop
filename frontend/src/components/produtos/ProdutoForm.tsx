@@ -21,12 +21,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
 import {
   useCreateProduto,
   useProduto,
   useUpdateProduto
 } from "@/hooks/useProdutos";
-import type { ProdutoPayload } from "@/types/produto";
+import type { ProdutoPayload, ProdutoUpdatePayload } from "@/types/produto";
 
 export function ProdutoForm({
   mode,
@@ -36,6 +37,7 @@ export function ProdutoForm({
   produtoId?: number;
 }) {
   const router = useRouter();
+  const { user } = useAuth();
   const createProduto = useCreateProduto();
   const updateProduto = useUpdateProduto(produtoId ?? 0);
   const produtoQuery = useProduto(produtoId ?? Number.NaN);
@@ -45,6 +47,8 @@ export function ProdutoForm({
   });
   const ativo = Boolean(useWatch({ control: form.control, name: "ativo" }));
   const isEdit = mode === "edit";
+  const isAdmin = user?.role === "admin";
+  const mostrarPrecoCusto = !isEdit || isAdmin;
   const isSubmitting = createProduto.isPending || updateProduto.isPending;
   const mutationError = createProduto.error ?? updateProduto.error;
 
@@ -54,7 +58,10 @@ export function ProdutoForm({
         nome: produtoQuery.data.nome,
         categoria: produtoQuery.data.categoria ?? "",
         preco_venda: Number(produtoQuery.data.preco_venda),
-        preco_custo: Number(produtoQuery.data.preco_custo),
+        preco_custo:
+          produtoQuery.data.preco_custo == null
+            ? 0
+            : Number(produtoQuery.data.preco_custo),
         pontos_gerados: produtoQuery.data.pontos_gerados,
         ativo: produtoQuery.data.ativo
       });
@@ -62,11 +69,14 @@ export function ProdutoForm({
   }, [form, isEdit, produtoQuery.data]);
 
   async function onSubmit(values: ProdutoFormValues) {
-    const payload: ProdutoPayload = { ...values };
-
     if (isEdit && produtoId) {
+      const { preco_custo, ...resto } = values;
+      const payload: ProdutoUpdatePayload = mostrarPrecoCusto
+        ? { ...resto, preco_custo }
+        : resto;
       await updateProduto.mutateAsync(payload);
     } else {
+      const payload: ProdutoPayload = { ...values };
       await createProduto.mutateAsync(payload);
     }
 
@@ -105,7 +115,11 @@ export function ProdutoForm({
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
-            <ProdutoPrimaryFields form={form} isEdit={isEdit} />
+            <ProdutoPrimaryFields
+              form={form}
+              isEdit={isEdit}
+              mostrarPrecoCusto={mostrarPrecoCusto}
+            />
             <ProdutoOperationalFields form={form} ativo={ativo} />
           </div>
           {mutationError ? (

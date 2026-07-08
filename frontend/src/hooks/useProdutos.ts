@@ -8,7 +8,7 @@ import {
   getProdutos,
   updateProduto
 } from "@/services/produtoService";
-import type { ProdutoPayload } from "@/types/produto";
+import type { ProdutoUpdatePayload } from "@/types/produto";
 
 const produtosQueryKey = ["produtos"];
 
@@ -42,7 +42,7 @@ export function useUpdateProduto(id: number) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: ProdutoPayload) => updateProduto(id, payload),
+    mutationFn: (payload: ProdutoUpdatePayload) => updateProduto(id, payload),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: produtosQueryKey });
       void queryClient.invalidateQueries({

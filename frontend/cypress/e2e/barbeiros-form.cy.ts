@@ -4,6 +4,7 @@ describe("Módulo Barbeiros - formulário", () => {
   });
 
   it("valida e cria um barbeiro", () => {
+    cy.loginAsAdmin();
     cy.intercept("GET", "**/barbeiros", { statusCode: 200, body: [] }).as(
       "listarBarbeirosDepois"
     );
@@ -81,6 +82,7 @@ describe("Módulo Barbeiros - formulário", () => {
   });
 
   it("edita um barbeiro existente", function () {
+    cy.loginAsAdmin();
     cy.intercept("GET", "**/barbeiros/10", {
       statusCode: 200,
       body: this.barbeirosFixture.barbeiros[0]
@@ -158,6 +160,7 @@ describe("Módulo Barbeiros - formulário", () => {
   });
 
   it("exibe erro do backend ao tentar criar com CPF duplicado", () => {
+    cy.loginAsAdmin();
     cy.intercept("POST", "**/barbeiros/completo", {
       statusCode: 409,
       body: { detail: "CPF ja cadastrado" }

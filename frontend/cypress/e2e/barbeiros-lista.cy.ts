@@ -1,5 +1,6 @@
 describe("Módulo Barbeiros - listagem", () => {
   beforeEach(() => {
+    cy.loginAsAdmin();
     cy.fixture("barbeiros").as("barbeirosFixture");
   });
 
@@ -34,11 +35,7 @@ describe("Módulo Barbeiros - listagem", () => {
     cy.contains("Total de barbeiros").should("be.visible");
     cy.contains("Barbeiros cadastrados").should("be.visible");
     cy.contains("Apelidos").should("be.visible");
-    cy.contains("Novo barbeiro").should(
-      "have.attr",
-      "href",
-      "/barbeiros/novo"
-    );
+    cy.contains("Novo barbeiro").should("have.attr", "href", "/barbeiros/novo");
   });
 
   it("filtra barbeiros por busca", function () {
@@ -155,5 +152,53 @@ describe("Módulo Barbeiros - listagem", () => {
     cy.get("[data-testid='barbeiros-mobile-list']")
       .contains("Pedro Barreto")
       .should("be.visible");
+  });
+});
+
+describe("Módulo Barbeiros - listagem (funcionário)", () => {
+  beforeEach(() => {
+    cy.loginAsFuncionario();
+    cy.fixture("barbeiros").as("barbeirosFixture");
+  });
+
+  it("oculta comissão e ações de gestão para quem não é admin", function () {
+    const barbeirosSemComissao = this.barbeirosFixture.barbeiros.map(
+      (barbeiro: { comissao_percentual: string | null }) => ({
+        ...barbeiro,
+        comissao_percentual: null
+      })
+    );
+
+    cy.intercept(
+      {
+        method: "GET",
+        pathname: "/barbeiros",
+        headers: { accept: "application/json, text/plain, */*" }
+      },
+      { statusCode: 200, body: barbeirosSemComissao }
+    ).as("listarBarbeiros");
+    cy.intercept(
+      {
+        method: "GET",
+        pathname: "/pessoas",
+        headers: { accept: "application/json, text/plain, */*" }
+      },
+      { statusCode: 200, body: this.barbeirosFixture.pessoas }
+    ).as("listarPessoas");
+
+    cy.visit("/barbeiros");
+    cy.wait(["@listarBarbeiros", "@listarPessoas"]);
+
+    cy.contains("Pedro Barreto").should("be.visible");
+    cy.contains("40.00%").should("not.exist");
+    cy.contains("Novo barbeiro").should("not.exist");
+    cy.get("button[aria-label='Abrir ações do barbeiro Pedro Barreto']").should(
+      "not.exist"
+    );
+  });
+
+  it("bloqueia acesso direto às rotas de criar/editar barbeiro", () => {
+    cy.visit("/barbeiros/novo");
+    cy.location("pathname").should("eq", "/barbeiros");
   });
 });

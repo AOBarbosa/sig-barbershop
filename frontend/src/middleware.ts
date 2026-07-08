@@ -17,9 +17,17 @@ const funcionarioRoutes = [
   "/vendas"
 ];
 
+const adminOnlyRoutes = ["/barbeiros/novo", /^\/barbeiros\/[^/]+\/editar$/];
+
 function isFuncionarioRoute(pathname: string) {
   return funcionarioRoutes.some(
     (route) => pathname === route || pathname.startsWith(`${route}/`)
+  );
+}
+
+function isAdminOnlyRoute(pathname: string) {
+  return adminOnlyRoutes.some((route) =>
+    typeof route === "string" ? pathname === route : route.test(pathname)
   );
 }
 
@@ -82,6 +90,10 @@ export async function middleware(request: NextRequest) {
 
   if (role === "cliente" && isFuncionarioRoute(pathname)) {
     return NextResponse.redirect(new URL("/atendimentos", request.url));
+  }
+
+  if (role === "funcionario" && isAdminOnlyRoute(pathname)) {
+    return NextResponse.redirect(new URL("/barbeiros", request.url));
   }
 
   return NextResponse.next();

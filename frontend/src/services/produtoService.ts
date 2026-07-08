@@ -1,5 +1,9 @@
 import api from "@/lib/axios";
-import type { Produto, ProdutoPayload } from "@/types/produto";
+import type {
+  Produto,
+  ProdutoPayload,
+  ProdutoUpdatePayload
+} from "@/types/produto";
 
 function isProduto(data: unknown): data is Produto {
   return (
@@ -40,7 +44,7 @@ export const getProduto = (id: number) =>
 export const createProduto = (payload: ProdutoPayload) =>
   api.post<Produto>("/produtos", payload).then((response) => response.data);
 
-export const updateProduto = (id: number, payload: ProdutoPayload) =>
+export const updateProduto = (id: number, payload: ProdutoUpdatePayload) =>
   api
     .put<Produto>(`/produtos/${id}`, payload)
     .then((response) => response.data);

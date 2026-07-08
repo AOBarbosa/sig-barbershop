@@ -18,10 +18,13 @@ import { SummaryCard } from "@/components/barbeiros/BarbeiroListParts";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { useAuth } from "@/hooks/useAuth";
 import { useBarbeiros } from "@/hooks/useBarbeiros";
 import type { BarbeiroComPessoa } from "@/types/barbeiro";
 
 export function BarbeirosList() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { data: barbeiros = [], isLoading, isError, error } = useBarbeiros();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
@@ -45,7 +48,7 @@ export function BarbeirosList() {
 
   return (
     <section className="space-y-5">
-      <BarbeirosHeader saved={saved} />
+      <BarbeirosHeader saved={saved} isAdmin={isAdmin} />
       <BarbeirosSummary
         barbeiros={barbeiros}
         cadastrados={cadastrados}
@@ -70,6 +73,7 @@ export function BarbeirosList() {
             <BarbeiroResults
               isLoading={isLoading}
               barbeiros={filteredBarbeiros}
+              isAdmin={isAdmin}
             />
           )}
         </CardContent>
@@ -78,7 +82,13 @@ export function BarbeirosList() {
   );
 }
 
-function BarbeirosHeader({ saved }: { saved: boolean }) {
+function BarbeirosHeader({
+  saved,
+  isAdmin
+}: {
+  saved: boolean;
+  isAdmin: boolean;
+}) {
   return (
     <>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -88,12 +98,14 @@ function BarbeirosHeader({ saved }: { saved: boolean }) {
             Equipe de profissionais e suas comissões.
           </p>
         </div>
-        <Button asChild>
-          <Link href="/barbeiros/novo">
-            <Plus className="size-4" />
-            Novo barbeiro
-          </Link>
-        </Button>
+        {isAdmin ? (
+          <Button asChild>
+            <Link href="/barbeiros/novo">
+              <Plus className="size-4" />
+              Novo barbeiro
+            </Link>
+          </Button>
+        ) : null}
       </div>
       {saved ? (
         <Alert>

@@ -1,4 +1,4 @@
-type TestRole = "cliente" | "funcionario";
+type TestRole = "admin" | "cliente" | "funcionario";
 
 const testSecret = [
   "dev",
@@ -25,8 +25,14 @@ function toBase64Url(value: string | ArrayBuffer) {
     .replaceAll("=", "");
 }
 
+function subForRole(role: TestRole) {
+  if (role === "cliente") return "1";
+  if (role === "admin") return "5";
+  return "99";
+}
+
 async function createTestToken(role: TestRole) {
-  const sub = role === "cliente" ? "1" : "99";
+  const sub = subForRole(role);
   const header = toBase64Url(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const payload = toBase64Url(JSON.stringify({ sub, role, exp: 1893456000 }));
   const key = await crypto.subtle.importKey(
@@ -60,6 +66,21 @@ Cypress.Commands.add("loginAsFuncionario", () => {
   }).as("usuarioAtual");
 });
 
+Cypress.Commands.add("loginAsAdmin", () => {
+  cy.then(() => createTestToken("admin")).then((token) => {
+    cy.setCookie("access_token", token);
+  });
+  cy.intercept("GET", "**/auth/me", {
+    statusCode: 200,
+    body: {
+      id_pessoa: 5,
+      nome: "Admin Teste",
+      email: "admin@teste.com",
+      role: "admin"
+    }
+  }).as("usuarioAtualAdmin");
+});
+
 Cypress.Commands.add("loginAsCliente", () => {
   cy.then(() => createTestToken("cliente")).then((token) => {
     cy.setCookie("access_token", token);
@@ -85,6 +106,7 @@ declare global {
   namespace Cypress {
     interface Chainable {
       createTestToken(role: TestRole): Chainable<string>;
+      loginAsAdmin(): Chainable<void>;
       loginAsCliente(): Chainable<void>;
       loginAsFuncionario(): Chainable<void>;
     }
