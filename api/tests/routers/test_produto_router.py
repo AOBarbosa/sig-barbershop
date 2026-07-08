@@ -1,4 +1,3 @@
-from decimal import Decimal
 import inspect
 
 from fastapi import HTTPException
@@ -24,10 +23,11 @@ def produto_response(produto_id=1):
     return {
         "id_produto": produto_id,
         "nome": "Pomada modeladora",
-        "descricao": "Pomada efeito matte",
-        "preco": Decimal("35.00"),
-        "estoque": 20,
+        "categoria": "Finalizador",
         "ativo": True,
+        "preco_venda": "45.00",
+        "preco_custo": "25.00",
+        "pontos_gerados": 5,
     }
 
 
@@ -37,10 +37,11 @@ def test_get_produtos_delega_para_service(client, monkeypatch):
         {
             "id_produto": 1,
             "nome": "Pomada modeladora",
-            "descricao": "Pomada efeito matte",
-            "preco": "35.00",
-            "estoque": 20,
+            "categoria": "Finalizador",
             "ativo": True,
+            "preco_venda": "45.00",
+            "preco_custo": "25.00",
+            "pontos_gerados": 5,
         }
     ]
 
@@ -90,12 +91,12 @@ def test_get_historico_produto_delega_para_service(client, monkeypatch):
         {
             "id_historico": 1,
             "PRODUTO_id_produto": 1,
-            "preco_anterior": "35.00",
-            "preco_novo": "45.00",
-            "estoque_anterior": 20,
-            "estoque_novo": 15,
+            "preco_venda": "45.00",
+            "preco_custo": "25.00",
+            "pontos_gerados": 5,
+            "data_inicio": "2026-07-02",
+            "data_fim": None,
             "ativo": True,
-            "alterado_em": "2026-07-02T10:00:00",
         }
     ]
 
@@ -136,15 +137,16 @@ def test_post_produtos_valida_payload_e_retorna_201(client, monkeypatch):
     created = {
         "id_produto": 2,
         "nome": "Shampoo",
-        "descricao": "Shampoo anticaspa",
-        "preco": Decimal("25.00"),
-        "estoque": 15,
+        "categoria": "Higiene",
         "ativo": True,
+        "preco_venda": "35.00",
+        "preco_custo": "20.00",
+        "pontos_gerados": 3,
     }
 
     def fake_criar(_conn, payload):
         assert payload.nome == "Shampoo"
-        assert payload.preco == Decimal("25.00")
+        assert payload.categoria == "Higiene"
         return created
 
     monkeypatch.setattr(produto_router.produto_service, "criar_produto", fake_criar)
@@ -153,10 +155,11 @@ def test_post_produtos_valida_payload_e_retorna_201(client, monkeypatch):
         "/produtos",
         json={
             "nome": "Shampoo",
-            "descricao": "Shampoo anticaspa",
-            "preco": "25.00",
-            "estoque": 15,
+            "categoria": "Higiene",
             "ativo": True,
+            "preco_venda": 35,
+            "preco_custo": 20,
+            "pontos_gerados": 3,
         },
     )
 
@@ -172,9 +175,6 @@ def test_post_produtos_rejeita_payload_invalido(client):
         "/produtos",
         json={
             "nome": "",
-            "descricao": "Sem preco valido",
-            "preco": "0.00",
-            "estoque": -1,
             "ativo": True,
         },
     )
@@ -195,7 +195,13 @@ def test_put_produto_delega_para_service(client, monkeypatch):
 
     response = client.put(
         "/produtos/1",
-        json={"nome": "Pomada premium", "preco": "45.00"},
+        json={
+            "nome": "Pomada premium",
+            "categoria": "Finalizador",
+            "preco_venda": 55,
+            "preco_custo": 30,
+            "pontos_gerados": 7,
+        },
     )
 
     assert response.status_code == 200
@@ -221,7 +227,7 @@ def test_put_produto_repassa_404_do_service(client, monkeypatch):
 def test_put_produto_rejeita_payload_invalido(client):
     app.dependency_overrides[get_db] = override_db
 
-    response = client.put("/produtos/1", json={"preco": "-1.00"})
+    response = client.put("/produtos/1", json={"nome": ""})
 
     assert response.status_code == 422
     clear_overrides()

@@ -5,7 +5,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { useForm } from "react-hook-form";
 
 import {
   BarbeiroPrimaryFields,
@@ -46,7 +46,6 @@ export function BarbeiroForm({
     resolver: zodResolver(barbeiroFormSchema),
     defaultValues: defaultBarbeiroFormValues
   });
-  const ativo = Boolean(useWatch({ control: form.control, name: "ativo" }));
   const isEdit = mode === "edit";
   const isSubmitting = createBarbeiro.isPending || updateBarbeiro.isPending;
   const mutationError = createBarbeiro.error ?? updateBarbeiro.error;
@@ -59,8 +58,8 @@ export function BarbeiroForm({
         cpf: pessoa.cpf,
         email: pessoa.email ?? "",
         data_nascimento: pessoa.data_nascimento ?? "",
-        especialidade: barbeiro.especialidade ?? "",
-        ativo: barbeiro.ativo
+        apelido: barbeiro.apelido ?? "",
+        comissao_percentual: Number(barbeiro.comissao_percentual ?? 0)
       });
     }
   }, [form, isEdit, barbeiroQuery.data]);
@@ -116,7 +115,7 @@ export function BarbeiroForm({
           noValidate>
           <div className="grid gap-5 lg:grid-cols-[1fr_18rem]">
             <BarbeiroPrimaryFields form={form} isEdit={isEdit} />
-            <BarbeiroProfessionalFields form={form} ativo={ativo} />
+            <BarbeiroProfessionalFields form={form} />
           </div>
           {mutationError ? (
             <Alert variant="destructive">

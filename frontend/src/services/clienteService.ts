@@ -20,7 +20,7 @@ function isPessoa(data: unknown): data is Pessoa {
 }
 
 function isCliente(data: unknown): data is Cliente {
-  return hasKeys(data, ["id_cliente", "PESSOA_id_pessoa"]);
+  return hasKeys(data, ["PESSOA_id_pessoa"]);
 }
 
 function parseList<T>(

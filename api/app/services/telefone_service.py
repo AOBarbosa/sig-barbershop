@@ -4,8 +4,8 @@ from app.repositories import pessoa_repository, telefone_repository
 from app.schemas.telefone_schema import TelefoneCreate, TelefoneUpdate
 
 
-def buscar_telefone(conn, telefone_id: int):
-    telefone = telefone_repository.buscar_por_id(conn, telefone_id)
+def buscar_telefone(conn, pessoa_id: int, telefone_numero: str):
+    telefone = telefone_repository.buscar_por_id(conn, (pessoa_id, telefone_numero))
     if telefone is None:
         raise HTTPException(status_code=404, detail="Telefone nao encontrado")
     return telefone
@@ -31,9 +31,10 @@ def criar_telefone(conn, payload: TelefoneCreate):
         raise
 
 
-def atualizar_telefone(conn, telefone_id: int, payload: TelefoneUpdate):
+def atualizar_telefone(conn, pessoa_id: int, telefone_numero: str, payload: TelefoneUpdate):
     conn.start_transaction()
     try:
+        telefone_id = (pessoa_id, telefone_numero)
         if telefone_repository.buscar_por_id(conn, telefone_id) is None:
             raise HTTPException(status_code=404, detail="Telefone nao encontrado")
 
@@ -46,9 +47,10 @@ def atualizar_telefone(conn, telefone_id: int, payload: TelefoneUpdate):
         raise
 
 
-def deletar_telefone(conn, telefone_id: int):
+def deletar_telefone(conn, pessoa_id: int, telefone_numero: str):
     conn.start_transaction()
     try:
+        telefone_id = (pessoa_id, telefone_numero)
         if telefone_repository.buscar_por_id(conn, telefone_id) is None:
             raise HTTPException(status_code=404, detail="Telefone nao encontrado")
 

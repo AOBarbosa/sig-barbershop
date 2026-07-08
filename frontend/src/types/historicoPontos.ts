@@ -2,7 +2,7 @@ export type TipoMovimentacao = "acumulo" | "resgate";
 
 export interface HistoricoPontos {
   id_historico: number;
-  CLIENTE_id_cliente: number;
+  CLIENTE_PESSOA_id_pessoa: number;
   pontos: number;
   tipo_movimentacao: TipoMovimentacao;
   descricao: string | null;
@@ -10,6 +10,6 @@ export interface HistoricoPontos {
 }
 
 export interface SaldoPontos {
-  CLIENTE_id_cliente: number;
+  CLIENTE_PESSOA_id_pessoa: number;
   saldo: number;
 }

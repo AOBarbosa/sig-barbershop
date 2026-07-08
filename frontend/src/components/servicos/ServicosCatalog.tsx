@@ -47,7 +47,7 @@ export function CatalogToolbar({
       <div>
         <CardTitle>Catálogo</CardTitle>
         <CardDescription>
-          Preços usados como base nos atendimentos.
+          Serviços cadastrados para atendimento.
         </CardDescription>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -95,9 +95,9 @@ export function ServicoResults({
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Descrição</TableHead>
               <TableHead>Preço</TableHead>
               <TableHead>Duração</TableHead>
+              <TableHead>Pontos</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>

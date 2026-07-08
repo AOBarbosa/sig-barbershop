@@ -42,7 +42,8 @@ def fidelidade_row(fidelidade_id=1, servico_id=1, produto_id=None):
         "id_fidelidade": fidelidade_id,
         "SERVICO_id_servico": servico_id,
         "PRODUTO_id_produto": produto_id,
-        "pontos": 10,
+        "pontos_acumulados": 10,
+        "pontos_uso": 0,
         "ativo": 1,
     }
 
@@ -85,7 +86,8 @@ def test_criar_fidelidade_insere_sql_puro_e_retorna_registro_criado():
         {
             "SERVICO_id_servico": None,
             "PRODUTO_id_produto": 5,
-            "pontos": 10,
+            "pontos_acumulados": 10,
+            "pontos_uso": 0,
             "ativo": True,
         },
     )
@@ -93,7 +95,7 @@ def test_criar_fidelidade_insere_sql_puro_e_retorna_registro_criado():
     insert_sql, insert_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "INSERT INTO FIDELIDADE" in insert_sql
-    assert insert_params == (None, 5, 10, True)
+    assert insert_params == (None, 5, 10, 0, True)
     assert "FROM FIDELIDADE" in select_sql
     assert select_params == (10,)
     assert result == created

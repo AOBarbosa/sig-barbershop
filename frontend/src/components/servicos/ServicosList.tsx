@@ -1,6 +1,6 @@
 "use client";
 
-import { Clock, Plus, Scissors, Wallet } from "lucide-react";
+import { CheckCircle2, Clock, Plus, Scissors } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -11,10 +11,6 @@ import {
   type StatusFilter
 } from "@/components/servicos/ServicosCatalog";
 import { SummaryCard } from "@/components/servicos/ServicoListParts";
-import {
-  formatCurrency,
-  getAveragePrice
-} from "@/components/servicos/servicoFormatters";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -35,8 +31,7 @@ export function ServicosList() {
     return servicos.filter((servico) => {
       const matchesSearch =
         normalizedSearch.length === 0 ||
-        servico.nome.toLowerCase().includes(normalizedSearch) ||
-        (servico.descricao ?? "").toLowerCase().includes(normalizedSearch);
+        servico.nome.toLowerCase().includes(normalizedSearch);
       const matchesStatus =
         statusFilter === "todos" ||
         (statusFilter === "ativos" && servico.ativo) ||
@@ -125,10 +120,10 @@ function ServicosSummary({
         icon={Clock}
       />
       <SummaryCard
-        title="Preço médio"
-        value={formatCurrency(getAveragePrice(servicos))}
-        description="Média do catálogo atual"
-        icon={Wallet}
+        title="Ativos"
+        value={String(active)}
+        description="Disponíveis para atendimento"
+        icon={CheckCircle2}
       />
     </div>
   );

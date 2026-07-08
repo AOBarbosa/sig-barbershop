@@ -42,12 +42,13 @@ class FakeConn:
 def venda_row(venda_id=1):
     return {
         "id_venda": venda_id,
-        "CLIENTE_id_cliente": 1,
-        "CAIXA_id_caixa": 2,
-        "data_venda": datetime(2026, 7, 5, 9, 0),
+        "CLIENTE_PESSOA_id_pessoa": 1,
+        "CAIXA_PESSOA_id_pessoa": 2,
+        "data_hora": datetime(2026, 7, 5, 9, 0),
         "valor_total": Decimal("0.00"),
-        "status": "pendente",
-        "forma_pagamento": "pix",
+        "status": "ABERTA",
+        "forma_pagamento": "PIX",
+        "desconto": Decimal("0.00"),
     }
 
 
@@ -86,34 +87,44 @@ def test_criar_venda_insere_sem_receber_valor_total_do_cliente():
     result = venda_repository.criar(
         conn,
         {
-            "CLIENTE_id_cliente": 1,
-            "CAIXA_id_caixa": 2,
+            "CLIENTE_PESSOA_id_pessoa": 1,
+            "CAIXA_PESSOA_id_pessoa": 2,
+            "data_hora": datetime(2026, 7, 5, 9, 0),
             "valor_total": Decimal("0.00"),
-            "status": "pendente",
-            "forma_pagamento": "pix",
+            "status": "ABERTA",
+            "forma_pagamento": "PIX",
+            "desconto": Decimal("0.00"),
         },
     )
 
     insert_sql, insert_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "INSERT INTO VENDA" in insert_sql
-    assert insert_params == (1, 2, Decimal("0.00"), "pendente", "pix")
+    assert insert_params == (
+        1,
+        2,
+        datetime(2026, 7, 5, 9, 0),
+        Decimal("0.00"),
+        "ABERTA",
+        "PIX",
+        Decimal("0.00"),
+    )
     assert select_params == (10,)
     assert "FROM VENDA" in select_sql
     assert result == created
 
 
 def test_atualizar_status_altera_apenas_status():
-    updated = venda_row(venda_id=6) | {"status": "concluida"}
+    updated = venda_row(venda_id=6) | {"status": "PAGA"}
     cursor = FakeCursor(row=updated)
     conn = FakeConn(cursor)
 
-    result = venda_repository.atualizar_status(conn, 6, "concluida")
+    result = venda_repository.atualizar_status(conn, 6, "PAGA")
 
     update_sql, update_params = cursor.statements[0]
     assert "UPDATE VENDA" in update_sql
     assert "status = %s" in update_sql
-    assert update_params == ("concluida", 6)
+    assert update_params == ("PAGA", 6)
     assert result == updated
 
 

@@ -32,9 +32,9 @@ function parseList<T>(
 function isVenda(data: unknown): data is Venda {
   return hasKeys(data, [
     "id_venda",
-    "CLIENTE_id_cliente",
-    "CAIXA_id_caixa",
-    "data_venda",
+    "CLIENTE_PESSOA_id_pessoa",
+    "CAIXA_PESSOA_id_pessoa",
+    "data_hora",
     "status",
     "valor_total"
   ]);
@@ -42,7 +42,6 @@ function isVenda(data: unknown): data is Venda {
 
 function isVendaProduto(data: unknown): data is VendaProduto {
   return hasKeys(data, [
-    "id_venda_produto",
     "VENDA_id_venda",
     "PRODUTO_id_produto",
     "quantidade",
@@ -51,7 +50,7 @@ function isVendaProduto(data: unknown): data is VendaProduto {
 }
 
 function isCaixa(data: unknown): data is Caixa {
-  return hasKeys(data, ["id_caixa", "PESSOA_id_pessoa"]);
+  return hasKeys(data, ["PESSOA_id_pessoa"]);
 }
 
 export const getVendas = () =>

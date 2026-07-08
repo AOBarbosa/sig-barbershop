@@ -4,10 +4,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useWatch } from "react-hook-form";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 
 import { AtendimentoAvailabilityHint } from "@/components/atendimentos/AtendimentoAvailabilityHint";
+import { AtendimentoErrorAlert } from "@/components/atendimentos/AtendimentoErrorAlert";
 import { AtendimentoFieldError } from "@/components/atendimentos/AtendimentoFieldError";
 import { AtendimentoMissingDataAlert } from "@/components/atendimentos/AtendimentoMissingDataAlert";
 import { AtendimentoSubmitButton } from "@/components/atendimentos/AtendimentoSubmitButton";
@@ -40,22 +40,23 @@ export function AtendimentoForm() {
     defaultValues: defaultAtendimentoFormValues
   });
   const barbeiroId = Number(
-    useWatch({ control: form.control, name: "BARBEIRO_id_barbeiro" })
+    useWatch({ control: form.control, name: "BARBEIRO_PESSOA_id_pessoa" })
   );
   const disponibilidadesQuery = useDisponibilidadesDoBarbeiro(barbeiroId);
 
   async function onSubmit(values: AtendimentoFormValues) {
     const dataHora =
-      values.data_hora.length === 16
-        ? `${values.data_hora}:00`
-        : values.data_hora;
+      values.data_hora_inicio.length === 16
+        ? `${values.data_hora_inicio}:00`
+        : values.data_hora_inicio;
 
     await createAtendimento.mutateAsync({
-      CLIENTE_id_cliente: values.CLIENTE_id_cliente,
-      BARBEIRO_id_barbeiro: values.BARBEIRO_id_barbeiro,
-      data_hora: dataHora,
-      status: "agendado",
-      observacao: values.observacao || null,
+      CLIENTE_PESSOA_id_pessoa: values.CLIENTE_PESSOA_id_pessoa,
+      BARBEIRO_PESSOA_id_pessoa: values.BARBEIRO_PESSOA_id_pessoa,
+      data_hora_inicio: dataHora,
+      data_hora_fim: null,
+      status: "AGENDADO",
+      observacoes: values.observacoes || null,
       servicoIds: values.servicoIds
     });
     router.push("/atendimentos?salvo=1");
@@ -98,54 +99,60 @@ export function AtendimentoForm() {
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-2">
               <AtendimentoFieldError
-                message={form.formState.errors.CLIENTE_id_cliente?.message}>
+                message={
+                  form.formState.errors.CLIENTE_PESSOA_id_pessoa?.message
+                }>
                 <label className="text-sm font-medium" htmlFor="cliente">
                   Cliente
                 </label>
                 <select
                   id="cliente"
                   className="h-10 rounded-lg border px-3 text-sm"
-                  {...form.register("CLIENTE_id_cliente")}
-                  name="CLIENTE_id_cliente">
+                  {...form.register("CLIENTE_PESSOA_id_pessoa")}
+                  name="CLIENTE_PESSOA_id_pessoa">
                   <option value={0}>Selecione</option>
                   {lookups.clientes.map((cliente) => (
-                    <option key={cliente.id_cliente} value={cliente.id_cliente}>
+                    <option
+                      key={cliente.PESSOA_id_pessoa}
+                      value={cliente.PESSOA_id_pessoa}>
                       {pessoaNome(cliente.PESSOA_id_pessoa, lookups)}
                     </option>
                   ))}
                 </select>
               </AtendimentoFieldError>
               <AtendimentoFieldError
-                message={form.formState.errors.BARBEIRO_id_barbeiro?.message}>
+                message={
+                  form.formState.errors.BARBEIRO_PESSOA_id_pessoa?.message
+                }>
                 <label className="text-sm font-medium" htmlFor="barbeiro">
                   Barbeiro
                 </label>
                 <select
                   id="barbeiro"
                   className="h-10 rounded-lg border px-3 text-sm"
-                  {...form.register("BARBEIRO_id_barbeiro")}
-                  name="BARBEIRO_id_barbeiro">
+                  {...form.register("BARBEIRO_PESSOA_id_pessoa")}
+                  name="BARBEIRO_PESSOA_id_pessoa">
                   <option value={0}>Selecione</option>
-                  {lookups.barbeiros
-                    .filter((barbeiro) => barbeiro.ativo)
-                    .map((barbeiro) => (
-                      <option
-                        key={barbeiro.id_barbeiro}
-                        value={barbeiro.id_barbeiro}>
-                        {pessoaNome(barbeiro.PESSOA_id_pessoa, lookups)}
-                      </option>
-                    ))}
+                  {lookups.barbeiros.map((barbeiro) => (
+                    <option
+                      key={barbeiro.PESSOA_id_pessoa}
+                      value={barbeiro.PESSOA_id_pessoa}>
+                      {pessoaNome(barbeiro.PESSOA_id_pessoa, lookups)}
+                    </option>
+                  ))}
                 </select>
               </AtendimentoFieldError>
               <AtendimentoFieldError
-                message={form.formState.errors.data_hora?.message}>
-                <label className="text-sm font-medium" htmlFor="data_hora">
+                message={form.formState.errors.data_hora_inicio?.message}>
+                <label
+                  className="text-sm font-medium"
+                  htmlFor="data_hora_inicio">
                   Data e hora
                 </label>
                 <Input
-                  id="data_hora"
+                  id="data_hora_inicio"
                   type="datetime-local"
-                  {...form.register("data_hora")}
+                  {...form.register("data_hora_inicio")}
                 />
               </AtendimentoFieldError>
               <AtendimentoAvailabilityHint
@@ -174,21 +181,14 @@ export function AtendimentoForm() {
                 </p>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium" htmlFor="observacao">
+                <label className="text-sm font-medium" htmlFor="observacoes">
                   Observação
                 </label>
-                <Textarea id="observacao" {...form.register("observacao")} />
+                <Textarea id="observacoes" {...form.register("observacoes")} />
               </div>
             </CardContent>
           </Card>
-          {createAtendimento.error ? (
-            <Alert variant="destructive">
-              <AlertTitle>Erro ao salvar atendimento</AlertTitle>
-              <AlertDescription>
-                {createAtendimento.error.message}
-              </AlertDescription>
-            </Alert>
-          ) : null}
+          <AtendimentoErrorAlert message={createAtendimento.error?.message} />
           <div className="flex justify-end">
             <AtendimentoSubmitButton loading={createAtendimento.isPending} />
           </div>

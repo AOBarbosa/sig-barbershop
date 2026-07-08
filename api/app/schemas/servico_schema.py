@@ -1,15 +1,15 @@
+from datetime import date
 from decimal import Decimal
-from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class ServicoBase(BaseModel):
-    nome: str = Field(min_length=1, max_length=100)
-    descricao: str | None = None
-    preco: Decimal = Field(gt=0, max_digits=10, decimal_places=2)
-    duracao_minutos: int = Field(gt=0)
+    nome: str = Field(min_length=1, max_length=80)
     ativo: bool = True
+    preco: Decimal = Field(ge=0)
+    duracao_em_minutos: int = Field(gt=0)
+    pontos_gerados: int = Field(default=0, ge=0)
 
 
 class ServicoCreate(ServicoBase):
@@ -17,11 +17,11 @@ class ServicoCreate(ServicoBase):
 
 
 class ServicoUpdate(BaseModel):
-    nome: str | None = Field(default=None, min_length=1, max_length=100)
-    descricao: str | None = None
-    preco: Decimal | None = Field(default=None, gt=0, max_digits=10, decimal_places=2)
-    duracao_minutos: int | None = Field(default=None, gt=0)
+    nome: str | None = Field(default=None, min_length=1, max_length=80)
     ativo: bool | None = None
+    preco: Decimal | None = Field(default=None, ge=0)
+    duracao_em_minutos: int | None = Field(default=None, gt=0)
+    pontos_gerados: int | None = Field(default=None, ge=0)
 
 
 class ServicoResponse(ServicoBase):
@@ -35,7 +35,9 @@ class HistoricoServicoResponse(BaseModel):
 
     id_historico: int
     SERVICO_id_servico: int
-    preco_anterior: Decimal | None
-    preco_novo: Decimal | None
+    preco: Decimal
+    duracao_em_minutos: int
+    pontos_gerados: int
+    data_inicio: date
+    data_fim: date | None
     ativo: bool
-    alterado_em: datetime

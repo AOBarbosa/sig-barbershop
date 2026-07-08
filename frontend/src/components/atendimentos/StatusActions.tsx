@@ -10,16 +10,16 @@ const nextActions: Record<
   AtendimentoStatus,
   Array<{ label: string; status: AtendimentoStatus }>
 > = {
-  agendado: [
-    { label: "Iniciar", status: "em_andamento" },
-    { label: "Cancelar", status: "cancelado" }
+  AGENDADO: [
+    { label: "Iniciar", status: "EM_EXECUCAO" },
+    { label: "Cancelar", status: "CANCELADO" }
   ],
-  em_andamento: [
-    { label: "Concluir", status: "concluido" },
-    { label: "Cancelar", status: "cancelado" }
+  EM_EXECUCAO: [
+    { label: "Concluir", status: "CONCLUIDO" },
+    { label: "Cancelar", status: "CANCELADO" }
   ],
-  concluido: [],
-  cancelado: []
+  CONCLUIDO: [],
+  CANCELADO: []
 };
 
 export function StatusActions({
@@ -42,7 +42,7 @@ export function StatusActions({
         <Button
           key={action.status}
           type="button"
-          variant={action.status === "cancelado" ? "outline" : "default"}
+          variant={action.status === "CANCELADO" ? "outline" : "default"}
           disabled={mutation.isPending}
           onClick={() => mutation.mutate(action.status)}>
           {mutation.isPending ? (

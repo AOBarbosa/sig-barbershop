@@ -22,12 +22,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL"
-});
 
 type ProdutoFormInstance = UseFormReturn<
   ProdutoFormInput,
@@ -37,12 +31,10 @@ type ProdutoFormInstance = UseFormReturn<
 
 export function ProdutoPrimaryFields({
   form,
-  isEdit,
-  preco
+  isEdit
 }: {
   form: ProdutoFormInstance;
   isEdit: boolean;
-  preco: number;
 }) {
   return (
     <Card>
@@ -64,40 +56,75 @@ export function ProdutoPrimaryFields({
             </FormItem>
           )}
         </FormField>
-        <FormField name="descricao">
+        <FormField name="categoria">
           {(field) => (
             <FormItem>
-              <FormLabel htmlFor="descricao">Descrição</FormLabel>
+              <FormLabel htmlFor="categoria">Categoria</FormLabel>
               <FormControl>
-                <Textarea
-                  id="descricao"
-                  placeholder="Detalhes do produto"
-                  {...field}
-                />
+                <Input id="categoria" placeholder="Finalizador" {...field} />
               </FormControl>
+              <FormMessage>
+                {form.formState.errors.categoria?.message}
+              </FormMessage>
             </FormItem>
           )}
         </FormField>
-        <FormField name="preco">
-          {(field) => (
-            <FormItem>
-              <FormLabel htmlFor="preco">Preço</FormLabel>
-              <FormControl>
-                <Input
-                  id="preco"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage>{form.formState.errors.preco?.message}</FormMessage>
-              <p className="text-muted-foreground text-sm">
-                Preço formatado: {currencyFormatter.format(preco)}
-              </p>
-            </FormItem>
-          )}
-        </FormField>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <FormField name="preco_venda">
+            {(field) => (
+              <FormItem>
+                <FormLabel htmlFor="preco_venda">Preço venda</FormLabel>
+                <FormControl>
+                  <Input
+                    id="preco_venda"
+                    type="number"
+                    step="0.01"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.preco_venda?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          </FormField>
+          <FormField name="preco_custo">
+            {(field) => (
+              <FormItem>
+                <FormLabel htmlFor="preco_custo">Preço custo</FormLabel>
+                <FormControl>
+                  <Input
+                    id="preco_custo"
+                    type="number"
+                    step="0.01"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.preco_custo?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          </FormField>
+          <FormField name="pontos_gerados">
+            {(field) => (
+              <FormItem>
+                <FormLabel htmlFor="pontos_gerados">Pontos</FormLabel>
+                <FormControl>
+                  <Input
+                    id="pontos_gerados"
+                    type="number"
+                    step="1"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.pontos_gerados?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          </FormField>
+        </div>
       </CardContent>
     </Card>
   );
@@ -115,23 +142,10 @@ export function ProdutoOperationalFields({
       <CardHeader>
         <CardTitle>Configuração operacional</CardTitle>
         <CardDescription>
-          Controle de estoque e disponibilidade.
+          Disponibilidade do produto no catálogo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <FormField name="estoque">
-          {(field) => (
-            <FormItem>
-              <FormLabel htmlFor="estoque">Estoque disponível</FormLabel>
-              <FormControl>
-                <Input id="estoque" type="number" min="0" step="1" {...field} />
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.estoque?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        </FormField>
         <FormItem>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-1">

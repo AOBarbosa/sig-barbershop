@@ -5,9 +5,10 @@ import type { VendaStatus } from "@/types/venda";
 import { statusLabel } from "./vendaFormatters";
 
 const statusClasses: Record<VendaStatus, string> = {
-  pendente: "border-amber-200 bg-amber-50 text-amber-700",
-  concluida: "border-emerald-200 bg-emerald-50 text-emerald-700",
-  cancelada: "border-red-200 bg-red-50 text-red-700"
+  ABERTA: "border-amber-200 bg-amber-50 text-amber-700",
+  PAGA: "border-emerald-200 bg-emerald-50 text-emerald-700",
+  CANCELADA: "border-red-200 bg-red-50 text-red-700",
+  ESTORNADA: "border-slate-200 bg-slate-50 text-slate-700"
 };
 
 export function StatusBadge({ status }: { status: VendaStatus }) {

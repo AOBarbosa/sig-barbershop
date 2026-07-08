@@ -54,7 +54,7 @@ export function AtendimentosList() {
         <SummaryCard
           title="Agendados"
           value={String(
-            atendimentos.filter((item) => item.status === "agendado").length
+            atendimentos.filter((item) => item.status === "AGENDADO").length
           )}
           description="Ainda não iniciados"
           icon={CalendarClock}
@@ -159,12 +159,14 @@ function AtendimentosTable({
           {atendimentos.map((atendimento) => (
             <TableRow key={atendimento.id_atendimento}>
               <TableCell>
-                {clienteNome(atendimento.CLIENTE_id_cliente, lookups)}
+                {clienteNome(atendimento.CLIENTE_PESSOA_id_pessoa, lookups)}
               </TableCell>
               <TableCell>
-                {barbeiroNome(atendimento.BARBEIRO_id_barbeiro, lookups)}
+                {barbeiroNome(atendimento.BARBEIRO_PESSOA_id_pessoa, lookups)}
               </TableCell>
-              <TableCell>{formatDateTime(atendimento.data_hora)}</TableCell>
+              <TableCell>
+                {formatDateTime(atendimento.data_hora_inicio)}
+              </TableCell>
               <TableCell>
                 <StatusBadge status={atendimento.status} />
               </TableCell>

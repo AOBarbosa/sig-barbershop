@@ -3,20 +3,21 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
-TipoMovimentacao = Literal["acumulo", "resgate"]
+TipoMovimentacao = Literal["ACUMULA", "USA"]
 
 
 class HistoricoPontosResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
-    id_historico: int
-    CLIENTE_id_cliente: int
+    id_movimentacao: int
+    CLIENTE_PESSOA_id_pessoa: int
+    VENDA_id_venda: int
+    FIDELIDADE_id_fidelidade: int
     pontos: int
     tipo_movimentacao: TipoMovimentacao
-    descricao: str | None = None
     data_movimentacao: datetime
 
 
 class SaldoPontosResponse(BaseModel):
-    CLIENTE_id_cliente: int
+    CLIENTE_PESSOA_id_pessoa: int
     saldo: int

@@ -35,9 +35,8 @@ class FakeConn:
         return self.fake_cursor
 
 
-def vinculo_row(vinculo_id=1):
+def vinculo_row():
     return {
-        "id_atendimento_servico": vinculo_id,
         "ATENDIMENTO_id_atendimento": 1,
         "SERVICO_id_servico": 2,
         "preco_cobrado": Decimal("35.00"),
@@ -75,7 +74,7 @@ def test_buscar_por_ids_consulta_vinculo_por_atendimento_e_servico():
 
 
 def test_criar_vinculo_insere_preco_cobrado_e_retorna_registro():
-    created = vinculo_row(vinculo_id=10)
+    created = vinculo_row()
     cursor = FakeCursor(row=created, lastrowid=10)
     conn = FakeConn(cursor)
 
@@ -91,20 +90,21 @@ def test_criar_vinculo_insere_preco_cobrado_e_retorna_registro():
     assert "INSERT INTO ATENDIMENTO_SERVICO" in insert_sql
     assert insert_params == (1, 2, Decimal("35.00"))
     assert "FROM ATENDIMENTO_SERVICO" in select_sql
-    assert select_params == (10,)
+    assert select_params == (1, 2)
     assert result == created
 
 
-def test_buscar_por_id_consulta_vinculo_por_id():
-    cursor = FakeCursor(row=vinculo_row(vinculo_id=5))
+def test_buscar_por_id_consulta_vinculo_por_chave_composta():
+    cursor = FakeCursor(row=vinculo_row())
     conn = FakeConn(cursor)
 
-    result = atendimento_servico_repository.buscar_por_id(conn, 5)
+    result = atendimento_servico_repository.buscar_por_id(conn, (1, 2))
 
     sql, params = cursor.statements[0]
-    assert "WHERE id_atendimento_servico = %s" in sql
-    assert params == (5,)
-    assert result["id_atendimento_servico"] == 5
+    assert "ATENDIMENTO_id_atendimento = %s" in sql
+    assert "SERVICO_id_servico = %s" in sql
+    assert params == (1, 2)
+    assert result["SERVICO_id_servico"] == 2
 
 
 def test_deletar_por_ids_remove_vinculo_por_atendimento_e_servico():

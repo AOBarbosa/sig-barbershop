@@ -1,4 +1,3 @@
-from decimal import Decimal
 import inspect
 
 from fastapi import HTTPException
@@ -24,10 +23,10 @@ def servico_response(servico_id=1):
     return {
         "id_servico": servico_id,
         "nome": "Corte",
-        "descricao": "Corte masculino",
-        "preco": Decimal("35.00"),
-        "duracao_minutos": 30,
         "ativo": True,
+        "preco": "40.00",
+        "duracao_em_minutos": 45,
+        "pontos_gerados": 4,
     }
 
 
@@ -37,10 +36,10 @@ def test_get_servicos_delega_para_service(client, monkeypatch):
         {
             "id_servico": 1,
             "nome": "Corte",
-            "descricao": "Corte masculino",
-            "preco": "35.00",
-            "duracao_minutos": 30,
             "ativo": True,
+            "preco": "40.00",
+            "duracao_em_minutos": 45,
+            "pontos_gerados": 4,
         }
     ]
 
@@ -90,10 +89,12 @@ def test_get_historico_servico_delega_para_service(client, monkeypatch):
         {
             "id_historico": 1,
             "SERVICO_id_servico": 1,
-            "preco_anterior": "35.00",
-            "preco_novo": "45.00",
+            "preco": "45.00",
+            "duracao_em_minutos": 30,
+            "pontos_gerados": 5,
+            "data_inicio": "2026-07-02",
+            "data_fim": None,
             "ativo": True,
-            "alterado_em": "2026-07-02T10:00:00",
         }
     ]
 
@@ -138,15 +139,14 @@ def test_post_servicos_valida_payload_e_retorna_201(client, monkeypatch):
     created = {
         "id_servico": 2,
         "nome": "Barba",
-        "descricao": "Barba completa",
-        "preco": Decimal("25.00"),
-        "duracao_minutos": 20,
         "ativo": True,
+        "preco": "35.00",
+        "duracao_em_minutos": 30,
+        "pontos_gerados": 3,
     }
 
     def fake_criar(_conn, payload):
         assert payload.nome == "Barba"
-        assert payload.preco == Decimal("25.00")
         return created
 
     monkeypatch.setattr(servico_router.servico_service, "criar_servico", fake_criar)
@@ -155,10 +155,10 @@ def test_post_servicos_valida_payload_e_retorna_201(client, monkeypatch):
         "/servicos",
         json={
             "nome": "Barba",
-            "descricao": "Barba completa",
-            "preco": "25.00",
-            "duracao_minutos": 20,
             "ativo": True,
+            "preco": 35,
+            "duracao_em_minutos": 30,
+            "pontos_gerados": 3,
         },
     )
 
@@ -174,9 +174,6 @@ def test_post_servicos_rejeita_payload_invalido(client):
         "/servicos",
         json={
             "nome": "",
-            "descricao": "Sem preco valido",
-            "preco": "0.00",
-            "duracao_minutos": 0,
             "ativo": True,
         },
     )
@@ -197,7 +194,12 @@ def test_put_servico_delega_para_service(client, monkeypatch):
 
     response = client.put(
         "/servicos/1",
-        json={"nome": "Corte premium", "preco": "45.00"},
+        json={
+            "nome": "Corte premium",
+            "preco": 50,
+            "duracao_em_minutos": 50,
+            "pontos_gerados": 6,
+        },
     )
 
     assert response.status_code == 200
@@ -223,7 +225,7 @@ def test_put_servico_repassa_404_do_service(client, monkeypatch):
 def test_put_servico_rejeita_payload_invalido(client):
     app.dependency_overrides[get_db] = override_db
 
-    response = client.put("/servicos/1", json={"preco": "-1.00"})
+    response = client.put("/servicos/1", json={"nome": ""})
 
     assert response.status_code == 422
     clear_overrides()

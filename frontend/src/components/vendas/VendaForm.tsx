@@ -1,7 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -14,6 +14,7 @@ import {
 } from "@/components/vendas/vendaFormSchema";
 import { VendaFieldError } from "@/components/vendas/VendaFieldError";
 import { VendaItemsField } from "@/components/vendas/VendaItemsField";
+import { VendaSubmitButton } from "@/components/vendas/VendaSubmitButton";
 import { pessoaNome } from "@/components/vendas/vendaFormatters";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,10 +24,11 @@ import { useCreateVenda, useVendaLookups } from "@/hooks/useVendas";
 import type { FormaPagamento, VendaItemPayload } from "@/types/venda";
 
 const formasPagamento: Array<{ value: FormaPagamento; label: string }> = [
-  { value: "dinheiro", label: "Dinheiro" },
-  { value: "cartao_debito", label: "Cartão de débito" },
-  { value: "cartao_credito", label: "Cartão de crédito" },
-  { value: "pix", label: "Pix" }
+  { value: "DINHEIRO", label: "Dinheiro" },
+  { value: "CARTAO_DEBITO", label: "Cartão de débito" },
+  { value: "CARTAO_CREDITO", label: "Cartão de crédito" },
+  { value: "PIX", label: "Pix" },
+  { value: "OUTRO", label: "Outro" }
 ];
 
 export function VendaForm() {
@@ -46,11 +48,17 @@ export function VendaForm() {
         quantidade
       }));
 
+    const dataHora =
+      values.data_hora.length === 16
+        ? `${values.data_hora}:00`
+        : values.data_hora;
+
     await createVenda.mutateAsync({
-      CLIENTE_id_cliente: values.CLIENTE_id_cliente,
-      CAIXA_id_caixa: values.CAIXA_id_caixa,
-      forma_pagamento: (values.forma_pagamento ||
-        null) as FormaPagamento | null,
+      CLIENTE_PESSOA_id_pessoa: values.CLIENTE_PESSOA_id_pessoa,
+      CAIXA_PESSOA_id_pessoa: values.CAIXA_PESSOA_id_pessoa,
+      data_hora: dataHora,
+      forma_pagamento: values.forma_pagamento as FormaPagamento,
+      desconto: 0,
       itens
     });
     router.push("/vendas?salvo=1");
@@ -97,40 +105,55 @@ export function VendaForm() {
           </CardHeader>
           <CardContent className="grid gap-4 md:grid-cols-2">
             <VendaFieldError
-              message={form.formState.errors.CLIENTE_id_cliente?.message}>
+              message={form.formState.errors.CLIENTE_PESSOA_id_pessoa?.message}>
               <label className="text-sm font-medium" htmlFor="cliente">
                 Cliente
               </label>
               <select
                 id="cliente"
                 className="h-10 rounded-lg border px-3 text-sm"
-                {...form.register("CLIENTE_id_cliente")}
-                name="CLIENTE_id_cliente">
+                {...form.register("CLIENTE_PESSOA_id_pessoa")}
+                name="CLIENTE_PESSOA_id_pessoa">
                 <option value={0}>Selecione</option>
                 {lookups.clientes.map((cliente) => (
-                  <option key={cliente.id_cliente} value={cliente.id_cliente}>
+                  <option
+                    key={cliente.PESSOA_id_pessoa}
+                    value={cliente.PESSOA_id_pessoa}>
                     {pessoaNome(cliente.PESSOA_id_pessoa, lookups)}
                   </option>
                 ))}
               </select>
             </VendaFieldError>
             <VendaFieldError
-              message={form.formState.errors.CAIXA_id_caixa?.message}>
+              message={form.formState.errors.CAIXA_PESSOA_id_pessoa?.message}>
               <label className="text-sm font-medium" htmlFor="caixa">
                 Caixa
               </label>
               <select
                 id="caixa"
                 className="h-10 rounded-lg border px-3 text-sm"
-                {...form.register("CAIXA_id_caixa")}
-                name="CAIXA_id_caixa">
+                {...form.register("CAIXA_PESSOA_id_pessoa")}
+                name="CAIXA_PESSOA_id_pessoa">
                 <option value={0}>Selecione</option>
                 {lookups.caixas.map((caixa) => (
-                  <option key={caixa.id_caixa} value={caixa.id_caixa}>
+                  <option
+                    key={caixa.PESSOA_id_pessoa}
+                    value={caixa.PESSOA_id_pessoa}>
                     {pessoaNome(caixa.PESSOA_id_pessoa, lookups)}
                   </option>
                 ))}
               </select>
+            </VendaFieldError>
+            <VendaFieldError message={form.formState.errors.data_hora?.message}>
+              <label className="text-sm font-medium" htmlFor="data_hora">
+                Data e hora
+              </label>
+              <input
+                id="data_hora"
+                type="datetime-local"
+                className="h-10 rounded-lg border px-3 text-sm"
+                {...form.register("data_hora")}
+              />
             </VendaFieldError>
             <div className="space-y-2 md:col-span-2">
               <label className="text-sm font-medium" htmlFor="forma_pagamento">
@@ -141,7 +164,6 @@ export function VendaForm() {
                 className="h-10 rounded-lg border px-3 text-sm"
                 {...form.register("forma_pagamento")}
                 name="forma_pagamento">
-                <option value="">Não informar</option>
                 {formasPagamento.map((forma) => (
                   <option key={forma.value} value={forma.value}>
                     {forma.label}
@@ -170,12 +192,7 @@ export function VendaForm() {
           </Alert>
         ) : null}
         <div className="flex justify-end">
-          <Button type="submit" disabled={createVenda.isPending}>
-            {createVenda.isPending ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : null}
-            Salvar venda
-          </Button>
+          <VendaSubmitButton loading={createVenda.isPending} />
         </div>
       </form>
     </section>

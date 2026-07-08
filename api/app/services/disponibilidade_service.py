@@ -20,11 +20,11 @@ def listar_por_barbeiro(conn, barbeiro_id: int):
 def criar_disponibilidade(conn, payload: DisponibilidadeCreate):
     conn.start_transaction()
     try:
-        if barbeiro_repository.buscar_por_id(conn, payload.BARBEIRO_id_barbeiro) is None:
+        if barbeiro_repository.buscar_por_id(conn, payload.BARBEIRO_PESSOA_id_pessoa) is None:
             raise HTTPException(status_code=404, detail="Barbeiro nao encontrado")
 
         existente = disponibilidade_repository.buscar_por_barbeiro_e_dia(
-            conn, payload.BARBEIRO_id_barbeiro, payload.dia_semana.value
+            conn, payload.BARBEIRO_PESSOA_id_pessoa, payload.dia_semana.value
         )
         if existente is not None:
             raise HTTPException(
@@ -83,7 +83,7 @@ def atualizar_disponibilidade(conn, disponibilidade_id: int, payload: Disponibil
             _validar_conflito_dia(
                 conn,
                 disponibilidade_id,
-                atual["BARBEIRO_id_barbeiro"],
+                atual["BARBEIRO_PESSOA_id_pessoa"],
                 data["dia_semana"],
             )
 

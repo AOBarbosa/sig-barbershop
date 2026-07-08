@@ -6,8 +6,7 @@
       "cpf": "55566677788",
       "email": "pedro@barbearia.com",
       "data_nascimento": "1988-11-03",
-      "created_at": "2026-01-10T10:00:00",
-      "updated_at": "2026-01-10T10:00:00"
+      "admin": false
     },
     {
       "id_pessoa": 11,
@@ -15,8 +14,7 @@
       "cpf": "66677788899",
       "email": null,
       "data_nascimento": "1992-06-25",
-      "created_at": "2026-01-11T10:00:00",
-      "updated_at": "2026-01-11T10:00:00"
+      "admin": false
     },
     {
       "id_pessoa": 12,
@@ -24,28 +22,24 @@
       "cpf": "77788899900",
       "email": "diego@barbearia.com",
       "data_nascimento": "1985-02-18",
-      "created_at": "2026-01-12T10:00:00",
-      "updated_at": "2026-01-12T10:00:00"
+      "admin": false
     }
   ],
   "barbeiros": [
     {
-      "id_barbeiro": 1,
       "PESSOA_id_pessoa": 10,
-      "especialidade": "Corte masculino",
-      "ativo": true
+      "apelido": "Pedro",
+      "comissao_percentual": "40.00"
     },
     {
-      "id_barbeiro": 2,
       "PESSOA_id_pessoa": 11,
-      "especialidade": "Barba",
-      "ativo": true
+      "apelido": "Rafa",
+      "comissao_percentual": "45.00"
     },
     {
-      "id_barbeiro": 3,
       "PESSOA_id_pessoa": 12,
-      "especialidade": "Coloração",
-      "ativo": false
+      "apelido": "Diego",
+      "comissao_percentual": "35.00"
     }
   ]
 }

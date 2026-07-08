@@ -8,7 +8,6 @@ import {
   formatCpf,
   formatDate
 } from "@/components/barbeiros/barbeiroFormatters";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -42,7 +41,9 @@ function BarbeiroActions({ barbeiro }: { barbeiro: BarbeiroComPessoa }) {
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuLabel>Ações</DropdownMenuLabel>
         <DropdownMenuItem asChild>
-          <Link href={`/barbeiros/${barbeiro.id_barbeiro}/editar`}>Editar</Link>
+          <Link href={`/barbeiros/${barbeiro.PESSOA_id_pessoa}/editar`}>
+            Editar
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -55,14 +56,10 @@ export function BarbeiroRow({ barbeiro }: { barbeiro: BarbeiroComPessoa }) {
       <TableCell className="font-medium">{barbeiro.pessoa.nome}</TableCell>
       <TableCell>{formatCpf(barbeiro.pessoa.cpf)}</TableCell>
       <TableCell className="text-muted-foreground">
-        {barbeiro.especialidade ?? "Sem especialidade"}
+        {barbeiro.apelido ?? "Sem apelido"}
       </TableCell>
+      <TableCell>{barbeiro.comissao_percentual ?? "0.00"}%</TableCell>
       <TableCell>{formatDate(barbeiro.pessoa.data_nascimento)}</TableCell>
-      <TableCell>
-        <Badge variant={barbeiro.ativo ? "secondary" : "outline"}>
-          {barbeiro.ativo ? "Ativo" : "Inativo"}
-        </Badge>
-      </TableCell>
       <TableCell className="text-right">
         <BarbeiroActions barbeiro={barbeiro} />
       </TableCell>
@@ -81,7 +78,7 @@ export function BarbeiroMobileCard({
         <div className="min-w-0">
           <p className="font-medium">{barbeiro.pessoa.nome}</p>
           <p className="text-muted-foreground mt-1 text-sm">
-            {barbeiro.especialidade ?? "Sem especialidade"}
+            {barbeiro.apelido ?? "Sem apelido"}
           </p>
         </div>
         <BarbeiroActions barbeiro={barbeiro} />
@@ -92,17 +89,12 @@ export function BarbeiroMobileCard({
           <p className="font-medium">{formatCpf(barbeiro.pessoa.cpf)}</p>
         </div>
         <div>
-          <p className="text-muted-foreground">Nascimento</p>
+          <p className="text-muted-foreground">Comissão</p>
           <p className="font-medium">
-            {formatDate(barbeiro.pessoa.data_nascimento)}
+            {barbeiro.comissao_percentual ?? "0.00"}%
           </p>
         </div>
       </div>
-      <Badge
-        className="mt-4"
-        variant={barbeiro.ativo ? "secondary" : "outline"}>
-        {barbeiro.ativo ? "Ativo" : "Inativo"}
-      </Badge>
     </div>
   );
 }
@@ -112,7 +104,7 @@ export function LoadingRows() {
     <>
       {[1, 2, 3].map((row) => (
         <TableRow key={row}>
-          <TableCell colSpan={6}>
+          <TableCell colSpan={5}>
             <Skeleton className="h-8 w-full" />
           </TableCell>
         </TableRow>

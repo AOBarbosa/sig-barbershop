@@ -10,7 +10,12 @@ function hasKeys(data: unknown, keys: string[]) {
 }
 
 function isFidelidade(data: unknown): data is Fidelidade {
-  return hasKeys(data, ["id_fidelidade", "pontos", "ativo"]);
+  return hasKeys(data, [
+    "id_fidelidade",
+    "pontos_acumulados",
+    "pontos_uso",
+    "ativo"
+  ]);
 }
 
 function parseList(data: unknown) {

@@ -62,7 +62,7 @@ def pessoa_row(pessoa_id=1, cpf="12345678901", email="f@ex.com"):
 def disponibilidade_row(disp_id=1, dia="segunda"):
     return {
         "id_disponibilidade": disp_id,
-        "BARBEIRO_id_barbeiro": 1,
+        "BARBEIRO_PESSOA_id_pessoa": 1,
         "dia_semana": dia,
         "hora_inicio": time(9, 0),
         "hora_fim": time(18, 0),

@@ -22,11 +22,12 @@ def clear_overrides():
 
 def historico_response():
     return {
-        "id_historico": 1,
-        "CLIENTE_id_cliente": 1,
+        "id_movimentacao": 1,
+        "CLIENTE_PESSOA_id_pessoa": 1,
+        "VENDA_id_venda": 1,
+        "FIDELIDADE_id_fidelidade": 1,
         "pontos": 10,
-        "tipo_movimentacao": "acumulo",
-        "descricao": "Atendimento #1 concluido",
+        "tipo_movimentacao": "ACUMULA",
         "data_movimentacao": datetime(2026, 7, 5, 9, 0),
     }
 
@@ -36,13 +37,13 @@ def test_get_saldo_pontos_delega_para_service(client, monkeypatch):
     monkeypatch.setattr(
         historico_pontos_router.historico_pontos_service,
         "buscar_saldo_pontos",
-        lambda _conn, cliente_id: {"CLIENTE_id_cliente": cliente_id, "saldo": 25},
+        lambda _conn, cliente_id: {"CLIENTE_PESSOA_id_pessoa": cliente_id, "saldo": 25},
     )
 
     response = client.get("/clientes/1/pontos")
 
     assert response.status_code == 200
-    assert response.json() == {"CLIENTE_id_cliente": 1, "saldo": 25}
+    assert response.json() == {"CLIENTE_PESSOA_id_pessoa": 1, "saldo": 25}
     clear_overrides()
 
 
@@ -72,7 +73,7 @@ def test_get_historico_pontos_delega_para_service(client, monkeypatch):
     response = client.get("/clientes/1/pontos/historico")
 
     assert response.status_code == 200
-    assert response.json()[0]["id_historico"] == 1
+    assert response.json()[0]["id_movimentacao"] == 1
     clear_overrides()
 
 

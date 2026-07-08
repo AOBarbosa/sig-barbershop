@@ -96,17 +96,20 @@ export function AtendimentoDetail({
             <DetailInfo
               icon={UserRound}
               label="Cliente"
-              value={clienteNome(atendimento.CLIENTE_id_cliente, lookups)}
+              value={clienteNome(atendimento.CLIENTE_PESSOA_id_pessoa, lookups)}
             />
             <DetailInfo
               icon={UserRound}
               label="Barbeiro"
-              value={barbeiroNome(atendimento.BARBEIRO_id_barbeiro, lookups)}
+              value={barbeiroNome(
+                atendimento.BARBEIRO_PESSOA_id_pessoa,
+                lookups
+              )}
             />
             <DetailInfo
               icon={CalendarClock}
               label="Data"
-              value={formatDateTime(atendimento.data_hora)}
+              value={formatDateTime(atendimento.data_hora_inicio)}
             />
             <div className="rounded-lg border p-4 sm:col-span-3">
               <div className="mb-2 flex items-center gap-2">

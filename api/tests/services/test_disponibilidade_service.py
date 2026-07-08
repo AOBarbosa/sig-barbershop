@@ -30,7 +30,7 @@ class FakeConn:
 def disp_row(disp_id=1, dia="segunda", hi=time(9, 0), hf=time(18, 0), barbeiro=1):
     return {
         "id_disponibilidade": disp_id,
-        "BARBEIRO_id_barbeiro": barbeiro,
+        "BARBEIRO_PESSOA_id_pessoa": barbeiro,
         "dia_semana": dia,
         "hora_inicio": hi,
         "hora_fim": hf,
@@ -39,7 +39,7 @@ def disp_row(disp_id=1, dia="segunda", hi=time(9, 0), hf=time(18, 0), barbeiro=1
 
 def _payload(dia=DiaSemana.segunda, hi=time(9, 0), hf=time(18, 0)):
     return DisponibilidadeCreate(
-        BARBEIRO_id_barbeiro=1, dia_semana=dia, hora_inicio=hi, hora_fim=hf
+        BARBEIRO_PESSOA_id_pessoa=1, dia_semana=dia, hora_inicio=hi, hora_fim=hf
     )
 
 

@@ -4,7 +4,8 @@ from pydantic import BaseModel, ConfigDict, Field
 class FidelidadeBase(BaseModel):
     SERVICO_id_servico: int | None = None
     PRODUTO_id_produto: int | None = None
-    pontos: int = Field(gt=0)
+    pontos_acumulados: int = Field(default=0, ge=0)
+    pontos_uso: int = Field(default=0, ge=0)
     ativo: bool = True
 
 
@@ -15,7 +16,8 @@ class FidelidadeCreate(FidelidadeBase):
 class FidelidadeUpdate(BaseModel):
     SERVICO_id_servico: int | None = None
     PRODUTO_id_produto: int | None = None
-    pontos: int | None = Field(default=None, gt=0)
+    pontos_acumulados: int | None = Field(default=None, ge=0)
+    pontos_uso: int | None = Field(default=None, ge=0)
     ativo: bool | None = None
 
 

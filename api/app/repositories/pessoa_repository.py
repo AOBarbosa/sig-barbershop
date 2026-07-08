@@ -3,7 +3,7 @@ def listar(conn):
     try:
         cursor.execute(
             """
-            SELECT id_pessoa, nome, cpf, email, data_nascimento, created_at, updated_at
+            SELECT id_pessoa, nome, cpf, email, data_nascimento, admin
             FROM PESSOA
             ORDER BY nome
             """
@@ -18,7 +18,7 @@ def buscar_por_id(conn, pessoa_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_pessoa, nome, cpf, email, data_nascimento, created_at, updated_at
+            SELECT id_pessoa, nome, cpf, email, data_nascimento, admin
             FROM PESSOA
             WHERE id_pessoa = %s
             """,
@@ -34,7 +34,7 @@ def buscar_por_cpf(conn, cpf: str):
     try:
         cursor.execute(
             """
-            SELECT id_pessoa, nome, cpf, email, data_nascimento, created_at, updated_at
+            SELECT id_pessoa, nome, cpf, email, data_nascimento, admin
             FROM PESSOA
             WHERE cpf = %s
             """,
@@ -50,7 +50,7 @@ def buscar_por_email(conn, email: str):
     try:
         cursor.execute(
             """
-            SELECT id_pessoa, nome, cpf, email, data_nascimento, created_at, updated_at
+            SELECT id_pessoa, nome, cpf, email, data_nascimento, admin
             FROM PESSOA
             WHERE email = %s
             """,
@@ -66,14 +66,15 @@ def criar(conn, data):
     try:
         cursor.execute(
             """
-            INSERT INTO PESSOA (nome, cpf, email, data_nascimento)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO PESSOA (nome, cpf, email, data_nascimento, admin)
+            VALUES (%s, %s, %s, %s, %s)
             """,
             (
                 data["nome"],
                 data["cpf"],
                 data.get("email"),
                 data.get("data_nascimento"),
+                data.get("admin", False),
             ),
         )
         return buscar_por_id(conn, cursor.lastrowid)

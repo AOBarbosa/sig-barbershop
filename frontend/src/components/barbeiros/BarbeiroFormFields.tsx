@@ -21,7 +21,6 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 
 type BarbeiroFormInstance = UseFormReturn<
   BarbeiroFormInput,
@@ -110,11 +109,9 @@ export function BarbeiroPrimaryFields({
 }
 
 export function BarbeiroProfessionalFields({
-  form,
-  ativo
+  form
 }: {
   form: BarbeiroFormInstance;
-  ativo: boolean;
 }) {
   return (
     <Card>
@@ -123,45 +120,43 @@ export function BarbeiroProfessionalFields({
         <CardDescription>Configurações da atuação do barbeiro.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <FormField name="especialidade">
+        <FormField name="apelido">
           {(field) => (
             <FormItem>
-              <FormLabel htmlFor="especialidade">Especialidade</FormLabel>
+              <FormLabel htmlFor="apelido">Apelido</FormLabel>
               <FormControl>
                 <Input
-                  id="especialidade"
-                  placeholder="Corte, barba, coloração..."
+                  id="apelido"
+                  placeholder="Nome usado na equipe"
                   {...field}
                 />
               </FormControl>
               <FormMessage>
-                {form.formState.errors.especialidade?.message}
+                {form.formState.errors.apelido?.message}
               </FormMessage>
             </FormItem>
           )}
         </FormField>
-        <FormItem>
-          <div className="flex items-center justify-between rounded-lg border p-3">
-            <div className="space-y-1">
-              <FormLabel htmlFor="ativo">Barbeiro ativo</FormLabel>
-              <p className="text-muted-foreground text-sm">
-                {ativo
-                  ? "Disponível para novos atendimentos"
-                  : "Oculto em novos fluxos operacionais"}
-              </p>
-            </div>
-            <Switch
-              id="ativo"
-              checked={ativo}
-              onCheckedChange={(checked) =>
-                form.setValue("ativo", checked, {
-                  shouldDirty: true,
-                  shouldValidate: true
-                })
-              }
-            />
-          </div>
-        </FormItem>
+        <FormField name="comissao_percentual">
+          {(field) => (
+            <FormItem>
+              <FormLabel htmlFor="comissao_percentual">Comissão (%)</FormLabel>
+              <FormControl>
+                <Input
+                  id="comissao_percentual"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  {...field}
+                />
+              </FormControl>
+              <FormMessage>
+                {form.formState.errors.comissao_percentual?.message}
+              </FormMessage>
+            </FormItem>
+          )}
+        </FormField>
       </CardContent>
     </Card>
   );

@@ -39,8 +39,8 @@ def _barbeiro_row(barb_id=1, pessoa_id=1):
     return {
         "id_barbeiro": barb_id,
         "PESSOA_id_pessoa": pessoa_id,
-        "especialidade": "Corte",
-        "ativo": True,
+        "apelido": "Corte",
+        "comissao_percentual": 10.0,
     }
 
 
@@ -50,8 +50,8 @@ def _payload(cpf="55566677788", email="p@ex.com"):
         cpf=cpf,
         email=email,
         data_nascimento=date(1988, 11, 3),
-        especialidade="Corte",
-        ativo=True,
+        apelido="Corte",
+        comissao_percentual=10.0,
     )
 
 
@@ -139,7 +139,7 @@ def test_criar_barbeiro_completo_sem_email_nao_verifica_duplicidade(monkeypatch)
     barbeiro_service.criar_barbeiro_completo(
         conn,
         BarbeiroCompletoCreate(
-            nome="X", cpf="00000000000", email=None, especialidade="Corte", ativo=True
+            nome="X", cpf="00000000000", email=None, apelido="Corte", comissao_percentual=10.0
         ),
     )
 
@@ -197,13 +197,13 @@ def test_criar_barbeiro_completo_passa_dados_profissionais_corretos(monkeypatch)
         cpf="66677788899",
         email=None,
         data_nascimento=None,
-        especialidade="Barba",
-        ativo=False,
+        apelido="Barba",
+        comissao_percentual=5.0,
     )
     barbeiro_service.criar_barbeiro_completo(conn, payload)
 
-    assert dados_capturados["especialidade"] == "Barba"
-    assert dados_capturados["ativo"] is False
+    assert dados_capturados["apelido"] == "Barba"
+    assert dados_capturados["comissao_percentual"] == 5.0
     assert "PESSOA_id_pessoa" in dados_capturados
 
 
@@ -211,7 +211,7 @@ def test_atualizar_barbeiro_completo_atualiza_pessoa_e_barbeiro_em_transacao(mon
     conn = FakeConn()
     barbeiro_atual = _barbeiro_row(pessoa_id=10)
     pessoa = _pessoa_row(pessoa_id=10) | {"nome": "Pedro Atualizado"}
-    barbeiro = barbeiro_atual | {"especialidade": "Barba", "ativo": False}
+    barbeiro = barbeiro_atual | {"apelido": "Barba", "comissao_percentual": 5.0}
     pessoa_payload = {}
     barbeiro_payload = {}
 
@@ -250,8 +250,8 @@ def test_atualizar_barbeiro_completo_atualiza_pessoa_e_barbeiro_em_transacao(mon
         cpf="55566677788",
         email="novo@ex.com",
         data_nascimento=date(1988, 11, 3),
-        especialidade="Barba",
-        ativo=False,
+        apelido="Barba",
+        comissao_percentual=5.0,
     )
 
     result = barbeiro_service.atualizar_barbeiro_completo(conn, 1, payload)
@@ -263,7 +263,7 @@ def test_atualizar_barbeiro_completo_atualiza_pessoa_e_barbeiro_em_transacao(mon
         "email": "novo@ex.com",
         "data_nascimento": date(1988, 11, 3),
     }
-    assert barbeiro_payload == {"especialidade": "Barba", "ativo": False}
+    assert barbeiro_payload == {"apelido": "Barba", "comissao_percentual": 5.0}
     assert conn.started is True
     assert conn.committed is True
     assert conn.rolled_back is False

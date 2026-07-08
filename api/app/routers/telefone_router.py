@@ -7,9 +7,9 @@ from app.services import telefone_service
 router = APIRouter(prefix="/telefones", tags=["telefones"])
 
 
-@router.get("/{telefone_id}", response_model=TelefoneResponse)
-def buscar_telefone(telefone_id: int, conn=Depends(get_db)):
-    return telefone_service.buscar_telefone(conn, telefone_id)
+@router.get("/{pessoa_id}/{telefone}", response_model=TelefoneResponse)
+def buscar_telefone(pessoa_id: int, telefone: str, conn=Depends(get_db)):
+    return telefone_service.buscar_telefone(conn, pessoa_id, telefone)
 
 
 @router.post("", response_model=TelefoneResponse, status_code=status.HTTP_201_CREATED)
@@ -17,12 +17,14 @@ def criar_telefone(payload: TelefoneCreate, conn=Depends(get_db)):
     return telefone_service.criar_telefone(conn, payload)
 
 
-@router.put("/{telefone_id}", response_model=TelefoneResponse)
-def atualizar_telefone(telefone_id: int, payload: TelefoneUpdate, conn=Depends(get_db)):
-    return telefone_service.atualizar_telefone(conn, telefone_id, payload)
+@router.put("/{pessoa_id}/{telefone}", response_model=TelefoneResponse)
+def atualizar_telefone(
+    pessoa_id: int, telefone: str, payload: TelefoneUpdate, conn=Depends(get_db)
+):
+    return telefone_service.atualizar_telefone(conn, pessoa_id, telefone, payload)
 
 
-@router.delete("/{telefone_id}", status_code=status.HTTP_204_NO_CONTENT)
-def deletar_telefone(telefone_id: int, conn=Depends(get_db)):
-    telefone_service.deletar_telefone(conn, telefone_id)
+@router.delete("/{pessoa_id}/{telefone}", status_code=status.HTTP_204_NO_CONTENT)
+def deletar_telefone(pessoa_id: int, telefone: str, conn=Depends(get_db)):
+    telefone_service.deletar_telefone(conn, pessoa_id, telefone)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

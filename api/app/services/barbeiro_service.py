@@ -43,14 +43,15 @@ def _barbeiro_completo_pessoa_data(payload: BarbeiroCompletoCreate):
         "cpf": payload.cpf,
         "email": payload.email,
         "data_nascimento": payload.data_nascimento,
+        "admin": payload.admin,
     }
 
 
 def _barbeiro_completo_data(payload: BarbeiroCompletoCreate, pessoa_id: int):
     return {
         "PESSOA_id_pessoa": pessoa_id,
-        "especialidade": payload.especialidade,
-        "ativo": payload.ativo,
+        "apelido": payload.apelido,
+        "comissao_percentual": payload.comissao_percentual,
     }
 
 
@@ -91,10 +92,12 @@ def _validar_email_unico(conn, email: str | None, pessoa_id: int):
 
 
 def _separar_barbeiro_completo_update(data):
-    pessoa_campos = {"nome", "cpf", "email", "data_nascimento"}
+    pessoa_campos = {"nome", "cpf", "email", "data_nascimento", "admin"}
     pessoa_data = {campo: valor for campo, valor in data.items() if campo in pessoa_campos}
     barbeiro_data = {
-        campo: valor for campo, valor in data.items() if campo in {"especialidade", "ativo"}
+        campo: valor
+        for campo, valor in data.items()
+        if campo in {"apelido", "comissao_percentual"}
     }
     return pessoa_data, barbeiro_data
 

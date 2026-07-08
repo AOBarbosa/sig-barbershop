@@ -7,7 +7,7 @@ function isServico(data: unknown): data is Servico {
     data !== null &&
     "id_servico" in data &&
     "nome" in data &&
-    "preco" in data
+    "ativo" in data
   );
 }
 

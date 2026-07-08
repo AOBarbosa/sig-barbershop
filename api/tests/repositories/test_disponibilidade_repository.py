@@ -38,7 +38,7 @@ class FakeConn:
 def disp_row(disp_id=1, dia="segunda"):
     return {
         "id_disponibilidade": disp_id,
-        "BARBEIRO_id_barbeiro": 1,
+        "BARBEIRO_PESSOA_id_pessoa": 1,
         "dia_semana": dia,
         "hora_inicio": time(9, 0),
         "hora_fim": time(18, 0),
@@ -53,6 +53,8 @@ def test_buscar_por_id():
 
     sql, params = cursor.statements[0]
     assert "FROM DISPONIBILIDADE" in sql
+    assert "CAST(hora_inicio AS CHAR)" in sql
+    assert "CAST(hora_fim AS CHAR)" in sql
     assert "WHERE id_disponibilidade = %s" in sql
     assert params == (3,)
     assert result["id_disponibilidade"] == 3
@@ -65,10 +67,10 @@ def test_listar_por_barbeiro_ordena_por_dia_semana():
     result = disponibilidade_repository.listar_por_barbeiro(conn, 1)
 
     sql, params = cursor.statements[0]
-    assert "WHERE BARBEIRO_id_barbeiro = %s" in sql
+    assert "WHERE BARBEIRO_PESSOA_id_pessoa = %s" in sql
     assert "FIELD(dia_semana" in sql
-    assert "segunda" in sql
-    assert "domingo" in sql
+    assert "SEGUNDA" in sql
+    assert "DOMINGO" in sql
     assert params == (1,)
     assert len(result) == 1
 
@@ -80,7 +82,7 @@ def test_buscar_por_barbeiro_e_dia():
     result = disponibilidade_repository.buscar_por_barbeiro_e_dia(conn, 1, "terca")
 
     sql, params = cursor.statements[0]
-    assert "WHERE BARBEIRO_id_barbeiro = %s AND dia_semana = %s" in sql
+    assert "WHERE BARBEIRO_PESSOA_id_pessoa = %s AND dia_semana = %s" in sql
     assert params == (1, "terca")
     assert result["dia_semana"] == "terca"
 
@@ -93,7 +95,7 @@ def test_criar_disponibilidade_insere_e_retorna_registro():
     result = disponibilidade_repository.criar(
         conn,
         {
-            "BARBEIRO_id_barbeiro": 1,
+            "BARBEIRO_PESSOA_id_pessoa": 1,
             "dia_semana": "segunda",
             "hora_inicio": time(9, 0),
             "hora_fim": time(18, 0),

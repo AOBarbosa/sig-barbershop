@@ -146,7 +146,7 @@ function FidelidadeTable({
                   ? origemNome(fidelidade, lookups.servicos, lookups.produtos)
                   : "—"}
               </TableCell>
-              <TableCell>{fidelidade.pontos} pts</TableCell>
+              <TableCell>{fidelidade.pontos_acumulados} pts</TableCell>
               <TableCell>
                 <Badge variant={fidelidade.ativo ? "secondary" : "outline"}>
                   {fidelidade.ativo ? "Ativa" : "Inativa"}

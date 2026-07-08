@@ -38,7 +38,9 @@ function ClienteActions({ cliente }: { cliente: ClienteComPessoa }) {
       <DropdownMenuContent align="end" className="w-40">
         <DropdownMenuLabel>Ações</DropdownMenuLabel>
         <DropdownMenuItem asChild>
-          <Link href={`/clientes/${cliente.id_cliente}/editar`}>Editar</Link>
+          <Link href={`/clientes/${cliente.PESSOA_id_pessoa}/editar`}>
+            Editar
+          </Link>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

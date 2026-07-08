@@ -3,7 +3,9 @@ def buscar_por_id(conn, disponibilidade_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_disponibilidade, BARBEIRO_id_barbeiro, dia_semana, hora_inicio, hora_fim
+            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana,
+                   CAST(hora_inicio AS CHAR) AS hora_inicio,
+                   CAST(hora_fim AS CHAR) AS hora_fim
             FROM DISPONIBILIDADE
             WHERE id_disponibilidade = %s
             """,
@@ -19,10 +21,12 @@ def listar_por_barbeiro(conn, barbeiro_id: int):
     try:
         cursor.execute(
             """
-            SELECT id_disponibilidade, BARBEIRO_id_barbeiro, dia_semana, hora_inicio, hora_fim
+            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana,
+                   CAST(hora_inicio AS CHAR) AS hora_inicio,
+                   CAST(hora_fim AS CHAR) AS hora_fim
             FROM DISPONIBILIDADE
-            WHERE BARBEIRO_id_barbeiro = %s
-            ORDER BY FIELD(dia_semana,'segunda','terca','quarta','quinta','sexta','sabado','domingo')
+            WHERE BARBEIRO_PESSOA_id_pessoa = %s
+            ORDER BY FIELD(dia_semana,'SEGUNDA','TERCA','QUARTA','QUINTA','SEXTA','SABADO','DOMINGO')
             """,
             (barbeiro_id,),
         )
@@ -36,9 +40,11 @@ def buscar_por_barbeiro_e_dia(conn, barbeiro_id: int, dia_semana: str):
     try:
         cursor.execute(
             """
-            SELECT id_disponibilidade, BARBEIRO_id_barbeiro, dia_semana, hora_inicio, hora_fim
+            SELECT id_disponibilidade, BARBEIRO_PESSOA_id_pessoa, dia_semana,
+                   CAST(hora_inicio AS CHAR) AS hora_inicio,
+                   CAST(hora_fim AS CHAR) AS hora_fim
             FROM DISPONIBILIDADE
-            WHERE BARBEIRO_id_barbeiro = %s AND dia_semana = %s
+            WHERE BARBEIRO_PESSOA_id_pessoa = %s AND dia_semana = %s
             """,
             (barbeiro_id, dia_semana),
         )
@@ -53,12 +59,12 @@ def criar(conn, data):
         cursor.execute(
             """
             INSERT INTO DISPONIBILIDADE (
-                BARBEIRO_id_barbeiro, dia_semana, hora_inicio, hora_fim
+                BARBEIRO_PESSOA_id_pessoa, dia_semana, hora_inicio, hora_fim
             )
             VALUES (%s, %s, %s, %s)
             """,
             (
-                data["BARBEIRO_id_barbeiro"],
+                data["BARBEIRO_PESSOA_id_pessoa"],
                 data["dia_semana"],
                 data["hora_inicio"],
                 data["hora_fim"],

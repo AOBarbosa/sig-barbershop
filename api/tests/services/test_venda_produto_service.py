@@ -27,13 +27,16 @@ def venda_row():
     return {"id_venda": 1, "valor_total": Decimal("0.00")}
 
 
-def produto_row(estoque=10, preco=Decimal("10.00")):
-    return {"id_produto": 2, "preco": preco, "estoque": estoque, "ativo": True}
+def produto_row():
+    return {"id_produto": 2, "ativo": True}
+
+
+def historico_produto_row():
+    return {"PRODUTO_id_produto": 2, "preco_venda": Decimal("10.00"), "ativo": True}
 
 
 def vinculo_row():
     return {
-        "id_venda_produto": 20,
         "VENDA_id_venda": 1,
         "PRODUTO_id_produto": 2,
         "quantidade": 3,
@@ -63,21 +66,20 @@ def test_listar_produtos_venda_inexistente_retorna_404(monkeypatch):
     assert exc.value.status_code == 404
 
 
-def test_adicionar_produto_venda_deduz_estoque_grava_preco_vigente_e_recalcula(monkeypatch):
+def test_adicionar_produto_venda_grava_preco_vigente_e_recalcula(monkeypatch):
     conn = FakeConn()
-    produto = produto_row(estoque=10, preco=Decimal("10.00"))
+    produto = produto_row()
     criado = vinculo_row()
-    estoque_atualizado = []
     total_recalculado = []
 
     monkeypatch.setattr(venda_service.venda_repository, "buscar_por_id", lambda _c, _id: venda_row())
     monkeypatch.setattr(venda_service.produto_repository, "buscar_por_id", lambda _c, _id: produto)
     monkeypatch.setattr(venda_service.venda_produto_repository, "buscar_por_ids", lambda _c, _v, _p: None)
-
-    def fake_atualizar_produto(_conn, produto_id, data):
-        estoque_atualizado.append((produto_id, data))
-
-    monkeypatch.setattr(venda_service.produto_repository, "atualizar", fake_atualizar_produto)
+    monkeypatch.setattr(
+        venda_service.historico_produto_repository,
+        "buscar_vigente",
+        lambda _c, _id: historico_produto_row(),
+    )
     monkeypatch.setattr(venda_service.venda_produto_repository, "criar", lambda _c, **kwargs: criado)
 
     def fake_recalcular(_conn, venda_id):
@@ -93,19 +95,18 @@ def test_adicionar_produto_venda_deduz_estoque_grava_preco_vigente_e_recalcula(m
     )
 
     assert result == criado
-    assert estoque_atualizado == [(2, {"estoque": 7})]
     assert total_recalculado == [1]
     assert conn.started is True
     assert conn.committed is True
     assert conn.rolled_back is False
 
 
-def test_adicionar_produto_venda_rejeita_estoque_insuficiente(monkeypatch):
+def test_adicionar_produto_venda_rejeita_sem_preco_vigente(monkeypatch):
     conn = FakeConn()
-    produto = produto_row(estoque=2)
     monkeypatch.setattr(venda_service.venda_repository, "buscar_por_id", lambda _c, _id: venda_row())
-    monkeypatch.setattr(venda_service.produto_repository, "buscar_por_id", lambda _c, _id: produto)
+    monkeypatch.setattr(venda_service.produto_repository, "buscar_por_id", lambda _c, _id: produto_row())
     monkeypatch.setattr(venda_service.venda_produto_repository, "buscar_por_ids", lambda _c, _v, _p: None)
+    monkeypatch.setattr(venda_service.historico_produto_repository, "buscar_vigente", lambda _c, _id: None)
 
     with pytest.raises(HTTPException) as exc:
         venda_service.adicionar_produto_venda(
@@ -172,7 +173,11 @@ def test_adicionar_produto_venda_faz_rollback_quando_repository_falha(monkeypatc
     monkeypatch.setattr(venda_service.venda_repository, "buscar_por_id", lambda _c, _id: venda_row())
     monkeypatch.setattr(venda_service.produto_repository, "buscar_por_id", lambda _c, _id: produto_row())
     monkeypatch.setattr(venda_service.venda_produto_repository, "buscar_por_ids", lambda _c, _v, _p: None)
-    monkeypatch.setattr(venda_service.produto_repository, "atualizar", lambda _c, _id, _data: None)
+    monkeypatch.setattr(
+        venda_service.historico_produto_repository,
+        "buscar_vigente",
+        lambda _c, _id: historico_produto_row(),
+    )
 
     def fake_criar(_conn, **_kwargs):
         raise RuntimeError("erro de banco")
@@ -190,22 +195,14 @@ def test_adicionar_produto_venda_faz_rollback_quando_repository_falha(monkeypatc
     assert conn.rolled_back is True
 
 
-def test_remover_produto_venda_estorna_estoque_e_recalcula(monkeypatch):
+def test_remover_produto_venda_remove_vinculo_e_recalcula(monkeypatch):
     conn = FakeConn()
-    produto = produto_row(estoque=7)
     deletados = []
     total_recalculado = []
 
     monkeypatch.setattr(venda_service.venda_repository, "buscar_por_id", lambda _c, _id: venda_row())
     monkeypatch.setattr(venda_service.venda_produto_repository, "buscar_por_ids", lambda _c, _v, _p: vinculo_row())
-    monkeypatch.setattr(venda_service.produto_repository, "buscar_por_id", lambda _c, _id: produto)
-
-    estoque_atualizado = []
-    monkeypatch.setattr(
-        venda_service.produto_repository,
-        "atualizar",
-        lambda _c, produto_id, data: estoque_atualizado.append((produto_id, data)),
-    )
+    monkeypatch.setattr(venda_service.produto_repository, "buscar_por_id", lambda _c, _id: produto_row())
     monkeypatch.setattr(
         venda_service.venda_produto_repository,
         "deletar_por_ids",
@@ -221,7 +218,6 @@ def test_remover_produto_venda_estorna_estoque_e_recalcula(monkeypatch):
     result = venda_service.remover_produto_venda(conn, 1, 2)
 
     assert result is None
-    assert estoque_atualizado == [(2, {"estoque": 10})]
     assert deletados == [(1, 2)]
     assert total_recalculado == [1]
     assert conn.committed is True
@@ -257,10 +253,10 @@ def test_remover_produto_venda_faz_rollback_quando_repository_falha(monkeypatch)
     monkeypatch.setattr(venda_service.venda_produto_repository, "buscar_por_ids", lambda _c, _v, _p: vinculo_row())
     monkeypatch.setattr(venda_service.produto_repository, "buscar_por_id", lambda _c, _id: produto_row())
 
-    def fake_atualizar(_conn, _id, _data):
+    def fake_deletar(_conn, _venda_id, _produto_id):
         raise RuntimeError("erro de banco")
 
-    monkeypatch.setattr(venda_service.produto_repository, "atualizar", fake_atualizar)
+    monkeypatch.setattr(venda_service.venda_produto_repository, "deletar_por_ids", fake_deletar)
 
     with pytest.raises(RuntimeError):
         venda_service.remover_produto_venda(conn, 1, 2)

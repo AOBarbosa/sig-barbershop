@@ -28,12 +28,15 @@ def atendimento_row():
 
 
 def servico_row():
-    return {"id_servico": 2, "preco": Decimal("35.00"), "ativo": True}
+    return {"id_servico": 2, "ativo": True}
+
+
+def historico_servico_row():
+    return {"SERVICO_id_servico": 2, "preco": Decimal("35.00"), "ativo": True}
 
 
 def vinculo_row():
     return {
-        "id_atendimento_servico": 10,
         "ATENDIMENTO_id_atendimento": 1,
         "SERVICO_id_servico": 2,
         "preco_cobrado": Decimal("35.00"),
@@ -88,6 +91,11 @@ def test_adicionar_servico_vincula_preco_atual_recalcula_total_e_commita(monkeyp
         atendimento_service.atendimento_servico_repository,
         "buscar_por_ids",
         lambda _conn, _atendimento_id, _servico_id: None,
+    )
+    monkeypatch.setattr(
+        atendimento_service.historico_servico_repository,
+        "buscar_vigente",
+        lambda _conn, _servico_id: historico_servico_row(),
     )
 
     def fake_criar(_conn, atendimento_id, servico_id, preco_cobrado):
@@ -197,6 +205,11 @@ def test_adicionar_servico_faz_rollback_quando_recalculo_falha(monkeypatch):
         "criar",
         lambda _c, **_kwargs: vinculo_row(),
     )
+    monkeypatch.setattr(
+        atendimento_service.historico_servico_repository,
+        "buscar_vigente",
+        lambda _conn, _servico_id: historico_servico_row(),
+    )
 
     def fake_recalcular(_conn, _atendimento_id):
         raise RuntimeError("erro ao recalcular")
@@ -211,6 +224,36 @@ def test_adicionar_servico_faz_rollback_quando_recalculo_falha(monkeypatch):
         )
 
     assert conn.committed is False
+    assert conn.rolled_back is True
+
+
+def test_adicionar_servico_sem_preco_vigente_retorna_422(monkeypatch):
+    conn = FakeConn()
+    monkeypatch.setattr(
+        atendimento_service.atendimento_repository,
+        "buscar_por_id",
+        lambda _c, _id: atendimento_row(),
+    )
+    monkeypatch.setattr(atendimento_service.servico_repository, "buscar_por_id", lambda _c, _id: servico_row())
+    monkeypatch.setattr(
+        atendimento_service.atendimento_servico_repository,
+        "buscar_por_ids",
+        lambda _c, _atendimento_id, _servico_id: None,
+    )
+    monkeypatch.setattr(
+        atendimento_service.historico_servico_repository,
+        "buscar_vigente",
+        lambda _conn, _servico_id: None,
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        atendimento_service.adicionar_servico_atendimento(
+            conn,
+            1,
+            AtendimentoServicoCreate(SERVICO_id_servico=2),
+        )
+
+    assert exc.value.status_code == 422
     assert conn.rolled_back is True
 
 

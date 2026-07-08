@@ -43,7 +43,8 @@ describe("Módulo Fidelidade", () => {
         id_fidelidade: 3,
         SERVICO_id_servico: 1,
         PRODUTO_id_produto: null,
-        pontos: 10,
+        pontos_acumulados: 10,
+        pontos_uso: 0,
         ativo: true
       }
     }).as("criarFidelidade");
@@ -58,7 +59,8 @@ describe("Módulo Fidelidade", () => {
     cy.wait("@criarFidelidade").its("request.body").should("deep.equal", {
       SERVICO_id_servico: 1,
       PRODUTO_id_produto: null,
-      pontos: 10,
+      pontos_acumulados: 10,
+      pontos_uso: 0,
       ativo: true
     });
     cy.location("pathname").should("eq", "/fidelidade");
@@ -75,7 +77,8 @@ describe("Módulo Fidelidade", () => {
         id_fidelidade: 4,
         SERVICO_id_servico: null,
         PRODUTO_id_produto: 1,
-        pontos: 5,
+        pontos_acumulados: 5,
+        pontos_uso: 0,
         ativo: true
       }
     }).as("criarFidelidade");
@@ -91,7 +94,8 @@ describe("Módulo Fidelidade", () => {
     cy.wait("@criarFidelidade").its("request.body").should("deep.equal", {
       SERVICO_id_servico: null,
       PRODUTO_id_produto: 1,
-      pontos: 5,
+      pontos_acumulados: 5,
+      pontos_uso: 0,
       ativo: true
     });
     cy.location("pathname").should("eq", "/fidelidade");

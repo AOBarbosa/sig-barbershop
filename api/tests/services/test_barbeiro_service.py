@@ -25,8 +25,8 @@ def barb_row(barb_id=1):
     return {
         "id_barbeiro": barb_id,
         "PESSOA_id_pessoa": 1,
-        "especialidade": "Corte",
-        "ativo": True,
+        "apelido": "Corte",
+        "comissao_percentual": 10.0,
     }
 
 
@@ -74,7 +74,7 @@ def test_criar_barbeiro_controla_transacao(monkeypatch):
     )
 
     result = barbeiro_service.criar_barbeiro(
-        conn, BarbeiroCreate(PESSOA_id_pessoa=1, especialidade="Corte", ativo=True)
+        conn, BarbeiroCreate(PESSOA_id_pessoa=1, apelido="Corte", comissao_percentual=10.0)
     )
 
     assert result == barb_row()
@@ -110,7 +110,7 @@ def test_criar_barbeiro_duplicado_retorna_409(monkeypatch):
 
 def test_atualizar_barbeiro_existente(monkeypatch):
     conn = FakeConn()
-    novo = barb_row() | {"especialidade": "Degradê"}
+    novo = barb_row() | {"apelido": "Degradê"}
     monkeypatch.setattr(
         barbeiro_service.barbeiro_repository, "buscar_por_id", lambda _c, _i: barb_row()
     )
@@ -119,7 +119,7 @@ def test_atualizar_barbeiro_existente(monkeypatch):
     )
 
     result = barbeiro_service.atualizar_barbeiro(
-        conn, 1, BarbeiroUpdate(especialidade="Degradê")
+        conn, 1, BarbeiroUpdate(apelido="Degradê")
     )
 
     assert result == novo
@@ -133,7 +133,7 @@ def test_atualizar_barbeiro_inexistente_retorna_404(monkeypatch):
     )
 
     with pytest.raises(HTTPException) as exc:
-        barbeiro_service.atualizar_barbeiro(conn, 404, BarbeiroUpdate(ativo=False))
+        barbeiro_service.atualizar_barbeiro(conn, 404, BarbeiroUpdate(comissao_percentual=5.0))
 
     assert exc.value.status_code == 404
     assert conn.rolled_back is True

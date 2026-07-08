@@ -36,9 +36,7 @@ export function VendasList() {
     (sum, venda) => sum + Number(venda.valor_total),
     0
   );
-  const concluidas = vendas.filter(
-    (venda) => venda.status === "concluida"
-  ).length;
+  const PAGAs = vendas.filter((venda) => venda.status === "PAGA").length;
 
   return (
     <section className="space-y-5">
@@ -52,7 +50,7 @@ export function VendasList() {
         />
         <SummaryCard
           title="Concluídas"
-          value={String(concluidas)}
+          value={String(PAGAs)}
           description="Vendas finalizadas"
           icon={CheckCircle2}
         />
@@ -152,9 +150,9 @@ function VendasTable({
           {vendas.map((venda) => (
             <TableRow key={venda.id_venda}>
               <TableCell>
-                {clienteNome(venda.CLIENTE_id_cliente, lookups)}
+                {clienteNome(venda.CLIENTE_PESSOA_id_pessoa, lookups)}
               </TableCell>
-              <TableCell>{formatDateTime(venda.data_venda)}</TableCell>
+              <TableCell>{formatDateTime(venda.data_hora)}</TableCell>
               <TableCell>
                 <StatusBadge status={venda.status} />
               </TableCell>

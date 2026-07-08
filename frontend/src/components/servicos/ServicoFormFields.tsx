@@ -22,12 +22,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
-
-const currencyFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "currency",
-  currency: "BRL"
-});
 
 type ServicoFormInstance = UseFormReturn<
   ServicoFormInput,
@@ -37,12 +31,10 @@ type ServicoFormInstance = UseFormReturn<
 
 export function ServicoPrimaryFields({
   form,
-  isEdit,
-  preco
+  isEdit
 }: {
   form: ServicoFormInstance;
   isEdit: boolean;
-  preco: number;
 }) {
   return (
     <Card>
@@ -64,40 +56,57 @@ export function ServicoPrimaryFields({
             </FormItem>
           )}
         </FormField>
-        <FormField name="descricao">
-          {(field) => (
-            <FormItem>
-              <FormLabel htmlFor="descricao">Descrição</FormLabel>
-              <FormControl>
-                <Textarea
-                  id="descricao"
-                  placeholder="Detalhes do serviço"
-                  {...field}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        </FormField>
-        <FormField name="preco">
-          {(field) => (
-            <FormItem>
-              <FormLabel htmlFor="preco">Preço</FormLabel>
-              <FormControl>
-                <Input
-                  id="preco"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage>{form.formState.errors.preco?.message}</FormMessage>
-              <p className="text-muted-foreground text-sm">
-                Preço formatado: {currencyFormatter.format(preco)}
-              </p>
-            </FormItem>
-          )}
-        </FormField>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <FormField name="preco">
+            {(field) => (
+              <FormItem>
+                <FormLabel htmlFor="preco">Preço</FormLabel>
+                <FormControl>
+                  <Input id="preco" type="number" step="0.01" {...field} />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.preco?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          </FormField>
+          <FormField name="duracao_em_minutos">
+            {(field) => (
+              <FormItem>
+                <FormLabel htmlFor="duracao_em_minutos">Duração</FormLabel>
+                <FormControl>
+                  <Input
+                    id="duracao_em_minutos"
+                    type="number"
+                    step="1"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.duracao_em_minutos?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          </FormField>
+          <FormField name="pontos_gerados">
+            {(field) => (
+              <FormItem>
+                <FormLabel htmlFor="pontos_gerados">Pontos</FormLabel>
+                <FormControl>
+                  <Input
+                    id="pontos_gerados"
+                    type="number"
+                    step="1"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage>
+                  {form.formState.errors.pontos_gerados?.message}
+                </FormMessage>
+              </FormItem>
+            )}
+          </FormField>
+        </div>
       </CardContent>
     </Card>
   );
@@ -115,31 +124,10 @@ export function ServicoOperationalFields({
       <CardHeader>
         <CardTitle>Configuração operacional</CardTitle>
         <CardDescription>
-          Controle de disponibilidade e duração.
+          Disponibilidade do serviço no catálogo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
-        <FormField name="duracao_minutos">
-          {(field) => (
-            <FormItem>
-              <FormLabel htmlFor="duracao_minutos">
-                Duração em minutos
-              </FormLabel>
-              <FormControl>
-                <Input
-                  id="duracao_minutos"
-                  type="number"
-                  min="1"
-                  step="1"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage>
-                {form.formState.errors.duracao_minutos?.message}
-              </FormMessage>
-            </FormItem>
-          )}
-        </FormField>
         <FormItem>
           <div className="flex items-center justify-between rounded-lg border p-3">
             <div className="space-y-1">

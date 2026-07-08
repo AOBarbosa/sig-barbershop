@@ -3,7 +3,7 @@ describe("Módulo Serviços - listagem", () => {
     cy.fixture("servicos").as("servicos");
   });
 
-  it("lista serviços com preço formatado e navega pelo shell", function () {
+  it("lista serviços por nome e navega pelo shell", function () {
     cy.viewport(1280, 720);
     cy.intercept(
       {
@@ -25,14 +25,11 @@ describe("Módulo Serviços - listagem", () => {
     cy.contains("SIG Barbershop").should("be.visible");
     cy.contains("Serviços").should("be.visible");
     cy.contains("Corte masculino").should("be.visible");
-    cy.contains("Corte na tesoura e máquina").should("be.visible");
-    cy.contains("R$ 45,00").should("be.visible");
     cy.contains("Barba completa").should("be.visible");
     cy.contains("Total de serviços").should("be.visible");
     cy.contains("3").should("be.visible");
     cy.contains("Serviços ativos").should("be.visible");
-    cy.contains("Preço médio").should("be.visible");
-    cy.contains("R$ 53,33").should("be.visible");
+    cy.contains("Ativos").should("be.visible");
     cy.contains("Novo serviço").should("have.attr", "href", "/servicos/novo");
   });
 
@@ -60,7 +57,7 @@ describe("Módulo Serviços - listagem", () => {
 
     cy.get("input[placeholder='Buscar serviço']").clear();
     cy.contains("Inativos").click();
-    cy.contains("Coloração").should("be.visible");
+    cy.contains("Coloracao").should("be.visible");
     cy.contains("Barba completa").should("not.exist");
   });
 

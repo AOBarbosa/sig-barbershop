@@ -21,10 +21,9 @@ def clear_overrides():
 
 def barb_row(barb_id=1):
     return {
-        "id_barbeiro": barb_id,
         "PESSOA_id_pessoa": 1,
-        "especialidade": "Corte",
-        "ativo": True,
+        "apelido": "Corte",
+        "comissao_percentual": 10.0,
     }
 
 
@@ -69,10 +68,11 @@ def test_get_disponibilidades_do_barbeiro_delega(client, monkeypatch):
     disps = [
         {
             "id_disponibilidade": 1,
-            "BARBEIRO_id_barbeiro": 1,
-            "dia_semana": "segunda",
+            "BARBEIRO_PESSOA_id_pessoa": 1,
+            "dia_semana": "SEGUNDA",
             "hora_inicio": "09:00:00",
             "hora_fim": "18:00:00",
+            "ativo": True,
         }
     ]
 
@@ -95,14 +95,14 @@ def test_post_barbeiro_valida_e_retorna_201(client, monkeypatch):
 
     def fake(_c, payload):
         assert payload.PESSOA_id_pessoa == 1
-        assert payload.especialidade == "Corte"
+        assert payload.apelido == "Corte"
         return barb_row()
 
     monkeypatch.setattr(barbeiro_router.barbeiro_service, "criar_barbeiro", fake)
 
     response = client.post(
         "/barbeiros",
-        json={"PESSOA_id_pessoa": 1, "especialidade": "Corte", "ativo": True},
+        json={"PESSOA_id_pessoa": 1, "apelido": "Corte", "comissao_percentual": 10.0},
     )
     assert response.status_code == 201
     clear_overrides()
@@ -126,14 +126,14 @@ def test_put_barbeiro_delega(client, monkeypatch):
 
     def fake(_c, barb_id, payload):
         assert barb_id == 1
-        assert payload.ativo is False
-        return barb_row() | {"ativo": False}
+        assert payload.comissao_percentual == 5.0
+        return barb_row() | {"comissao_percentual": 5.0}
 
     monkeypatch.setattr(barbeiro_router.barbeiro_service, "atualizar_barbeiro", fake)
 
-    response = client.put("/barbeiros/1", json={"ativo": False})
+    response = client.put("/barbeiros/1", json={"comissao_percentual": 5.0})
     assert response.status_code == 200
-    assert response.json()["ativo"] is False
+    assert response.json()["comissao_percentual"] == 5.0
     clear_overrides()
 
 

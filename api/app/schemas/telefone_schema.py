@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 
 class TelefoneBase(BaseModel):
-    numero: str = Field(min_length=11, max_length=11, pattern=r"^\d{11}$")
+    telefone: str = Field(min_length=1, max_length=20)
 
 
 class TelefoneCreate(TelefoneBase):
@@ -10,11 +10,10 @@ class TelefoneCreate(TelefoneBase):
 
 
 class TelefoneUpdate(BaseModel):
-    numero: str | None = Field(default=None, min_length=11, max_length=11, pattern=r"^\d{11}$")
+    telefone: str | None = Field(default=None, min_length=1, max_length=20)
 
 
 class TelefoneResponse(TelefoneBase):
     model_config = ConfigDict(from_attributes=True)
 
-    id_telefone: int
     PESSOA_id_pessoa: int

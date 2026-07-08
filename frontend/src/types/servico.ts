@@ -1,16 +1,16 @@
 export interface Servico {
   id_servico: number;
   nome: string;
-  descricao: string | null;
-  preco: string;
-  duracao_minutos: number;
   ativo: boolean;
+  preco: string | number;
+  duracao_em_minutos: number;
+  pontos_gerados: number;
 }
 
 export interface ServicoPayload {
   nome: string;
-  descricao: string;
-  preco: number;
-  duracao_minutos: number;
   ativo: boolean;
+  preco: number;
+  duracao_em_minutos: number;
+  pontos_gerados: number;
 }

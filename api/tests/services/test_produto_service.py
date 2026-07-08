@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 import pytest
 from fastapi import HTTPException
 
@@ -28,33 +26,57 @@ def test_criar_produto_controla_transacao_e_retorna_produto(monkeypatch):
     created = {
         "id_produto": 1,
         "nome": "Pomada modeladora",
-        "descricao": "Pomada efeito matte",
-        "preco": Decimal("35.00"),
-        "estoque": 20,
+        "categoria": "Finalizador",
         "ativo": True,
+        "preco_venda": 45.0,
+        "preco_custo": 25.0,
+        "pontos_gerados": 5,
     }
+    historicos = []
 
     def fake_criar(received_conn, data):
         assert received_conn is conn
         assert data["nome"] == "Pomada modeladora"
+        assert "preco_venda" not in data
+        return {"id_produto": 1, "nome": "Pomada modeladora", "categoria": "Finalizador", "ativo": True}
+
+    def fake_criar_historico(received_conn, **kwargs):
+        assert received_conn is conn
+        historicos.append(kwargs)
+
+    def fake_buscar(received_conn, produto_id):
+        assert received_conn is conn
+        assert produto_id == 1
         return created
 
     monkeypatch.setattr(produto_service.produto_repository, "criar", fake_criar)
+    monkeypatch.setattr(produto_service.historico_produto_repository, "criar", fake_criar_historico)
+    monkeypatch.setattr(produto_service.produto_repository, "buscar_por_id", fake_buscar)
 
     result = produto_service.criar_produto(
         conn,
         ProdutoCreate(
             nome="Pomada modeladora",
-            descricao="Pomada efeito matte",
-            preco=Decimal("35.00"),
-            estoque=20,
+            categoria="Finalizador",
             ativo=True,
+            preco_venda=45,
+            preco_custo=25,
+            pontos_gerados=5,
         ),
     )
 
     assert conn.started is True
     assert conn.committed is True
     assert conn.rolled_back is False
+    assert historicos == [
+        {
+            "produto_id": 1,
+            "preco_venda": 45,
+            "preco_custo": 25,
+            "pontos_gerados": 5,
+            "ativo": True,
+        }
+    ]
     assert result == created
 
 
@@ -142,10 +164,11 @@ def test_criar_produto_faz_rollback_quando_repository_falha(monkeypatch):
             conn,
             ProdutoCreate(
                 nome="Pomada modeladora",
-                descricao=None,
-                preco=Decimal("35.00"),
-                estoque=20,
+                categoria=None,
                 ativo=True,
+                preco_venda=45,
+                preco_custo=25,
+                pontos_gerados=5,
             ),
         )
 
@@ -159,10 +182,14 @@ def test_atualizar_produto_existente_controla_transacao_e_retorna_produto(monkey
     updated = {
         "id_produto": 1,
         "nome": "Pomada premium",
-        "preco": Decimal("35.00"),
-        "estoque": 20,
+        "categoria": "Finalizador",
         "ativo": True,
+        "preco_venda": 55.0,
+        "preco_custo": 30.0,
+        "pontos_gerados": 7,
     }
+    historicos_encerrados = []
+    historicos_criados = []
 
     monkeypatch.setattr(
         produto_service.produto_repository,
@@ -170,8 +197,7 @@ def test_atualizar_produto_existente_controla_transacao_e_retorna_produto(monkey
         lambda _conn, _id: {
             "id_produto": 1,
             "nome": "Pomada modeladora",
-            "preco": Decimal("35.00"),
-            "estoque": 20,
+            "categoria": "Finalizador",
             "ativo": True,
         },
     )
@@ -180,75 +206,116 @@ def test_atualizar_produto_existente_controla_transacao_e_retorna_produto(monkey
         assert received_conn is conn
         assert produto_id == 1
         assert data == {"nome": "Pomada premium"}
-        return updated
+        return {"id_produto": 1, "nome": "Pomada premium", "categoria": "Finalizador", "ativo": True}
+
+    def fake_buscar_vigente(received_conn, produto_id):
+        assert received_conn is conn
+        assert produto_id == 1
+        return {
+            "preco_venda": 45.0,
+            "preco_custo": 25.0,
+            "pontos_gerados": 5,
+        }
+
+    def fake_encerrar(received_conn, produto_id):
+        historicos_encerrados.append((received_conn, produto_id))
+
+    def fake_criar_historico(received_conn, **kwargs):
+        historicos_criados.append(kwargs)
 
     monkeypatch.setattr(produto_service.produto_repository, "atualizar", fake_atualizar)
     monkeypatch.setattr(
         produto_service.historico_produto_repository,
-        "criar",
-        lambda _conn, **_kwargs: None,
+        "buscar_vigente",
+        fake_buscar_vigente,
     )
+    monkeypatch.setattr(
+        produto_service.historico_produto_repository,
+        "encerrar_vigente",
+        fake_encerrar,
+    )
+    monkeypatch.setattr(
+        produto_service.historico_produto_repository,
+        "criar",
+        fake_criar_historico,
+    )
+    monkeypatch.setattr(produto_service.produto_repository, "buscar_por_id", lambda _conn, _id: updated)
 
     result = produto_service.atualizar_produto(
         conn,
         1,
-        ProdutoUpdate(nome="Pomada premium"),
+        ProdutoUpdate(nome="Pomada premium", preco_venda=55, preco_custo=30, pontos_gerados=7),
     )
 
     assert result == updated
+    assert historicos_encerrados == [(conn, 1)]
+    assert historicos_criados == [
+        {
+            "produto_id": 1,
+            "preco_venda": 55,
+            "preco_custo": 30,
+            "pontos_gerados": 7,
+            "ativo": True,
+        }
+    ]
     assert conn.started is True
     assert conn.committed is True
     assert conn.rolled_back is False
 
 
-def test_atualizar_produto_grava_historico_com_valores_anterior_e_novo(monkeypatch):
+def test_atualizar_produto_apenas_dados_principais_nao_cria_historico(monkeypatch):
     conn = FakeConn()
-    atual = {
-        "id_produto": 1,
-        "preco": Decimal("35.00"),
-        "estoque": 20,
-        "ativo": True,
-    }
-    updated = {
-        "id_produto": 1,
-        "preco": Decimal("45.00"),
-        "estoque": 15,
-        "ativo": False,
-    }
+    historicos = []
 
-    monkeypatch.setattr(
-        produto_service.produto_repository, "buscar_por_id", lambda _conn, _id: atual
-    )
     monkeypatch.setattr(
         produto_service.produto_repository,
-        "atualizar",
-        lambda _conn, _id, _data: updated,
+        "buscar_por_id",
+        lambda _conn, _id: {"id_produto": 1, "nome": "Pomada premium", "ativo": True},
     )
-
-    historico_chamado = {}
-
-    def fake_criar_historico(received_conn, **kwargs):
-        assert received_conn is conn
-        historico_chamado.update(kwargs)
-
+    monkeypatch.setattr(produto_service.produto_repository, "atualizar", lambda _c, _id, _d: None)
     monkeypatch.setattr(
-        produto_service.historico_produto_repository, "criar", fake_criar_historico
+        produto_service.historico_produto_repository,
+        "criar",
+        lambda _conn, **kwargs: historicos.append(kwargs),
     )
 
-    produto_service.atualizar_produto(
-        conn,
-        1,
-        ProdutoUpdate(preco=Decimal("45.00"), estoque=15, ativo=False),
+    result = produto_service.atualizar_produto(conn, 1, ProdutoUpdate(nome="Pomada premium"))
+
+    assert result["nome"] == "Pomada premium"
+    assert historicos == []
+    assert conn.committed is True
+
+
+def test_atualizar_produto_apenas_historico_preserva_dados_vigentes(monkeypatch):
+    conn = FakeConn()
+    created = []
+    updated = {"id_produto": 1, "preco_venda": 60, "preco_custo": 25, "pontos_gerados": 5}
+
+    monkeypatch.setattr(produto_service.produto_repository, "buscar_por_id", lambda _c, _id: updated)
+    monkeypatch.setattr(
+        produto_service.historico_produto_repository,
+        "buscar_vigente",
+        lambda _c, _id: {"preco_venda": 45, "preco_custo": 25, "pontos_gerados": 5},
+    )
+    monkeypatch.setattr(produto_service.historico_produto_repository, "encerrar_vigente", lambda *_: None)
+    monkeypatch.setattr(
+        produto_service.historico_produto_repository,
+        "criar",
+        lambda _conn, **kwargs: created.append(kwargs),
     )
 
-    assert historico_chamado == {
-        "produto_id": 1,
-        "preco_anterior": Decimal("35.00"),
-        "preco_novo": Decimal("45.00"),
-        "estoque_anterior": 20,
-        "estoque_novo": 15,
-        "ativo": False,
-    }
+    result = produto_service.atualizar_produto(conn, 1, ProdutoUpdate(preco_venda=60))
+
+    assert result == updated
+    assert created == [
+        {
+            "produto_id": 1,
+            "preco_venda": 60,
+            "preco_custo": 25,
+            "pontos_gerados": 5,
+            "ativo": True,
+        }
+    ]
     assert conn.committed is True
 
 

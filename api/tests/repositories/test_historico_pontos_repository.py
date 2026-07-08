@@ -38,10 +38,10 @@ class FakeConn:
 def historico_row(historico_id=1, tipo_movimentacao="acumulo"):
     return {
         "id_historico": historico_id,
-        "CLIENTE_id_cliente": 1,
+        "CLIENTE_PESSOA_id_pessoa": 1,
         "pontos": 10,
         "tipo_movimentacao": tipo_movimentacao,
-        "descricao": "Atendimento #1 concluido",
+        "descricao": "Atendimento #1 CONCLUIDO",
         "data_movimentacao": datetime(2026, 7, 5, 9, 0),
     }
 
@@ -56,7 +56,7 @@ def test_listar_por_cliente_consulta_historico_do_cliente():
     sql, params = cursor.statements[0]
     assert conn.cursor_kwargs == {"dictionary": True}
     assert "FROM HISTORICO_PONTOS" in sql
-    assert "WHERE CLIENTE_id_cliente = %s" in sql
+    assert "WHERE CLIENTE_PESSOA_id_pessoa = %s" in sql
     assert params == (1,)
     assert result == rows
     assert cursor.closed is True
@@ -79,12 +79,12 @@ def test_criar_insere_movimentacao_de_acumulo():
     cursor = FakeCursor(row=created, lastrowid=10)
     conn = FakeConn(cursor)
 
-    result = historico_pontos_repository.criar(conn, 1, 10, "acumulo", "Atendimento #1 concluido")
+    result = historico_pontos_repository.criar(conn, 1, 10, "acumulo", "Atendimento #1 CONCLUIDO")
 
     insert_sql, insert_params = cursor.statements[0]
     select_sql, select_params = cursor.statements[1]
     assert "INSERT INTO HISTORICO_PONTOS" in insert_sql
-    assert insert_params == (1, 10, "acumulo", "Atendimento #1 concluido")
+    assert insert_params == (1, 10, "acumulo", "Atendimento #1 CONCLUIDO")
     assert select_params == (10,)
     assert "FROM HISTORICO_PONTOS" in select_sql
     assert result == created

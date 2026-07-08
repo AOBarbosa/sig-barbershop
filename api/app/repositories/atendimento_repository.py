@@ -4,12 +4,13 @@ from decimal import Decimal
 ATENDIMENTO_SELECT = """
 SELECT
     id_atendimento,
-    CLIENTE_id_cliente,
-    BARBEIRO_id_barbeiro,
-    data_hora,
+    CLIENTE_PESSOA_id_pessoa,
+    BARBEIRO_PESSOA_id_pessoa,
+    data_hora_inicio,
+    data_hora_fim,
     status,
     valor_total,
-    observacao
+    observacoes
 FROM ATENDIMENTO
 """
 
@@ -20,7 +21,7 @@ def listar(conn):
         cursor.execute(
             f"""
             {ATENDIMENTO_SELECT}
-            ORDER BY data_hora DESC, id_atendimento DESC
+            ORDER BY data_hora_inicio DESC, id_atendimento DESC
             """
         )
         return cursor.fetchall()
@@ -49,22 +50,24 @@ def criar(conn, data):
         cursor.execute(
             """
             INSERT INTO ATENDIMENTO (
-                CLIENTE_id_cliente,
-                BARBEIRO_id_barbeiro,
-                data_hora,
+                CLIENTE_PESSOA_id_pessoa,
+                BARBEIRO_PESSOA_id_pessoa,
+                data_hora_inicio,
+                data_hora_fim,
                 status,
                 valor_total,
-                observacao
+                observacoes
             )
-            VALUES (%s, %s, %s, %s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
             (
-                data["CLIENTE_id_cliente"],
-                data["BARBEIRO_id_barbeiro"],
-                data["data_hora"],
+                data["CLIENTE_PESSOA_id_pessoa"],
+                data["BARBEIRO_PESSOA_id_pessoa"],
+                data["data_hora_inicio"],
+                data.get("data_hora_fim"),
                 data["status"],
                 data["valor_total"],
-                data["observacao"],
+                data["observacoes"],
             ),
         )
         return buscar_por_id(conn, cursor.lastrowid)
@@ -135,7 +138,7 @@ def cliente_existe(conn, cliente_id: int):
             """
             SELECT COUNT(*) AS total
             FROM CLIENTE
-            WHERE id_cliente = %s
+            WHERE PESSOA_id_pessoa = %s
             """,
             (cliente_id,),
         )
@@ -152,7 +155,7 @@ def barbeiro_existe(conn, barbeiro_id: int):
             """
             SELECT COUNT(*) AS total
             FROM BARBEIRO
-            WHERE id_barbeiro = %s
+            WHERE PESSOA_id_pessoa = %s
             """,
             (barbeiro_id,),
         )

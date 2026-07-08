@@ -29,7 +29,7 @@ describe("Módulo Clientes - listagem", () => {
     cy.contains("Clientes").should("be.visible");
     cy.contains("Maria Silva").should("be.visible");
     cy.contains("123.456.789-01").should("be.visible");
-    cy.contains("João Souza").should("be.visible");
+    cy.contains("Joao Souza").should("be.visible");
     cy.contains("Ana Costa").should("be.visible");
     cy.contains("Total de clientes").should("be.visible");
     cy.contains("Com email").should("be.visible");
@@ -59,7 +59,7 @@ describe("Módulo Clientes - listagem", () => {
 
     cy.get("input[placeholder='Buscar cliente']").type("maria");
     cy.contains("Maria Silva").should("be.visible");
-    cy.contains("João Souza").should("not.exist");
+    cy.contains("Joao Souza").should("not.exist");
 
     cy.get("input[placeholder='Buscar cliente']").clear().type("ana@");
     cy.contains("Ana Costa").should("be.visible");

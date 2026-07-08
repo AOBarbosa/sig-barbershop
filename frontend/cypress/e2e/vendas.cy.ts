@@ -41,12 +41,13 @@ describe("Módulo Vendas", () => {
       statusCode: 201,
       body: {
         id_venda: 21,
-        CLIENTE_id_cliente: 1,
-        CAIXA_id_caixa: 1,
-        data_venda: "2026-07-06T15:00:00",
-        status: "pendente",
+        CLIENTE_PESSOA_id_pessoa: 1,
+        CAIXA_PESSOA_id_pessoa: 5,
+        data_hora: "2026-07-06T15:00:00",
+        status: "ABERTA",
         valor_total: "0.00",
-        forma_pagamento: "pix"
+        forma_pagamento: "PIX",
+        desconto: "0.00"
       }
     }).as("criarVenda");
     cy.intercept("POST", "**/vendas/21/produtos", {
@@ -58,8 +59,9 @@ describe("Módulo Vendas", () => {
     cy.contains("Salvar venda").click();
     cy.contains("Cliente é obrigatório").should("be.visible");
 
-    cy.get("select[name='CLIENTE_id_cliente']").select("Maria Silva");
-    cy.get("select[name='CAIXA_id_caixa']").select("Carlos Caixa");
+    cy.get("select[name='CLIENTE_PESSOA_id_pessoa']").select("Maria Silva");
+    cy.get("select[name='CAIXA_PESSOA_id_pessoa']").select("Carlos Caixa");
+    cy.get("input[name='data_hora']").type("2026-07-06T15:00");
     cy.get("select[name='forma_pagamento']").select("Pix");
     cy.get("input[aria-label='Quantidade de Pomada modeladora']")
       .clear()
@@ -67,9 +69,10 @@ describe("Módulo Vendas", () => {
     cy.contains("Salvar venda").click();
 
     cy.wait("@criarVenda").its("request.body").should("deep.include", {
-      CLIENTE_id_cliente: 1,
-      CAIXA_id_caixa: 1,
-      forma_pagamento: "pix"
+      CLIENTE_PESSOA_id_pessoa: 1,
+      CAIXA_PESSOA_id_pessoa: 5,
+      data_hora: "2026-07-06T15:00:00",
+      forma_pagamento: "PIX"
     });
     cy.wait("@vincularProduto")
       .its("request.body")
@@ -91,7 +94,7 @@ describe("Módulo Vendas", () => {
       statusCode: 200,
       body: {
         ...this.dados.vendas[0],
-        status: "concluida"
+        status: "PAGA"
       }
     }).as("concluirVenda");
 
@@ -101,13 +104,13 @@ describe("Módulo Vendas", () => {
     cy.contains("Maria Silva").should("be.visible");
     cy.contains("Caixa de Carlos Caixa").should("be.visible");
     cy.contains("Pomada modeladora").should("be.visible");
-    cy.contains("Óleo para barba").should("be.visible");
+    cy.contains("Oleo para barba").should("be.visible");
     cy.contains("Total calculado pelo backend").should("be.visible");
     cy.contains("R$ 80,00").should("be.visible");
     cy.contains("Concluir").click();
     cy.wait("@concluirVenda")
       .its("request.body")
-      .should("deep.equal", { status: "concluida" });
+      .should("deep.equal", { status: "PAGA" });
     cy.contains("Concluída").should("be.visible");
   });
 });

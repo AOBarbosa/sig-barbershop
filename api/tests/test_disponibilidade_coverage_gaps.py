@@ -18,10 +18,10 @@ class FakeConn:
         pass
 
 
-def disponibilidade_row(dia="segunda"):
+def disponibilidade_row(dia="SEGUNDA"):
     return {
         "id_disponibilidade": 1,
-        "BARBEIRO_id_barbeiro": 1,
+        "BARBEIRO_PESSOA_id_pessoa": 1,
         "dia_semana": dia,
         "hora_inicio": time(9, 0),
         "hora_fim": time(18, 0),
@@ -30,7 +30,7 @@ def disponibilidade_row(dia="segunda"):
 
 def test_atualizar_disponibilidade_mantem_mesmo_dia_sem_buscar_conflito(monkeypatch):
     conn = FakeConn()
-    atual = disponibilidade_row(dia="segunda")
+    atual = disponibilidade_row(dia="SEGUNDA")
     chamadas_conflito = []
 
     monkeypatch.setattr(
