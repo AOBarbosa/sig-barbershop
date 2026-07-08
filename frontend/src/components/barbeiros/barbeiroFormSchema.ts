@@ -21,7 +21,10 @@ export const barbeiroFormSchema = z.object({
     .trim()
     .or(z.literal(""))
     .transform((value) => (value === "" ? null : value)),
-  comissao_percentual: z.coerce.number().min(0).max(100).nullable()
+  comissao_percentual: z.coerce.number().min(0).max(100).nullable(),
+  dia_semana: z.string().min(1, "Dia da semana é obrigatório"),
+  hora_inicio: z.string().min(1, "Hora inicial é obrigatória"),
+  hora_fim: z.string().min(1, "Hora final é obrigatória")
 });
 
 export type BarbeiroFormInput = z.input<typeof barbeiroFormSchema>;
@@ -33,5 +36,8 @@ export const defaultBarbeiroFormValues: BarbeiroFormInput = {
   email: "",
   data_nascimento: "",
   apelido: "",
-  comissao_percentual: null
+  comissao_percentual: null,
+  dia_semana: "SEGUNDA",
+  hora_inicio: "",
+  hora_fim: ""
 };

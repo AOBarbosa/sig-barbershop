@@ -31,7 +31,7 @@ def test_get_clientes_delega(client, monkeypatch):
 
     response = client.get("/clientes")
     assert response.status_code == 200
-    assert response.json() == [cli_row()]
+    assert response.json() == [cli_row() | {"saldo_pontos": 0}]
     clear_overrides()
 
 

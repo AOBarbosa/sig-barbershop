@@ -18,6 +18,9 @@ describe("Módulo Atendimentos", () => {
     cy.intercept(apiRoute("/clientes"), dados.clientes).as("listarClientes");
     cy.intercept(apiRoute("/barbeiros"), dados.barbeiros).as("listarBarbeiros");
     cy.intercept(apiRoute("/servicos"), dados.servicos).as("listarServicos");
+    cy.intercept(apiRoute("/atendimentos"), dados.atendimentos).as(
+      "listarAtendimentosLookup"
+    );
     cy.intercept(
       apiRoute("/barbeiros/2/disponibilidades"),
       dados.disponibilidades
@@ -26,12 +29,8 @@ describe("Módulo Atendimentos", () => {
 
   it("lista atendimentos com nomes, status colorido e valor do backend", function () {
     interceptBase(this.dados);
-    cy.intercept(apiRoute("/atendimentos"), this.dados.atendimentos).as(
-      "listarAtendimentos"
-    );
-
     cy.visit("/atendimentos");
-    cy.wait("@listarAtendimentos");
+    cy.wait("@listarAtendimentosLookup");
 
     cy.get("main").contains("Atendimentos").should("be.visible");
     cy.contains("Maria Silva").should("be.visible");
@@ -54,7 +53,7 @@ describe("Módulo Atendimentos", () => {
         id_atendimento: 11,
         CLIENTE_PESSOA_id_pessoa: 1,
         BARBEIRO_PESSOA_id_pessoa: 2,
-        data_hora_inicio: "2026-07-06T14:30:00",
+        data_hora_inicio: "2026-07-13T08:00:00",
         data_hora_fim: null,
         status: "AGENDADO",
         valor_total: "0.00",
@@ -73,7 +72,7 @@ describe("Módulo Atendimentos", () => {
     cy.get("select[name='CLIENTE_PESSOA_id_pessoa']").select("Maria Silva");
     cy.get("select[name='BARBEIRO_PESSOA_id_pessoa']").select("Joao Barbeiro");
     cy.wait("@listarDisponibilidades");
-    cy.get("input[name='data_hora_inicio']").type("2026-07-06T14:30");
+    cy.get("select[name='data_hora_inicio']").select("13/07/2026 08:00");
     cy.contains("Corte masculino").click();
     cy.get("textarea[name='observacoes']").type("Cliente quer corte e barba");
     cy.contains("Salvar atendimento").click();
@@ -83,7 +82,7 @@ describe("Módulo Atendimentos", () => {
       .should("deep.include", {
         CLIENTE_PESSOA_id_pessoa: 1,
         BARBEIRO_PESSOA_id_pessoa: 2,
-        data_hora_inicio: "2026-07-06T14:30:00",
+        data_hora_inicio: "2026-07-13T08:00:00",
         status: "AGENDADO",
         observacoes: "Cliente quer corte e barba"
       });
@@ -93,6 +92,23 @@ describe("Módulo Atendimentos", () => {
     cy.location("pathname").should("eq", "/atendimentos");
     cy.location("search").should("eq", "?salvo=1");
     cy.wait("@listarDepoisDeCriar");
+  });
+
+  it("mostra apenas horários disponíveis do barbeiro no atendimento", function () {
+    interceptBase(this.dados);
+    cy.visit("/atendimentos/novo");
+    cy.get("select[name='BARBEIRO_PESSOA_id_pessoa']").select("Joao Barbeiro");
+    cy.wait(["@listarDisponibilidades", "@listarAtendimentosLookup"]);
+
+    cy.get("select[name='data_hora_inicio']")
+      .contains("13/07/2026 08:00")
+      .should("be.visible");
+    cy.get("select[name='data_hora_inicio']")
+      .contains("14/07/2026 08:00")
+      .should("not.exist");
+    cy.get("select[name='data_hora_inicio']")
+      .contains("13/07/2026 14:30")
+      .should("not.exist");
   });
 
   it("mostra detalhes, serviços vinculados e muda status sem calcular valor", function () {

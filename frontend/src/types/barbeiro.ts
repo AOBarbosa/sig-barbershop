@@ -15,4 +15,19 @@ export interface BarbeiroPayload {
   comissao_percentual: number | null;
 }
 
-export type BarbeiroFormPayload = PessoaPayload & BarbeiroPayload;
+export interface DisponibilidadePayload {
+  BARBEIRO_PESSOA_id_pessoa: number;
+  dia_semana: string;
+  hora_inicio: string;
+  hora_fim: string;
+}
+
+export interface BarbeiroDisponibilidadePayload {
+  dia_semana: string;
+  hora_inicio: string;
+  hora_fim: string;
+}
+
+export type BarbeiroFormPayload = PessoaPayload &
+  BarbeiroPayload &
+  BarbeiroDisponibilidadePayload;

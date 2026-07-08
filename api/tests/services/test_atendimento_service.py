@@ -81,8 +81,18 @@ def test_criar_atendimento_valida_refs_calcula_valor_total_e_commita(monkeypatch
     conn = FakeConn()
     created = atendimento_row(atendimento_id=10)
     total_updates = []
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: True)
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(
+        atendimento_service.disponibilidade_repository,
+        "barbeiro_disponivel_no_horario",
+        lambda _c, _barbeiro_id, _inicio: True,
+    )
+    monkeypatch.setattr(
+        atendimento_service.agenda_repository,
+        "barbeiro_ocupado_no_horario",
+        lambda _c, _barbeiro_id, _inicio, atendimento_id=None: False,
+    )
     monkeypatch.setattr(atendimento_service.atendimento_repository, "criar", lambda _c, data: created)
     monkeypatch.setattr(
         atendimento_service.atendimento_repository,
@@ -119,7 +129,7 @@ def test_criar_atendimento_valida_refs_calcula_valor_total_e_commita(monkeypatch
 
 def test_criar_atendimento_nao_aceita_cliente_inexistente(monkeypatch):
     conn = FakeConn()
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: False)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: False)
 
     with pytest.raises(HTTPException) as exc:
         atendimento_service.criar_atendimento(
@@ -134,8 +144,8 @@ def test_criar_atendimento_nao_aceita_cliente_inexistente(monkeypatch):
 
 def test_criar_atendimento_nao_aceita_barbeiro_inexistente(monkeypatch):
     conn = FakeConn()
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: True)
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "barbeiro_existe", lambda _c, _id: False)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "barbeiro_existe", lambda _c, _id: False)
 
     with pytest.raises(HTTPException) as exc:
         atendimento_service.criar_atendimento(
@@ -148,10 +158,77 @@ def test_criar_atendimento_nao_aceita_barbeiro_inexistente(monkeypatch):
     assert conn.committed is False
 
 
+def test_criar_atendimento_fora_da_disponibilidade_retorna_422(monkeypatch):
+    conn = FakeConn()
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(
+        atendimento_service.disponibilidade_repository,
+        "barbeiro_disponivel_no_horario",
+        lambda _c, _barbeiro_id, _inicio: False,
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        atendimento_service.criar_atendimento(
+            conn,
+            AtendimentoCreate(
+                CLIENTE_PESSOA_id_pessoa=1,
+                BARBEIRO_PESSOA_id_pessoa=2,
+                data_hora_inicio=datetime(2026, 7, 7, 14, 30),
+            ),
+        )
+
+    assert exc.value.status_code == 422
+    assert exc.value.detail == "Horario fora da disponibilidade do barbeiro"
+    assert conn.rolled_back is True
+    assert conn.committed is False
+
+
+def test_criar_atendimento_em_horario_ocupado_retorna_409(monkeypatch):
+    conn = FakeConn()
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(
+        atendimento_service.disponibilidade_repository,
+        "barbeiro_disponivel_no_horario",
+        lambda _c, _barbeiro_id, _inicio: True,
+    )
+    monkeypatch.setattr(
+        atendimento_service.agenda_repository,
+        "barbeiro_ocupado_no_horario",
+        lambda _c, _barbeiro_id, _inicio, atendimento_id=None: True,
+    )
+
+    with pytest.raises(HTTPException) as exc:
+        atendimento_service.criar_atendimento(
+            conn,
+            AtendimentoCreate(
+                CLIENTE_PESSOA_id_pessoa=1,
+                BARBEIRO_PESSOA_id_pessoa=2,
+                data_hora_inicio=datetime(2026, 7, 6, 14, 30),
+            ),
+        )
+
+    assert exc.value.status_code == 409
+    assert exc.value.detail == "Horario indisponivel para este barbeiro"
+    assert conn.rolled_back is True
+    assert conn.committed is False
+
+
 def test_criar_atendimento_faz_rollback_quando_repository_falha(monkeypatch):
     conn = FakeConn()
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: True)
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(
+        atendimento_service.disponibilidade_repository,
+        "barbeiro_disponivel_no_horario",
+        lambda _c, _barbeiro_id, _inicio: True,
+    )
+    monkeypatch.setattr(
+        atendimento_service.agenda_repository,
+        "barbeiro_ocupado_no_horario",
+        lambda _c, _barbeiro_id, _inicio, atendimento_id=None: False,
+    )
 
     def fake_criar(_conn, _data):
         raise RuntimeError("erro de banco")
@@ -174,8 +251,18 @@ def test_atualizar_atendimento_existente_valida_refs_recalcula_total_e_commita(m
     current = atendimento_row()
     updated = current | {"observacoes": "Remarcado"}
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: current)
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: True)
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: True)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "barbeiro_existe", lambda _c, _id: True)
+    monkeypatch.setattr(
+        atendimento_service.disponibilidade_repository,
+        "barbeiro_disponivel_no_horario",
+        lambda _c, _barbeiro_id, _inicio: True,
+    )
+    monkeypatch.setattr(
+        atendimento_service.agenda_repository,
+        "barbeiro_ocupado_no_horario",
+        lambda _c, _barbeiro_id, _inicio, atendimento_id=None: False,
+    )
     monkeypatch.setattr(atendimento_service.atendimento_repository, "atualizar", lambda _c, _id, _data: updated)
     monkeypatch.setattr(
         atendimento_service.atendimento_repository,
@@ -215,7 +302,7 @@ def test_atualizar_atendimento_inexistente_retorna_404(monkeypatch):
 def test_atualizar_atendimento_nao_aceita_cliente_inexistente(monkeypatch):
     conn = FakeConn()
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atendimento_row())
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "cliente_existe", lambda _c, _id: False)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "cliente_existe", lambda _c, _id: False)
 
     with pytest.raises(HTTPException) as exc:
         atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(CLIENTE_PESSOA_id_pessoa=99))
@@ -227,7 +314,7 @@ def test_atualizar_atendimento_nao_aceita_cliente_inexistente(monkeypatch):
 def test_atualizar_atendimento_nao_aceita_barbeiro_inexistente(monkeypatch):
     conn = FakeConn()
     monkeypatch.setattr(atendimento_service.atendimento_repository, "buscar_por_id", lambda _c, _id: atendimento_row())
-    monkeypatch.setattr(atendimento_service.atendimento_repository, "barbeiro_existe", lambda _c, _id: False)
+    monkeypatch.setattr(atendimento_service.agenda_repository, "barbeiro_existe", lambda _c, _id: False)
 
     with pytest.raises(HTTPException) as exc:
         atendimento_service.atualizar_atendimento(conn, 1, AtendimentoUpdate(BARBEIRO_PESSOA_id_pessoa=99))

@@ -30,6 +30,7 @@ export interface Disponibilidade {
   dia_semana: string;
   hora_inicio: string;
   hora_fim: string;
+  ativo: boolean;
 }
 
 export interface Atendimento {
@@ -67,4 +68,5 @@ export interface AtendimentoLookups {
   clientes: Cliente[];
   barbeiros: Barbeiro[];
   servicos: Servico[];
+  atendimentos: Atendimento[];
 }

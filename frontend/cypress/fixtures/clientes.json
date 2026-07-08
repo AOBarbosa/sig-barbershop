@@ -29,17 +29,20 @@
     {
       "PESSOA_id_pessoa": 1,
       "preferencias": null,
-      "observacoes": null
+      "observacoes": null,
+      "saldo_pontos": 18
     },
     {
       "PESSOA_id_pessoa": 2,
       "preferencias": null,
-      "observacoes": null
+      "observacoes": null,
+      "saldo_pontos": 0
     },
     {
       "PESSOA_id_pessoa": 3,
       "preferencias": null,
-      "observacoes": null
+      "observacoes": null,
+      "saldo_pontos": 7
     }
   ]
 }

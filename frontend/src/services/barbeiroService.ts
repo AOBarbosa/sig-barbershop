@@ -3,10 +3,13 @@ import { getPessoa, getPessoas } from "@/services/clienteService";
 import type {
   Barbeiro,
   BarbeiroComPessoa,
+  BarbeiroDisponibilidadePayload,
   BarbeiroFormPayload,
-  BarbeiroPayload
+  BarbeiroPayload,
+  DisponibilidadePayload
 } from "@/types/barbeiro";
 import type { Pessoa } from "@/types/cliente";
+import type { Disponibilidade } from "@/types/atendimento";
 
 function hasKeys(data: unknown, keys: string[]) {
   return (
@@ -80,12 +83,29 @@ export const updateBarbeiroApi = (id: number, payload: BarbeiroPayload) =>
     .put<Barbeiro>(`/barbeiros/${id}`, payload)
     .then((response) => response.data);
 
+function separarBarbeiroPayload(payload: BarbeiroFormPayload) {
+  const { dia_semana, hora_inicio, hora_fim, ...barbeiroPayload } = payload;
+  return {
+    disponibilidade: { dia_semana, hora_inicio, hora_fim },
+    barbeiroPayload
+  };
+}
+
 export async function createBarbeiroWithPessoa(payload: BarbeiroFormPayload) {
-  const response = await api.post<unknown>("/barbeiros/completo", payload);
+  const { disponibilidade, barbeiroPayload } = separarBarbeiroPayload(payload);
+  const response = await api.post<unknown>(
+    "/barbeiros/completo",
+    barbeiroPayload
+  );
 
   if (!isBarbeiroCompletoResponse(response.data)) {
     throw new Error("Resposta inválida ao criar barbeiro");
   }
+
+  await createDisponibilidade({
+    BARBEIRO_PESSOA_id_pessoa: response.data.barbeiro.PESSOA_id_pessoa,
+    ...disponibilidade
+  });
 
   return response.data;
 }
@@ -94,9 +114,10 @@ export async function updateBarbeiroWithPessoa(
   barbeiroId: number,
   payload: BarbeiroFormPayload
 ) {
+  const { barbeiroPayload } = separarBarbeiroPayload(payload);
   const response = await api.put<unknown>(
     `/barbeiros/${barbeiroId}/completo`,
-    payload
+    barbeiroPayload
   );
 
   if (!isBarbeiroCompletoResponse(response.data)) {
@@ -104,6 +125,37 @@ export async function updateBarbeiroWithPessoa(
   }
 
   return response.data;
+}
+
+export const createDisponibilidade = (payload: DisponibilidadePayload) =>
+  api
+    .post<Disponibilidade>("/disponibilidades", payload)
+    .then((response) => response.data);
+
+export const getDisponibilidadesDoBarbeiro = (barbeiroId: number) =>
+  api
+    .get<Disponibilidade[]>(`/barbeiros/${barbeiroId}/disponibilidades`)
+    .then((response) => response.data);
+
+export async function saveBarbeiroDisponibilidade(
+  barbeiroId: number,
+  payload: BarbeiroDisponibilidadePayload
+) {
+  const disponibilidades = await getDisponibilidadesDoBarbeiro(barbeiroId);
+
+  if (disponibilidades.length === 0) {
+    return createDisponibilidade({
+      BARBEIRO_PESSOA_id_pessoa: barbeiroId,
+      ...payload
+    });
+  }
+
+  return api
+    .put<Disponibilidade>(
+      `/disponibilidades/${disponibilidades[0].id_disponibilidade}`,
+      payload
+    )
+    .then((response) => response.data);
 }
 
 export async function getBarbeirosComPessoas(): Promise<BarbeiroComPessoa[]> {

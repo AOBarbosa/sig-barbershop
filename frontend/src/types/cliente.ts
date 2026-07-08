@@ -11,6 +11,7 @@ export interface Cliente {
   PESSOA_id_pessoa: number;
   preferencias: string | null;
   observacoes: string | null;
+  saldo_pontos: number;
 }
 
 export interface ClienteComPessoa extends Cliente {

@@ -1,5 +1,7 @@
 from decimal import Decimal
 
+from app.repositories import agenda_repository
+
 
 ATENDIMENTO_SELECT = """
 SELECT
@@ -132,37 +134,11 @@ def deletar(conn, atendimento_id: int):
 
 
 def cliente_existe(conn, cliente_id: int):
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            """
-            SELECT COUNT(*) AS total
-            FROM CLIENTE
-            WHERE PESSOA_id_pessoa = %s
-            """,
-            (cliente_id,),
-        )
-        row = cursor.fetchone()
-        return bool(row and row["total"] > 0)
-    finally:
-        cursor.close()
+    return agenda_repository.cliente_existe(conn, cliente_id)
 
 
 def barbeiro_existe(conn, barbeiro_id: int):
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            """
-            SELECT COUNT(*) AS total
-            FROM BARBEIRO
-            WHERE PESSOA_id_pessoa = %s
-            """,
-            (barbeiro_id,),
-        )
-        row = cursor.fetchone()
-        return bool(row and row["total"] > 0)
-    finally:
-        cursor.close()
+    return agenda_repository.barbeiro_existe(conn, barbeiro_id)
 
 
 def calcular_valor_total(conn, atendimento_id: int):

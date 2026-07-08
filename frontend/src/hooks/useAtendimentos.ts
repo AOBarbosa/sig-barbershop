@@ -49,14 +49,16 @@ export function useAtendimentoLookups() {
   return useQuery({
     queryKey: lookupsQueryKey,
     queryFn: async () => {
-      const [pessoas, clientes, barbeiros, servicos] = await Promise.all([
-        getPessoas(),
-        getClientes(),
-        getBarbeiros(),
-        getServicos()
-      ]);
+      const [pessoas, clientes, barbeiros, servicos, atendimentos] =
+        await Promise.all([
+          getPessoas(),
+          getClientes(),
+          getBarbeiros(),
+          getServicos(),
+          getAtendimentos()
+        ]);
 
-      return { pessoas, clientes, barbeiros, servicos };
+      return { pessoas, clientes, barbeiros, servicos, atendimentos };
     }
   });
 }

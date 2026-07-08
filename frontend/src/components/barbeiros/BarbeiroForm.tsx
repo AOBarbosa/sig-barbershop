@@ -11,6 +11,7 @@ import {
   BarbeiroPrimaryFields,
   BarbeiroProfessionalFields
 } from "@/components/barbeiros/BarbeiroFormFields";
+import { BarbeiroAvailabilityFields } from "@/components/barbeiros/BarbeiroAvailabilityFields";
 import {
   barbeiroFormSchema,
   defaultBarbeiroFormValues,
@@ -59,7 +60,11 @@ export function BarbeiroForm({
         email: pessoa.email ?? "",
         data_nascimento: pessoa.data_nascimento ?? "",
         apelido: barbeiro.apelido ?? "",
-        comissao_percentual: Number(barbeiro.comissao_percentual ?? 0)
+        comissao_percentual: Number(barbeiro.comissao_percentual ?? 0),
+        dia_semana: barbeiroQuery.data.disponibilidade?.dia_semana ?? "SEGUNDA",
+        hora_inicio:
+          barbeiroQuery.data.disponibilidade?.hora_inicio.slice(0, 5) ?? "",
+        hora_fim: barbeiroQuery.data.disponibilidade?.hora_fim.slice(0, 5) ?? ""
       });
     }
   }, [form, isEdit, barbeiroQuery.data]);
@@ -117,6 +122,7 @@ export function BarbeiroForm({
             <BarbeiroPrimaryFields form={form} isEdit={isEdit} />
             <BarbeiroProfessionalFields form={form} />
           </div>
+          <BarbeiroAvailabilityFields form={form} />
           {mutationError ? (
             <Alert variant="destructive">
               <AlertTitle>Erro ao salvar barbeiro</AlertTitle>

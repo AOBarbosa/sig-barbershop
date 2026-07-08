@@ -4,7 +4,7 @@ import pytest
 from fastapi import HTTPException
 
 from app.schemas.atendimento_schema import AtendimentoServicoCreate
-from app.services import atendimento_service
+from app.services import atendimento_servico_service as atendimento_service
 
 
 class FakeConn:
@@ -122,6 +122,31 @@ def test_adicionar_servico_vincula_preco_atual_recalcula_total_e_commita(monkeyp
     assert conn.started is True
     assert conn.committed is True
     assert conn.rolled_back is False
+
+
+def test_recalcular_valor_total_atualiza_total_calculado(monkeypatch):
+    conn = FakeConn()
+    chamadas = []
+    monkeypatch.setattr(
+        atendimento_service.atendimento_repository,
+        "calcular_valor_total",
+        lambda _conn, atendimento_id: Decimal("35.00"),
+    )
+
+    def fake_atualizar(_conn, atendimento_id, valor_total):
+        chamadas.append((atendimento_id, valor_total))
+        return atendimento_row() | {"valor_total": valor_total}
+
+    monkeypatch.setattr(
+        atendimento_service.atendimento_repository,
+        "atualizar_valor_total",
+        fake_atualizar,
+    )
+
+    result = atendimento_service._recalcular_valor_total(conn, 1)
+
+    assert chamadas == [(1, Decimal("35.00"))]
+    assert result["valor_total"] == Decimal("35.00")
 
 
 def test_adicionar_servico_atendimento_inexistente_retorna_404(monkeypatch):

@@ -58,7 +58,7 @@
       "id_atendimento": 10,
       "CLIENTE_PESSOA_id_pessoa": 1,
       "BARBEIRO_PESSOA_id_pessoa": 2,
-      "data_hora_inicio": "2026-07-06T14:30:00",
+      "data_hora_inicio": "2026-07-13T14:30:00",
       "data_hora_fim": null,
       "status": "AGENDADO",
       "valor_total": "80.00",
