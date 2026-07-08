@@ -1,11 +1,5 @@
-import { Suspense } from "react";
-
-import { AgendamentoPublico } from "@/components/agendamento/AgendamentoPublico";
+import { redirect } from "next/navigation";
 
 export default function AgendarPage() {
-  return (
-    <Suspense>
-      <AgendamentoPublico />
-    </Suspense>
-  );
+  redirect("/");
 }

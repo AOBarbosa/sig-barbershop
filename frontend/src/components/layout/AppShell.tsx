@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 const navigationGroups = [
   {
     label: "Visão geral",
-    items: [{ href: "/", label: "Início", icon: Home }]
+    items: [{ href: "/app", label: "Início", icon: Home }]
   },
   {
     label: "Operação",
@@ -116,7 +116,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const { logout, user } = useAuth();
   const currentRoute = getCurrentRoute(pathname);
 
-  if (pathname.startsWith("/login")) {
+  if (pathname === "/" || pathname.startsWith("/login")) {
     return <>{children}</>;
   }
 

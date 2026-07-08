@@ -84,7 +84,7 @@ describe("Autenticação frontend", () => {
       }
     }).as("logout");
 
-    cy.visit("/");
+    cy.visit("/app");
     cy.contains("Funcionario Teste").should("be.visible");
     cy.contains("button", "Sair").click();
 
