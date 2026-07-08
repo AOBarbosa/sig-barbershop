@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.main import app
 from app.routers import venda_router
 
@@ -19,6 +19,16 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
+
+
 def vinculo_response():
     return {
         "VENDA_id_venda": 1,
@@ -29,7 +39,7 @@ def vinculo_response():
 
 
 def test_get_produtos_venda_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     monkeypatch.setattr(
         venda_router.venda_service,
         "listar_produtos_venda",
@@ -44,7 +54,7 @@ def test_get_produtos_venda_delega_para_service(client, monkeypatch):
 
 
 def test_get_produtos_venda_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_listar(_conn, _venda_id):
         raise HTTPException(status_code=404, detail="Venda nao encontrada")
@@ -58,7 +68,7 @@ def test_get_produtos_venda_repassa_404_do_service(client, monkeypatch):
 
 
 def test_post_produto_venda_valida_payload_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_adicionar(_conn, venda_id, payload):
         assert venda_id == 1
@@ -77,7 +87,7 @@ def test_post_produto_venda_valida_payload_e_retorna_201(client, monkeypatch):
 
 
 def test_post_produto_venda_rejeita_quantidade_invalida(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post("/vendas/1/produtos", json={"PRODUTO_id_produto": 2, "quantidade": 0})
 
@@ -86,7 +96,7 @@ def test_post_produto_venda_rejeita_quantidade_invalida(client):
 
 
 def test_post_produto_venda_repassa_422_estoque_insuficiente(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_adicionar(_conn, _venda_id, _payload):
         raise HTTPException(status_code=422, detail="Estoque insuficiente")
@@ -101,7 +111,7 @@ def test_post_produto_venda_repassa_422_estoque_insuficiente(client, monkeypatch
 
 
 def test_post_produto_venda_repassa_409_produto_ja_vinculado(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_adicionar(_conn, _venda_id, _payload):
         raise HTTPException(status_code=409, detail="Produto ja vinculado a venda")
@@ -115,7 +125,7 @@ def test_post_produto_venda_repassa_409_produto_ja_vinculado(client, monkeypatch
 
 
 def test_delete_produto_venda_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     removidos = []
     monkeypatch.setattr(
         venda_router.venda_service,
@@ -132,7 +142,7 @@ def test_delete_produto_venda_retorna_204(client, monkeypatch):
 
 
 def test_delete_produto_venda_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_remover(_conn, _venda_id, _produto_id):
         raise HTTPException(status_code=404, detail="Produto nao vinculado a venda")

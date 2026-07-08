@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.main import app
 from app.routers import fidelidade_router
 
@@ -19,6 +19,16 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
+
+
 def fidelidade_response(fidelidade_id=1):
     return {
         "id_fidelidade": fidelidade_id,
@@ -31,7 +41,7 @@ def fidelidade_response(fidelidade_id=1):
 
 
 def test_get_fidelidades_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     expected = [fidelidade_response()]
 
     monkeypatch.setattr(
@@ -46,7 +56,7 @@ def test_get_fidelidades_delega_para_service(client, monkeypatch):
 
 
 def test_get_fidelidade_por_id_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_buscar(_conn, fidelidade_id):
         assert fidelidade_id == 1
@@ -62,7 +72,7 @@ def test_get_fidelidade_por_id_delega_para_service(client, monkeypatch):
 
 
 def test_get_fidelidade_por_id_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_buscar(_conn, _fidelidade_id):
         raise HTTPException(status_code=404, detail="Fidelidade nao encontrada")
@@ -77,7 +87,7 @@ def test_get_fidelidade_por_id_repassa_404_do_service(client, monkeypatch):
 
 
 def test_post_fidelidades_valida_payload_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     created = fidelidade_response(fidelidade_id=2)
 
     def fake_criar(_conn, payload):
@@ -98,7 +108,7 @@ def test_post_fidelidades_valida_payload_e_retorna_201(client, monkeypatch):
 
 
 def test_post_fidelidades_rejeita_payload_com_pontos_invalidos(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post(
         "/fidelidades",
@@ -110,7 +120,7 @@ def test_post_fidelidades_rejeita_payload_com_pontos_invalidos(client):
 
 
 def test_post_fidelidades_repassa_422_do_service_quando_viola_xor(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_criar(_conn, _payload):
         raise HTTPException(
@@ -130,7 +140,7 @@ def test_post_fidelidades_repassa_422_do_service_quando_viola_xor(client, monkey
 
 
 def test_put_fidelidade_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_atualizar(_conn, fidelidade_id, payload):
         assert fidelidade_id == 1
@@ -147,7 +157,7 @@ def test_put_fidelidade_delega_para_service(client, monkeypatch):
 
 
 def test_put_fidelidade_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_atualizar(_conn, _fidelidade_id, _payload):
         raise HTTPException(status_code=404, detail="Fidelidade nao encontrada")
@@ -162,7 +172,7 @@ def test_put_fidelidade_repassa_404_do_service(client, monkeypatch):
 
 
 def test_put_fidelidade_repassa_422_do_service_quando_viola_xor(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_atualizar(_conn, _fidelidade_id, _payload):
         raise HTTPException(
@@ -179,7 +189,7 @@ def test_put_fidelidade_repassa_422_do_service_quando_viola_xor(client, monkeypa
 
 
 def test_put_fidelidade_rejeita_payload_com_pontos_invalidos(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.put("/fidelidades/1", json={"pontos_acumulados": -1})
 
@@ -188,7 +198,7 @@ def test_put_fidelidade_rejeita_payload_com_pontos_invalidos(client):
 
 
 def test_delete_fidelidade_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     deleted_ids = []
 
     monkeypatch.setattr(
@@ -206,7 +216,7 @@ def test_delete_fidelidade_retorna_204(client, monkeypatch):
 
 
 def test_delete_fidelidade_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_deletar(_conn, _fidelidade_id):
         raise HTTPException(status_code=404, detail="Fidelidade nao encontrada")

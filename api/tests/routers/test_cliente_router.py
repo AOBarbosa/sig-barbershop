@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.main import app
 from app.routers import cliente_router
 
@@ -19,12 +19,22 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
+
+
 def cli_row(cli_id=1):
     return {"PESSOA_id_pessoa": cli_id, "preferencias": None, "observacoes": None}
 
 
 def test_get_clientes_delega(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     monkeypatch.setattr(
         cliente_router.cliente_service, "listar_clientes", lambda _c: [cli_row()]
     )
@@ -36,7 +46,7 @@ def test_get_clientes_delega(client, monkeypatch):
 
 
 def test_get_cliente_por_id_delega(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, cli_id):
         assert cli_id == 1
@@ -51,7 +61,7 @@ def test_get_cliente_por_id_delega(client, monkeypatch):
 
 
 def test_get_cliente_repassa_404(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _i):
         raise HTTPException(status_code=404, detail="Cliente nao encontrado")
@@ -64,7 +74,7 @@ def test_get_cliente_repassa_404(client, monkeypatch):
 
 
 def test_post_cliente_valida_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, payload):
         assert payload.PESSOA_id_pessoa == 1
@@ -78,7 +88,7 @@ def test_post_cliente_valida_e_retorna_201(client, monkeypatch):
 
 
 def test_post_cliente_rejeita_pessoa_invalida(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post("/clientes", json={"PESSOA_id_pessoa": 0})
     assert response.status_code == 422
@@ -86,7 +96,7 @@ def test_post_cliente_rejeita_pessoa_invalida(client):
 
 
 def test_post_cliente_repassa_409(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _p):
         raise HTTPException(status_code=409, detail="Pessoa ja esta cadastrada como cliente")
@@ -99,7 +109,7 @@ def test_post_cliente_repassa_409(client, monkeypatch):
 
 
 def test_delete_cliente_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     called = []
     monkeypatch.setattr(
         cliente_router.cliente_service, "deletar_cliente", lambda _c, i: called.append(i)
@@ -113,7 +123,7 @@ def test_delete_cliente_retorna_204(client, monkeypatch):
 
 
 def test_delete_cliente_repassa_409(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _i):
         raise HTTPException(status_code=409, detail="Cliente possui atendimentos")

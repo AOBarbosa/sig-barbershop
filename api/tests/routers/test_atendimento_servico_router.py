@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_current_user, get_db, require_funcionario
 from app.main import app
 from app.routers import atendimento_router
 
@@ -19,6 +19,20 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def override_funcionario():
+    app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_user] = usuario_funcionario
+    app.dependency_overrides[require_funcionario] = usuario_funcionario
+
+
+def atendimento_response():
+    return {"id_atendimento": 1, "CLIENTE_PESSOA_id_pessoa": 1, "BARBEIRO_PESSOA_id_pessoa": 2}
+
+
 def vinculo_response():
     return {
         "id_atendimento_servico": 10,
@@ -29,7 +43,10 @@ def vinculo_response():
 
 
 def test_get_servicos_atendimento_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    override_funcionario()
+    monkeypatch.setattr(
+        atendimento_router.atendimento_service, "buscar_atendimento", lambda _c, _i: atendimento_response()
+    )
     monkeypatch.setattr(
         atendimento_router.atendimento_service,
         "listar_servicos_atendimento",
@@ -44,12 +61,12 @@ def test_get_servicos_atendimento_delega_para_service(client, monkeypatch):
 
 
 def test_get_servicos_atendimento_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    override_funcionario()
 
-    def fake_listar(_conn, _atendimento_id):
+    def fake_buscar(_conn, _atendimento_id):
         raise HTTPException(status_code=404, detail="Atendimento nao encontrado")
 
-    monkeypatch.setattr(atendimento_router.atendimento_service, "listar_servicos_atendimento", fake_listar)
+    monkeypatch.setattr(atendimento_router.atendimento_service, "buscar_atendimento", fake_buscar)
 
     response = client.get("/atendimentos/404/servicos")
 
@@ -59,7 +76,7 @@ def test_get_servicos_atendimento_repassa_404_do_service(client, monkeypatch):
 
 
 def test_post_servico_atendimento_valida_payload_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    override_funcionario()
 
     def fake_adicionar(_conn, atendimento_id, payload):
         assert atendimento_id == 1
@@ -80,7 +97,7 @@ def test_post_servico_atendimento_valida_payload_e_retorna_201(client, monkeypat
 
 
 def test_post_servico_atendimento_rejeita_payload_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    override_funcionario()
 
     response = client.post("/atendimentos/1/servicos", json={"SERVICO_id_servico": 0})
 
@@ -89,7 +106,7 @@ def test_post_servico_atendimento_rejeita_payload_invalido(client):
 
 
 def test_post_servico_atendimento_repassa_409_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    override_funcionario()
 
     def fake_adicionar(_conn, _atendimento_id, _payload):
         raise HTTPException(status_code=409, detail="Servico ja vinculado ao atendimento")
@@ -108,7 +125,7 @@ def test_post_servico_atendimento_repassa_409_do_service(client, monkeypatch):
 
 
 def test_delete_servico_atendimento_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    override_funcionario()
     removed = []
     monkeypatch.setattr(
         atendimento_router.atendimento_service,
@@ -125,7 +142,7 @@ def test_delete_servico_atendimento_retorna_204(client, monkeypatch):
 
 
 def test_delete_servico_atendimento_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    override_funcionario()
 
     def fake_remover(_conn, _atendimento_id, _servico_id):
         raise HTTPException(status_code=404, detail="Servico nao vinculado ao atendimento")

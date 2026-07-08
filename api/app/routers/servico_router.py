@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.schemas.servico_schema import (
     HistoricoServicoResponse,
     ServicoCreate,
@@ -27,17 +27,28 @@ def listar_historico_servico(servico_id: int, conn=Depends(get_db)):
     return servico_service.listar_historico_servico(conn, servico_id)
 
 
-@router.post("", response_model=ServicoResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=ServicoResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_funcionario)],
+)
 def criar_servico(payload: ServicoCreate, conn=Depends(get_db)):
     return servico_service.criar_servico(conn, payload)
 
 
-@router.put("/{servico_id}", response_model=ServicoResponse)
+@router.put(
+    "/{servico_id}", response_model=ServicoResponse, dependencies=[Depends(require_funcionario)]
+)
 def atualizar_servico(servico_id: int, payload: ServicoUpdate, conn=Depends(get_db)):
     return servico_service.atualizar_servico(conn, servico_id, payload)
 
 
-@router.delete("/{servico_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{servico_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_funcionario)],
+)
 def deletar_servico(servico_id: int, conn=Depends(get_db)):
     servico_service.deletar_servico(conn, servico_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

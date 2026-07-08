@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_current_user_opcional, get_db, require_admin
 from app.main import app
 from app.routers import barbeiro_router
 
@@ -19,6 +19,20 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_admin():
+    return {"id_pessoa": 1, "nome": "Admin", "email": "admin@ex.com", "role": "admin"}
+
+
+def _override_admin_opcional():
+    app.dependency_overrides.update(
+        {get_db: override_db, get_current_user_opcional: _usuario_admin}
+    )
+
+
+def _override_admin():
+    app.dependency_overrides.update({get_db: override_db, require_admin: _usuario_admin})
+
+
 def barb_row(barb_id=1):
     return {
         "PESSOA_id_pessoa": 1,
@@ -28,7 +42,7 @@ def barb_row(barb_id=1):
 
 
 def test_get_barbeiros(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin_opcional()
     monkeypatch.setattr(
         barbeiro_router.barbeiro_service, "listar_barbeiros", lambda _c: [barb_row()]
     )
@@ -40,7 +54,7 @@ def test_get_barbeiros(client, monkeypatch):
 
 
 def test_get_barbeiro_por_id(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin_opcional()
     monkeypatch.setattr(
         barbeiro_router.barbeiro_service, "buscar_barbeiro", lambda _c, i: barb_row(i)
     )
@@ -91,7 +105,7 @@ def test_get_disponibilidades_do_barbeiro_delega(client, monkeypatch):
 
 
 def test_post_barbeiro_valida_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, payload):
         assert payload.PESSOA_id_pessoa == 1
@@ -109,7 +123,7 @@ def test_post_barbeiro_valida_e_retorna_201(client, monkeypatch):
 
 
 def test_post_barbeiro_repassa_409(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, _p):
         raise HTTPException(status_code=409, detail="Pessoa ja esta cadastrada como barbeiro")
@@ -122,7 +136,7 @@ def test_post_barbeiro_repassa_409(client, monkeypatch):
 
 
 def test_put_barbeiro_delega(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, barb_id, payload):
         assert barb_id == 1
@@ -138,7 +152,7 @@ def test_put_barbeiro_delega(client, monkeypatch):
 
 
 def test_delete_barbeiro_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
     called = []
     monkeypatch.setattr(
         barbeiro_router.barbeiro_service, "deletar_barbeiro", lambda _c, i: called.append(i)
@@ -151,7 +165,7 @@ def test_delete_barbeiro_retorna_204(client, monkeypatch):
 
 
 def test_delete_barbeiro_repassa_409(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, _i):
         raise HTTPException(status_code=409, detail="Barbeiro possui atendimentos")
@@ -160,6 +174,19 @@ def test_delete_barbeiro_repassa_409(client, monkeypatch):
 
     response = client.delete("/barbeiros/1")
     assert response.status_code == 409
+    clear_overrides()
+
+
+def test_get_barbeiros_sem_login_oculta_comissao(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    monkeypatch.setattr(
+        barbeiro_router.barbeiro_service, "listar_barbeiros", lambda _c: [barb_row()]
+    )
+
+    response = client.get("/barbeiros")
+
+    assert response.status_code == 200
+    assert response.json()[0]["comissao_percentual"] is None
     clear_overrides()
 
 

@@ -2,7 +2,7 @@ from datetime import date, datetime
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_admin
 from app.main import app
 from app.routers import barbeiro_router
 
@@ -17,6 +17,14 @@ def override_db():
 
 def clear_overrides():
     app.dependency_overrides.clear()
+
+
+def _usuario_admin():
+    return {"id_pessoa": 1, "nome": "Admin", "email": "admin@ex.com", "role": "admin"}
+
+
+def _override_admin():
+    app.dependency_overrides.update({get_db: override_db, require_admin: _usuario_admin})
 
 
 def _pessoa_row():
@@ -40,7 +48,7 @@ def _barbeiro_row():
 
 
 def test_post_barbeiro_completo_cria_pessoa_e_barbeiro(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, payload):
         assert payload.nome == "Pedro"
@@ -72,7 +80,7 @@ def test_post_barbeiro_completo_cria_pessoa_e_barbeiro(client, monkeypatch):
 
 
 def test_post_barbeiro_completo_rejeita_cpf_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     response = client.post(
         "/barbeiros/completo",
@@ -84,7 +92,7 @@ def test_post_barbeiro_completo_rejeita_cpf_invalido(client):
 
 
 def test_post_barbeiro_completo_repassa_409_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, _p):
         raise HTTPException(status_code=409, detail="CPF ja cadastrado")
@@ -103,7 +111,7 @@ def test_post_barbeiro_completo_repassa_409_do_service(client, monkeypatch):
 
 
 def test_post_barbeiro_completo_comissao_percentual_default_none(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
     capturado = {}
 
     def fake(_c, payload):
@@ -127,7 +135,7 @@ def test_post_barbeiro_completo_comissao_percentual_default_none(client, monkeyp
 
 
 def test_put_barbeiro_completo_atualiza_pessoa_e_barbeiro(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, barbeiro_id, payload):
         assert barbeiro_id == 1

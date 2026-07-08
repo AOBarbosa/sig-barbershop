@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.main import app
 from app.routers import telefone_router
 
@@ -19,12 +19,22 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
+
+
 def tel_row(pessoa_id=1, telefone="84999999999"):
     return {"PESSOA_id_pessoa": pessoa_id, "telefone": telefone}
 
 
 def test_get_telefone_por_id(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     monkeypatch.setattr(
         telefone_router.telefone_service,
         "buscar_telefone",
@@ -39,7 +49,7 @@ def test_get_telefone_por_id(client, monkeypatch):
 
 
 def test_get_telefone_repassa_404(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _pessoa_id, _telefone):
         raise HTTPException(status_code=404, detail="Telefone nao encontrado")
@@ -52,7 +62,7 @@ def test_get_telefone_repassa_404(client, monkeypatch):
 
 
 def test_post_telefone_valida_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, payload):
         assert payload.PESSOA_id_pessoa == 1
@@ -70,7 +80,7 @@ def test_post_telefone_valida_e_retorna_201(client, monkeypatch):
 
 
 def test_post_telefone_rejeita_telefone_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post("/telefones", json={"PESSOA_id_pessoa": 1, "telefone": ""})
 
@@ -79,7 +89,7 @@ def test_post_telefone_rejeita_telefone_invalido(client):
 
 
 def test_post_telefone_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _p):
         raise HTTPException(status_code=404, detail="Pessoa nao encontrada")
@@ -95,7 +105,7 @@ def test_post_telefone_repassa_404_do_service(client, monkeypatch):
 
 
 def test_put_telefone_delega(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, pessoa_id, telefone, payload):
         assert pessoa_id == 1
@@ -115,7 +125,7 @@ def test_put_telefone_delega(client, monkeypatch):
 
 
 def test_delete_telefone_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     called = []
     monkeypatch.setattr(
         telefone_router.telefone_service,

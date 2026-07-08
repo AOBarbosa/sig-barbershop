@@ -30,6 +30,7 @@ class ProdutoResponse(ProdutoBase):
     model_config = ConfigDict(from_attributes=True)
 
     id_produto: int
+    preco_custo: Decimal | None = None
 
 
 class HistoricoProdutoResponse(BaseModel):
@@ -38,7 +39,7 @@ class HistoricoProdutoResponse(BaseModel):
     id_historico: int
     PRODUTO_id_produto: int
     preco_venda: Decimal
-    preco_custo: Decimal
+    preco_custo: Decimal | None = None
     pontos_gerados: int
     data_inicio: date
     data_fim: date | None

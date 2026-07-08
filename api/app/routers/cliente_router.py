@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.schemas.cliente_schema import (
     ClienteCompletoCreate,
     ClienteCompletoResponse,
@@ -9,7 +9,9 @@ from app.schemas.cliente_schema import (
 )
 from app.services import cliente_service
 
-router = APIRouter(prefix="/clientes", tags=["clientes"])
+router = APIRouter(
+    prefix="/clientes", tags=["clientes"], dependencies=[Depends(require_funcionario)]
+)
 
 
 @router.get("", response_model=list[ClienteResponse])

@@ -62,6 +62,31 @@ def test_get_current_user_sem_cookie_repassa_401(monkeypatch):
     assert exc.value.status_code == 401
 
 
+def test_get_current_user_opcional_sem_cookie_retorna_none():
+    request = FakeRequest(cookies={})
+
+    assert dependencies.get_current_user_opcional(request, conn=object()) is None
+
+
+def test_get_current_user_opcional_com_token_invalido_retorna_none(monkeypatch):
+    request = FakeRequest(cookies={"access_token": "invalido"})
+
+    def fake(_c, _t):
+        raise HTTPException(status_code=401, detail="Token invalido ou expirado")
+
+    monkeypatch.setattr(dependencies.auth_service, "obter_usuario_atual", fake)
+
+    assert dependencies.get_current_user_opcional(request, conn=object()) is None
+
+
+def test_get_current_user_opcional_com_token_valido_retorna_usuario(monkeypatch):
+    request = FakeRequest(cookies={"access_token": "token-fake"})
+    usuario = {"id_pessoa": 1, "nome": "X", "email": "x@ex.com", "role": "admin"}
+    monkeypatch.setattr(dependencies.auth_service, "obter_usuario_atual", lambda _c, _t: usuario)
+
+    assert dependencies.get_current_user_opcional(request, conn=object()) == usuario
+
+
 def test_require_admin_aceita_usuario_admin():
     usuario = {"role": "admin"}
     assert dependencies.require_admin(usuario) == usuario

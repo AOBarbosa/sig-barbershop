@@ -1,10 +1,12 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.schemas.telefone_schema import TelefoneCreate, TelefoneResponse, TelefoneUpdate
 from app.services import telefone_service
 
-router = APIRouter(prefix="/telefones", tags=["telefones"])
+router = APIRouter(
+    prefix="/telefones", tags=["telefones"], dependencies=[Depends(require_funcionario)]
+)
 
 
 @router.get("/{pessoa_id}/{telefone}", response_model=TelefoneResponse)

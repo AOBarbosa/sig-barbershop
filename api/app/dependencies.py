@@ -18,6 +18,16 @@ def get_current_user(request: Request, conn=Depends(get_db)) -> dict:
     return auth_service.obter_usuario_atual(conn, token)
 
 
+def get_current_user_opcional(request: Request, conn=Depends(get_db)) -> dict | None:
+    token = request.cookies.get(COOKIE_NAME)
+    if not token:
+        return None
+    try:
+        return auth_service.obter_usuario_atual(conn, token)
+    except HTTPException:
+        return None
+
+
 def require_admin(usuario: dict = Depends(get_current_user)) -> dict:
     if usuario["role"] != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Acesso restrito a administradores")
