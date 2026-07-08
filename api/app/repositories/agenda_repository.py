@@ -53,3 +53,23 @@ def barbeiro_ocupado_no_horario(
         return bool(row and row["total"] > 0)
     finally:
         cursor.close()
+
+
+def listar_horarios_ocupados_barbeiro(conn, barbeiro_id: int, inicio, fim):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            SELECT data_hora_inicio
+            FROM ATENDIMENTO
+            WHERE BARBEIRO_PESSOA_id_pessoa = %s
+              AND data_hora_inicio >= %s
+              AND data_hora_inicio <= %s
+              AND status <> 'CANCELADO'
+            ORDER BY data_hora_inicio
+            """,
+            (barbeiro_id, inicio, fim),
+        )
+        return cursor.fetchall()
+    finally:
+        cursor.close()

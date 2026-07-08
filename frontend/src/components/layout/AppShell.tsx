@@ -166,10 +166,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <p className="text-muted-foreground text-xs">{user.role}</p>
                 </div>
               ) : null}
-              <Button variant="outline" size="sm" onClick={handleLogout}>
-                <LogOut className="size-4" />
-                Sair
-              </Button>
+              {user ? (
+                <Button variant="outline" size="sm" onClick={handleLogout}>
+                  <LogOut className="size-4" />
+                  Sair
+                </Button>
+              ) : (
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/login?next=${encodeURIComponent(pathname)}`}>
+                    Entrar
+                  </Link>
+                </Button>
+              )}
             </div>
           </div>
         </header>
