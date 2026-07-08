@@ -50,7 +50,7 @@ def buscar_por_email(conn, email: str):
     try:
         cursor.execute(
             """
-            SELECT id_pessoa, nome, cpf, email, data_nascimento, admin
+            SELECT id_pessoa, nome, cpf, email, data_nascimento, admin, senha_hash
             FROM PESSOA
             WHERE email = %s
             """,
@@ -105,6 +105,21 @@ def atualizar(conn, pessoa_id: int, data):
             cursor.close()
 
     return buscar_por_id(conn, pessoa_id)
+
+
+def atualizar_senha(conn, pessoa_id: int, senha_hash: str):
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            """
+            UPDATE PESSOA
+            SET senha_hash = %s
+            WHERE id_pessoa = %s
+            """,
+            (senha_hash, pessoa_id),
+        )
+    finally:
+        cursor.close()
 
 
 def deletar(conn, pessoa_id: int):

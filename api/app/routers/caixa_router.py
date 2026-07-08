@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_admin
 from app.schemas.caixa_schema import CaixaCreate, CaixaResponse
 from app.services import caixa_service
 
-router = APIRouter(prefix="/caixas", tags=["caixas"])
+router = APIRouter(prefix="/caixas", tags=["caixas"], dependencies=[Depends(require_admin)])
 
 
 @router.get("", response_model=list[CaixaResponse])

@@ -3,7 +3,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_current_user, get_db
 from app.main import app
 from app.routers import historico_pontos_router
 
@@ -20,6 +20,20 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _usuario_cliente(id_pessoa=1):
+    return {"id_pessoa": id_pessoa, "nome": "Cliente", "email": "c@ex.com", "role": "cliente"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, get_current_user: _usuario_funcionario}
+    )
+
+
 def historico_response():
     return {
         "id_movimentacao": 1,
@@ -33,7 +47,7 @@ def historico_response():
 
 
 def test_get_saldo_pontos_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     monkeypatch.setattr(
         historico_pontos_router.historico_pontos_service,
         "buscar_saldo_pontos",
@@ -48,7 +62,7 @@ def test_get_saldo_pontos_delega_para_service(client, monkeypatch):
 
 
 def test_get_saldo_pontos_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_saldo(_conn, _cliente_id):
         raise HTTPException(status_code=404, detail="Cliente nao encontrado")
@@ -63,7 +77,7 @@ def test_get_saldo_pontos_repassa_404_do_service(client, monkeypatch):
 
 
 def test_get_historico_pontos_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     monkeypatch.setattr(
         historico_pontos_router.historico_pontos_service,
         "listar_historico_pontos",
@@ -78,7 +92,7 @@ def test_get_historico_pontos_delega_para_service(client, monkeypatch):
 
 
 def test_get_historico_pontos_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_listar(_conn, _cliente_id):
         raise HTTPException(status_code=404, detail="Cliente nao encontrado")
@@ -88,6 +102,31 @@ def test_get_historico_pontos_repassa_404_do_service(client, monkeypatch):
     response = client.get("/clientes/404/pontos/historico")
 
     assert response.status_code == 404
+    clear_overrides()
+
+
+def test_get_saldo_pontos_como_proprio_cliente_permite_acesso(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_user] = lambda: _usuario_cliente(1)
+    monkeypatch.setattr(
+        historico_pontos_router.historico_pontos_service,
+        "buscar_saldo_pontos",
+        lambda _conn, cliente_id: {"CLIENTE_PESSOA_id_pessoa": cliente_id, "saldo": 25},
+    )
+
+    response = client.get("/clientes/1/pontos")
+
+    assert response.status_code == 200
+    clear_overrides()
+
+
+def test_get_saldo_pontos_como_outro_cliente_retorna_403(client):
+    app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_user] = lambda: _usuario_cliente(2)
+
+    response = client.get("/clientes/1/pontos")
+
+    assert response.status_code == 403
     clear_overrides()
 
 

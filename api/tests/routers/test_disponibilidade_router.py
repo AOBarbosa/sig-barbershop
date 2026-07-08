@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.main import app
 from app.routers import disponibilidade_router
 
@@ -17,6 +17,16 @@ def override_db():
 
 def clear_overrides():
     app.dependency_overrides.clear()
+
+
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
 
 
 def disp_row(disp_id=1):
@@ -59,7 +69,7 @@ def test_get_disponibilidade_repassa_404(client, monkeypatch):
 
 
 def test_post_disponibilidade_valida_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, payload):
         assert payload.BARBEIRO_PESSOA_id_pessoa == 1
@@ -84,7 +94,7 @@ def test_post_disponibilidade_valida_e_retorna_201(client, monkeypatch):
 
 
 def test_post_disponibilidade_rejeita_hora_fim_menor_ou_igual(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post(
         "/disponibilidades",
@@ -100,7 +110,7 @@ def test_post_disponibilidade_rejeita_hora_fim_menor_ou_igual(client):
 
 
 def test_post_disponibilidade_rejeita_dia_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post(
         "/disponibilidades",
@@ -116,7 +126,7 @@ def test_post_disponibilidade_rejeita_dia_invalido(client):
 
 
 def test_post_disponibilidade_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _p):
         raise HTTPException(status_code=404, detail="Barbeiro nao encontrado")
@@ -139,7 +149,7 @@ def test_post_disponibilidade_repassa_404_do_service(client, monkeypatch):
 
 
 def test_post_disponibilidade_repassa_409_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _p):
         raise HTTPException(status_code=409, detail="Barbeiro ja possui disponibilidade")
@@ -162,7 +172,7 @@ def test_post_disponibilidade_repassa_409_do_service(client, monkeypatch):
 
 
 def test_put_disponibilidade_delega(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, disp_id, payload):
         assert disp_id == 1
@@ -180,7 +190,7 @@ def test_put_disponibilidade_delega(client, monkeypatch):
 
 
 def test_put_disponibilidade_rejeita_intervalo_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.put(
         "/disponibilidades/1",
@@ -191,7 +201,7 @@ def test_put_disponibilidade_rejeita_intervalo_invalido(client):
 
 
 def test_delete_disponibilidade_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     called = []
     monkeypatch.setattr(
         disponibilidade_router.disponibilidade_service,
@@ -206,7 +216,7 @@ def test_delete_disponibilidade_retorna_204(client, monkeypatch):
 
 
 def test_delete_disponibilidade_repassa_404(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake(_c, _i):
         raise HTTPException(status_code=404, detail="Disponibilidade nao encontrada")

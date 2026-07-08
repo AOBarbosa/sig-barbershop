@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.schemas.venda_schema import (
     VendaCreate,
     VendaProdutoCreate,
@@ -10,7 +10,7 @@ from app.schemas.venda_schema import (
 )
 from app.services import venda_service
 
-router = APIRouter(prefix="/vendas", tags=["vendas"])
+router = APIRouter(prefix="/vendas", tags=["vendas"], dependencies=[Depends(require_funcionario)])
 
 
 @router.get("", response_model=list[VendaResponse])

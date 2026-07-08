@@ -4,7 +4,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.main import app
 from app.routers import venda_router
 
@@ -21,6 +21,16 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
+
+
 def venda_response(venda_id=1):
     return {
         "id_venda": venda_id,
@@ -35,7 +45,7 @@ def venda_response(venda_id=1):
 
 
 def test_get_vendas_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     monkeypatch.setattr(venda_router.venda_service, "listar_vendas", lambda _conn: [venda_response()])
 
     response = client.get("/vendas")
@@ -46,7 +56,7 @@ def test_get_vendas_delega_para_service(client, monkeypatch):
 
 
 def test_get_venda_por_id_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_buscar(_conn, venda_id):
         assert venda_id == 1
@@ -62,7 +72,7 @@ def test_get_venda_por_id_delega_para_service(client, monkeypatch):
 
 
 def test_get_venda_por_id_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_buscar(_conn, _venda_id):
         raise HTTPException(status_code=404, detail="Venda nao encontrada")
@@ -77,7 +87,7 @@ def test_get_venda_por_id_repassa_404_do_service(client, monkeypatch):
 
 
 def test_post_venda_valida_payload_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_criar(_conn, payload):
         assert payload.CLIENTE_PESSOA_id_pessoa == 1
@@ -102,7 +112,7 @@ def test_post_venda_valida_payload_e_retorna_201(client, monkeypatch):
 
 
 def test_post_venda_rejeita_valor_total_do_cliente(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post(
         "/vendas",
@@ -120,7 +130,7 @@ def test_post_venda_rejeita_valor_total_do_cliente(client):
 
 
 def test_patch_status_venda_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_status(_conn, venda_id, payload):
         assert venda_id == 1
@@ -137,7 +147,7 @@ def test_patch_status_venda_delega_para_service(client, monkeypatch):
 
 
 def test_patch_status_venda_rejeita_status_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.patch("/vendas/1/status", json={"status": "finalizada"})
 
@@ -146,7 +156,7 @@ def test_patch_status_venda_rejeita_status_invalido(client):
 
 
 def test_patch_status_venda_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_status(_conn, _venda_id, _payload):
         raise HTTPException(status_code=404, detail="Venda nao encontrada")
@@ -161,7 +171,7 @@ def test_patch_status_venda_repassa_404_do_service(client, monkeypatch):
 
 
 def test_delete_venda_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     deleted_ids = []
     monkeypatch.setattr(
         venda_router.venda_service,
@@ -178,7 +188,7 @@ def test_delete_venda_retorna_204(client, monkeypatch):
 
 
 def test_delete_venda_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_deletar(_conn, _venda_id):
         raise HTTPException(status_code=404, detail="Venda nao encontrada")

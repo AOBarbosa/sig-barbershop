@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_admin
 from app.main import app
 from app.routers import caixa_router
 
@@ -19,12 +19,20 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_admin():
+    return {"id_pessoa": 1, "nome": "Admin", "email": "admin@ex.com", "role": "admin"}
+
+
+def _override_admin():
+    app.dependency_overrides.update({get_db: override_db, require_admin: _usuario_admin})
+
+
 def caixa_row(caixa_id=1):
     return {"PESSOA_id_pessoa": caixa_id}
 
 
 def test_get_caixas(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
     monkeypatch.setattr(
         caixa_router.caixa_service, "listar_caixas", lambda _c: [caixa_row()]
     )
@@ -36,7 +44,7 @@ def test_get_caixas(client, monkeypatch):
 
 
 def test_get_caixa_por_id(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
     monkeypatch.setattr(caixa_router.caixa_service, "buscar_caixa", lambda _c, i: caixa_row(i))
 
     response = client.get("/caixas/1")
@@ -45,7 +53,7 @@ def test_get_caixa_por_id(client, monkeypatch):
 
 
 def test_get_caixa_repassa_404(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, _i):
         raise HTTPException(status_code=404, detail="Caixa nao encontrado")
@@ -58,7 +66,7 @@ def test_get_caixa_repassa_404(client, monkeypatch):
 
 
 def test_post_caixa_valida_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, payload):
         assert payload.PESSOA_id_pessoa == 1
@@ -72,7 +80,7 @@ def test_post_caixa_valida_e_retorna_201(client, monkeypatch):
 
 
 def test_post_caixa_rejeita_pessoa_invalida(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     response = client.post("/caixas", json={"PESSOA_id_pessoa": 0})
     assert response.status_code == 422
@@ -80,7 +88,7 @@ def test_post_caixa_rejeita_pessoa_invalida(client):
 
 
 def test_post_caixa_repassa_409(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, _p):
         raise HTTPException(status_code=409, detail="Pessoa ja esta cadastrada como caixa")
@@ -93,7 +101,7 @@ def test_post_caixa_repassa_409(client, monkeypatch):
 
 
 def test_delete_caixa_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
     called = []
     monkeypatch.setattr(
         caixa_router.caixa_service, "deletar_caixa", lambda _c, i: called.append(i)
@@ -106,7 +114,7 @@ def test_delete_caixa_retorna_204(client, monkeypatch):
 
 
 def test_delete_caixa_repassa_409(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin()
 
     def fake(_c, _i):
         raise HTTPException(status_code=409, detail="Caixa possui vendas")

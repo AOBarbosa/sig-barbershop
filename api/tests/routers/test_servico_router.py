@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.main import app
 from app.routers import servico_router
 
@@ -17,6 +17,16 @@ def override_db():
 
 def clear_overrides():
     app.dependency_overrides.clear()
+
+
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
 
 
 def servico_response(servico_id=1):
@@ -135,7 +145,7 @@ def test_get_historico_servico_repassa_404_do_service(client, monkeypatch):
 
 
 def test_post_servicos_valida_payload_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     created = {
         "id_servico": 2,
         "nome": "Barba",
@@ -168,7 +178,7 @@ def test_post_servicos_valida_payload_e_retorna_201(client, monkeypatch):
 
 
 def test_post_servicos_rejeita_payload_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post(
         "/servicos",
@@ -183,7 +193,7 @@ def test_post_servicos_rejeita_payload_invalido(client):
 
 
 def test_put_servico_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_atualizar(_conn, servico_id, payload):
         assert servico_id == 1
@@ -208,7 +218,7 @@ def test_put_servico_delega_para_service(client, monkeypatch):
 
 
 def test_put_servico_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_atualizar(_conn, _servico_id, _payload):
         raise HTTPException(status_code=404, detail="Servico nao encontrado")
@@ -223,7 +233,7 @@ def test_put_servico_repassa_404_do_service(client, monkeypatch):
 
 
 def test_put_servico_rejeita_payload_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.put("/servicos/1", json={"nome": ""})
 
@@ -232,7 +242,7 @@ def test_put_servico_rejeita_payload_invalido(client):
 
 
 def test_delete_servico_sem_vinculo_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     deleted_ids = []
 
     monkeypatch.setattr(
@@ -250,7 +260,7 @@ def test_delete_servico_sem_vinculo_retorna_204(client, monkeypatch):
 
 
 def test_delete_servico_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_deletar(_conn, _servico_id):
         raise HTTPException(status_code=404, detail="Servico nao encontrado")
@@ -265,7 +275,7 @@ def test_delete_servico_repassa_404_do_service(client, monkeypatch):
 
 
 def test_delete_servico_repassa_conflito_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_deletar(_conn, _servico_id):
         raise HTTPException(status_code=409, detail="Servico possui atendimentos vinculados")

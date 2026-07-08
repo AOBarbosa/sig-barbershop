@@ -2,7 +2,7 @@ import inspect
 
 from fastapi import HTTPException
 
-from app.dependencies import get_db
+from app.dependencies import get_current_user_opcional, get_db, require_funcionario
 from app.main import app
 from app.routers import produto_router
 
@@ -19,6 +19,26 @@ def clear_overrides():
     app.dependency_overrides.clear()
 
 
+def _usuario_admin():
+    return {"id_pessoa": 1, "nome": "Admin", "email": "admin@ex.com", "role": "admin"}
+
+
+def _usuario_funcionario():
+    return {"id_pessoa": 99, "nome": "Func", "email": "f@ex.com", "role": "funcionario"}
+
+
+def _override_admin_opcional():
+    app.dependency_overrides.update(
+        {get_db: override_db, get_current_user_opcional: _usuario_admin}
+    )
+
+
+def _override_funcionario():
+    app.dependency_overrides.update(
+        {get_db: override_db, require_funcionario: _usuario_funcionario}
+    )
+
+
 def produto_response(produto_id=1):
     return {
         "id_produto": produto_id,
@@ -32,7 +52,7 @@ def produto_response(produto_id=1):
 
 
 def test_get_produtos_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin_opcional()
     expected = [
         {
             "id_produto": 1,
@@ -55,7 +75,7 @@ def test_get_produtos_delega_para_service(client, monkeypatch):
 
 
 def test_get_produto_por_id_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin_opcional()
 
     def fake_buscar(_conn, produto_id):
         assert produto_id == 1
@@ -86,7 +106,7 @@ def test_get_produto_por_id_repassa_404_do_service(client, monkeypatch):
 
 
 def test_get_historico_produto_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_admin_opcional()
     expected = [
         {
             "id_historico": 1,
@@ -133,7 +153,7 @@ def test_get_historico_produto_repassa_404_do_service(client, monkeypatch):
 
 
 def test_post_produtos_valida_payload_e_retorna_201(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     created = {
         "id_produto": 2,
         "nome": "Shampoo",
@@ -169,7 +189,7 @@ def test_post_produtos_valida_payload_e_retorna_201(client, monkeypatch):
 
 
 def test_post_produtos_rejeita_payload_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.post(
         "/produtos",
@@ -184,7 +204,7 @@ def test_post_produtos_rejeita_payload_invalido(client):
 
 
 def test_put_produto_delega_para_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_atualizar(_conn, produto_id, payload):
         assert produto_id == 1
@@ -210,7 +230,7 @@ def test_put_produto_delega_para_service(client, monkeypatch):
 
 
 def test_put_produto_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_atualizar(_conn, _produto_id, _payload):
         raise HTTPException(status_code=404, detail="Produto nao encontrado")
@@ -225,7 +245,7 @@ def test_put_produto_repassa_404_do_service(client, monkeypatch):
 
 
 def test_put_produto_rejeita_payload_invalido(client):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     response = client.put("/produtos/1", json={"nome": ""})
 
@@ -234,7 +254,7 @@ def test_put_produto_rejeita_payload_invalido(client):
 
 
 def test_delete_produto_sem_vinculo_retorna_204(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
     deleted_ids = []
 
     monkeypatch.setattr(
@@ -252,7 +272,7 @@ def test_delete_produto_sem_vinculo_retorna_204(client, monkeypatch):
 
 
 def test_delete_produto_repassa_404_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_deletar(_conn, _produto_id):
         raise HTTPException(status_code=404, detail="Produto nao encontrado")
@@ -267,7 +287,7 @@ def test_delete_produto_repassa_404_do_service(client, monkeypatch):
 
 
 def test_delete_produto_repassa_conflito_do_service(client, monkeypatch):
-    app.dependency_overrides[get_db] = override_db
+    _override_funcionario()
 
     def fake_deletar(_conn, _produto_id):
         raise HTTPException(status_code=409, detail="Produto possui movimentacoes vinculadas")
@@ -278,6 +298,33 @@ def test_delete_produto_repassa_conflito_do_service(client, monkeypatch):
 
     assert response.status_code == 409
     assert response.json() == {"detail": "Produto possui movimentacoes vinculadas"}
+    clear_overrides()
+
+
+def test_get_produtos_sem_login_oculta_preco_custo(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    monkeypatch.setattr(
+        produto_router.produto_service, "listar_produtos", lambda _c: [produto_response()]
+    )
+
+    response = client.get("/produtos")
+
+    assert response.status_code == 200
+    assert response.json()[0]["preco_custo"] is None
+    clear_overrides()
+
+
+def test_get_produtos_como_funcionario_tambem_oculta_preco_custo(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+    app.dependency_overrides[get_current_user_opcional] = _usuario_funcionario
+    monkeypatch.setattr(
+        produto_router.produto_service, "listar_produtos", lambda _c: [produto_response()]
+    )
+
+    response = client.get("/produtos")
+
+    assert response.status_code == 200
+    assert response.json()[0]["preco_custo"] is None
     clear_overrides()
 
 

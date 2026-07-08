@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Response, status
 
-from app.dependencies import get_db
+from app.dependencies import get_db, require_funcionario
 from app.schemas.fidelidade_schema import (
     FidelidadeCreate,
     FidelidadeResponse,
@@ -8,7 +8,9 @@ from app.schemas.fidelidade_schema import (
 )
 from app.services import fidelidade_service
 
-router = APIRouter(prefix="/fidelidades", tags=["fidelidades"])
+router = APIRouter(
+    prefix="/fidelidades", tags=["fidelidades"], dependencies=[Depends(require_funcionario)]
+)
 
 
 @router.get("", response_model=list[FidelidadeResponse])
