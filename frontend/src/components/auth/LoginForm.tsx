@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2, LockKeyhole } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -24,9 +25,12 @@ import {
   FormMessage
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { RegisterFields } from "@/components/auth/RegisterFields";
 import { useAuth } from "@/hooks/useAuth";
 
 const loginFormSchema = z.object({
+  nome: z.string().trim().optional(),
+  cpf: z.string().trim().optional(),
   email: z.string().trim().min(1, "Email é obrigatório"),
   senha: z.string().min(1, "Senha é obrigatória")
 });
@@ -45,9 +49,12 @@ export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const auth = useAuth();
+  const [mode, setMode] = useState<"login" | "register">("login");
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginFormSchema),
     defaultValues: {
+      nome: "",
+      cpf: "",
       email: "",
       senha: ""
     }
@@ -56,10 +63,19 @@ export function LoginForm() {
 
   async function onSubmit(values: LoginFormValues) {
     try {
-      await auth.login(values);
+      if (mode === "register") {
+        await auth.register({
+          nome: values.nome ?? "",
+          cpf: values.cpf || null,
+          email: values.email,
+          senha: values.senha
+        });
+      } else {
+        await auth.login({ email: values.email, senha: values.senha });
+      }
       router.push(getSafeNext(searchParams.get("next")));
     } catch {
-      // erro exibido via auth.loginError
+      // erro exibido via auth
     }
   }
 
@@ -70,9 +86,13 @@ export function LoginForm() {
           <div className="bg-muted flex size-10 items-center justify-center rounded-lg">
             <LockKeyhole className="size-5" />
           </div>
-          <CardTitle>Entrar no SIG Barbershop</CardTitle>
+          <CardTitle>
+            {mode === "register" ? "Criar conta" : "Entrar no SIG Barbershop"}
+          </CardTitle>
           <CardDescription>
-            Use seu email e senha para acessar o painel operacional.
+            {mode === "register"
+              ? "Cadastre-se para confirmar seu agendamento."
+              : "Use seu email e senha para acessar sua conta."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -81,6 +101,7 @@ export function LoginForm() {
               onSubmit={form.handleSubmit(onSubmit)}
               className="space-y-4"
               noValidate>
+              {mode === "register" ? <RegisterFields form={form} /> : null}
               <FormField name="email">
                 {(field) => (
                   <FormItem>
@@ -116,17 +137,28 @@ export function LoginForm() {
                   </FormItem>
                 )}
               </FormField>
-              {auth.loginError ? (
+              {auth.loginError || auth.registerError ? (
                 <Alert variant="destructive">
                   <AlertTitle>Não foi possível entrar</AlertTitle>
-                  <AlertDescription>{auth.loginError.message}</AlertDescription>
+                  <AlertDescription>
+                    {(auth.loginError ?? auth.registerError)?.message}
+                  </AlertDescription>
                 </Alert>
               ) : null}
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? (
                   <Loader2 className="size-4 animate-spin" />
                 ) : null}
-                Entrar
+                {mode === "register" ? "Criar conta" : "Entrar"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                className="w-full"
+                onClick={() =>
+                  setMode(mode === "register" ? "login" : "register")
+                }>
+                {mode === "register" ? "Já tenho conta" : "Criar conta"}
               </Button>
             </form>
           </Form>

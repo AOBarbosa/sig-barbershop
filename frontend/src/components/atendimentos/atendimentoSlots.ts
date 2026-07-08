@@ -53,16 +53,10 @@ function horariosOcupados(atendimentos: Atendimento[], barbeiroId: number) {
   );
 }
 
-export function gerarHorariosDisponiveis({
-  barbeiroId,
-  disponibilidades,
-  atendimentos
-}: {
-  barbeiroId: number;
-  disponibilidades: Disponibilidade[];
-  atendimentos: Atendimento[];
-}): AtendimentoSlot[] {
-  const ocupados = horariosOcupados(atendimentos, barbeiroId);
+function slotsPorOcupados(
+  disponibilidades: Disponibilidade[],
+  ocupados: Set<string>
+) {
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
 
@@ -94,4 +88,30 @@ export function gerarHorariosDisponiveis({
 
     return slots;
   });
+}
+
+export function gerarHorariosDisponiveis({
+  barbeiroId,
+  disponibilidades,
+  atendimentos
+}: {
+  barbeiroId: number;
+  disponibilidades: Disponibilidade[];
+  atendimentos: Atendimento[];
+}): AtendimentoSlot[] {
+  const ocupados = horariosOcupados(atendimentos, barbeiroId);
+  return slotsPorOcupados(disponibilidades, ocupados);
+}
+
+export function gerarHorariosPublicos({
+  disponibilidades,
+  horariosOcupados
+}: {
+  disponibilidades: Disponibilidade[];
+  horariosOcupados: string[];
+}) {
+  return slotsPorOcupados(
+    disponibilidades,
+    new Set(horariosOcupados.map((item) => item.slice(0, 16)))
+  );
 }

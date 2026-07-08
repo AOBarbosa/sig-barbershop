@@ -104,6 +104,27 @@ def test_get_disponibilidades_do_barbeiro_delega(client, monkeypatch):
     clear_overrides()
 
 
+def test_get_horarios_ocupados_do_barbeiro_e_publico(client, monkeypatch):
+    app.dependency_overrides[get_db] = override_db
+
+    def fake(_c, barbeiro_id, inicio, fim):
+        assert barbeiro_id == 1
+        assert inicio.isoformat() == "2026-07-13T00:00:00"
+        assert fim.isoformat() == "2026-07-27T23:59:59"
+        return [{"data_hora_inicio": "2026-07-13T14:30:00"}]
+
+    monkeypatch.setattr(barbeiro_router.agenda_service, "listar_horarios_ocupados", fake)
+
+    response = client.get(
+        "/barbeiros/1/horarios-ocupados"
+        "?inicio=2026-07-13T00:00:00&fim=2026-07-27T23:59:59"
+    )
+
+    assert response.status_code == 200
+    assert response.json() == [{"data_hora_inicio": "2026-07-13T14:30:00"}]
+    clear_overrides()
+
+
 def test_post_barbeiro_valida_e_retorna_201(client, monkeypatch):
     _override_admin()
 

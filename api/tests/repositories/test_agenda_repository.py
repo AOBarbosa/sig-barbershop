@@ -60,6 +60,30 @@ def test_barbeiro_ocupado_no_horario_ignora_atendimento_atual():
     assert result is False
 
 
+def test_listar_horarios_ocupados_barbeiro_retorna_datas_do_intervalo():
+    rows = [
+        {"data_hora_inicio": "2026-07-13T14:30:00"},
+        {"data_hora_inicio": "2026-07-13T15:00:00"},
+    ]
+    cursor = FakeCursor(row=None)
+    cursor.fetchall = lambda: rows
+    conn = FakeConn(cursor)
+
+    result = agenda_repository.listar_horarios_ocupados_barbeiro(
+        conn,
+        2,
+        "2026-07-13T00:00:00",
+        "2026-07-27T23:59:59",
+    )
+
+    sql, params = cursor.statements[0]
+    assert "data_hora_inicio >= %s" in sql
+    assert "data_hora_inicio <= %s" in sql
+    assert "status <> 'CANCELADO'" in sql
+    assert params == (2, "2026-07-13T00:00:00", "2026-07-27T23:59:59")
+    assert result == rows
+
+
 def test_repository_nao_lanca_http_exception():
     source = inspect.getsource(agenda_repository)
     assert "HTTPException" not in source

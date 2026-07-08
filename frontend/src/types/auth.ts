@@ -11,3 +11,11 @@ export interface LoginPayload {
   email: string;
   senha: string;
 }
+
+export interface RegistroClientePayload extends LoginPayload {
+  nome: string;
+  cpf: string | null;
+  data_nascimento?: string | null;
+  preferencias?: string | null;
+  observacoes?: string | null;
+}
